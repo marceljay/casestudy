@@ -1,0 +1,51 @@
+---
+title: "General Tasks Documentatation"
+author: "IDA Group 7"
+date: "July 2019"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# Installation of dependencies
+if( !require(readr)){
+  install.packages("readr")
+}
+
+if( !require(shiny)){
+  install.packages("shiny")
+}
+
+# Loading libraries
+#library(readr)
+#library(shiny)
+
+```
+
+#### 1. Logistics Delay
+#### a) How is the logistics delay distributed? Justify your selection and briefly describe your approach.
+Answer: 
+
+#### b) What is the minimum/maximum time between delivering and receiving goods?
+Answer: 
+
+#### c) Determine the mean of the logistics delay.
+Answer: 
+
+#### d) Visualize the distribution in an appropriate way.
+Answer: 
+
+#### 2. Why does it make sense to store the available data in separate files instead of saving everything in a huge table? How do you call the underlying data base concept?
+Answer: 
+
+#### 3. How many of the components K7 ended up in vehicles registered in the city of Dortmund?
+Answer: 
+
+#### 4. Which data types do the attributes of the registration table `Zulassungen_aller_Fahrzeuge` have ?
+Answer: 
+
+#### 5. You want to publish your application. Why does it make sense to store the data sets in a database on a server? Why is it notrecommended to store the data sets on your personal computer?
+Answer: 
+
+#### 6. On 11 August 2010 there was an accident involving a car produced by your firm. The driver left the scene without a trace. The license plate of the car, which caused the accident, is still missing. Since you work for the Federal Motor Transport Authority, the police asks for your help to find out where the vehicle with the engine code " K1BE2-104-1041-32049 " (corresponds to the engine ID number) was registered.
+Answer: 
