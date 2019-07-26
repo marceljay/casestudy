@@ -418,6 +418,63 @@ Komponente &lt;- read_csv2(kPath)</code></pre>
 ## 4 1908206 1908206 11-212-2121-… 12-213-2131-… 13-215-2152-… K2ST1-110-1101…
 ## 5 1908207 1908207 11-212-2121-… 12-213-2131-… 13-209-2092-… K2ST1-110-1101…
 ## 6 1908208 1908208 11-212-2121-… 12-213-2131-… 13-215-2152-… K2ST1-110-1101…</code></pre>
+<pre class="r"><code>lPath1 &lt;- &quot;Data/Logistikverzug/Logistikverzug_K7.csv&quot;
+logv1 &lt;- read_csv2(lPath1)</code></pre>
+<pre><code>## Using ',' as decimal and '.' as grouping mark. Use read_delim() for more control.</code></pre>
+<pre><code>## Warning: Missing column names filled in: 'X1' [1]</code></pre>
+<pre><code>## Parsed with column specification:
+## cols(
+##   X1 = col_double(),
+##   IDNummer = col_character(),
+##   Wareneingang = col_character(),
+##   Herstellernummer = col_double(),
+##   Werksnummer = col_double(),
+##   Fehlerhaft = col_double()
+## )</code></pre>
+<pre class="r"><code>summary(logv1)</code></pre>
+<pre><code>##        X1           IDNummer         Wareneingang       Herstellernummer
+##  Min.   :     1   Length:306490      Length:306490      Min.   :112     
+##  1st Qu.: 76623   Class :character   Class :character   1st Qu.:112     
+##  Median :153246   Mode  :character   Mode  :character   Median :113     
+##  Mean   :153246                                         Mean   :113     
+##  3rd Qu.:229868                                         3rd Qu.:114     
+##  Max.   :306490                                         Max.   :114     
+##   Werksnummer     Fehlerhaft
+##  Min.   :1132   Min.   :0   
+##  1st Qu.:1132   1st Qu.:0   
+##  Median :1137   Median :0   
+##  Mean   :1137   Mean   :0   
+##  3rd Qu.:1142   3rd Qu.:0   
+##  Max.   :1142   Max.   :0</code></pre>
+<pre class="r"><code>glimpse(logv1)</code></pre>
+<pre><code>## Observations: 306,490
+## Variables: 6
+## $ X1               &lt;dbl&gt; 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, …
+## $ IDNummer         &lt;chr&gt; &quot;K7-114-1142-1&quot;, &quot;K7-114-1142-2&quot;, &quot;K7-114-1142-…
+## $ Wareneingang     &lt;chr&gt; &quot;17.11.2008&quot;, &quot;17.11.2008&quot;, &quot;18.11.2008&quot;, &quot;18.1…
+## $ Herstellernummer &lt;dbl&gt; 114, 114, 114, 114, 114, 114, 114, 114, 114, 11…
+## $ Werksnummer      &lt;dbl&gt; 1142, 1142, 1142, 1142, 1142, 1142, 1142, 1142,…
+## $ Fehlerhaft       &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,…</code></pre>
+<pre class="r"><code>head(logv1)</code></pre>
+<pre><code>## # A tibble: 6 x 6
+##      X1 IDNummer      Wareneingang Herstellernummer Werksnummer Fehlerhaft
+##   &lt;dbl&gt; &lt;chr&gt;         &lt;chr&gt;                   &lt;dbl&gt;       &lt;dbl&gt;      &lt;dbl&gt;
+## 1     1 K7-114-1142-1 17.11.2008                114        1142          0
+## 2     2 K7-114-1142-2 17.11.2008                114        1142          0
+## 3     3 K7-114-1142-3 18.11.2008                114        1142          0
+## 4     4 K7-114-1142-4 18.11.2008                114        1142          0
+## 5     5 K7-114-1142-5 17.11.2008                114        1142          0
+## 6     6 K7-114-1142-6 19.11.2008                114        1142          0</code></pre>
+<pre class="r"><code>tail(logv1)</code></pre>
+<pre><code>## # A tibble: 6 x 6
+##       X1 IDNummer      Wareneingang Herstellernummer Werksnummer Fehlerhaft
+##    &lt;dbl&gt; &lt;chr&gt;         &lt;chr&gt;                   &lt;dbl&gt;       &lt;dbl&gt;      &lt;dbl&gt;
+## 1 306485 K7-113-1132-… 18.11.2016                112        1132          0
+## 2 306486 K7-113-1132-… 17.11.2016                112        1132          0
+## 3 306487 K7-113-1132-… 17.11.2016                112        1132          0
+## 4 306488 K7-113-1132-… 18.11.2016                112        1132          0
+## 5 306489 K7-113-1132-… 16.11.2016                112        1132          0
+## 6 306490 K7-113-1132-… 18.11.2016                112        1132          0</code></pre>
 
 
 

@@ -16,9 +16,13 @@ if( !require(shiny)){
   install.packages("shiny")
 }
 
+if( !require(dplyr)){
+  install.packages("dplyr")
+}
+
 # Loading libraries
 library(readr)
-
+library(dplyr)
 
 ```
 
@@ -36,7 +40,8 @@ tail(Komponente)
 lPath1 <- "Data/Logistikverzug/Logistikverzug_K7.csv"
 logv1 <- read_csv2(lPath1)
 summary(logv1)
-head(logv1s)
+glimpse(logv1)
+head(logv1)
 tail(logv1)
 ``` 
 
