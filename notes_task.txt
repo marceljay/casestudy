@@ -7,6 +7,12 @@ Case Study:
 Goal: program an app adressed at laymans without statistical knowledge
 
 
+Principles of tidy data:
+Each variable is in its own column
+Each observation is in its own row
+Each value is in its own cell
+
+
 ---------------------------------
 Task
 ---------------------------------
@@ -38,14 +44,3 @@ production of the entire vehicle for each vehicle type
 Requirements for Documentation:
 - Approach shown in r-markdown file
 - Comments in code
-
-
-
----------------------------------
-Group member assignments (WP = work package)
----------------------------------
-Xiufu:
-Sinan:
-Sven:
-Victor:
-Marcel:
