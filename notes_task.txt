@@ -21,7 +21,7 @@ Parts:
 (4) 3. part from this series (consecutive number)
 
 
-Requirements:
+Requirements for Analysis:
 -Box plot showing production time:
 Time between production of a part and
 production of the entire vehicle for each vehicle type
@@ -30,6 +30,14 @@ production of the entire vehicle for each vehicle type
 
 -Boxplots should update automatically when clicked
 
+-Tidy data principles
+
+-all data in single data frame
+
+
+Requirements for Documentation:
+- Approach shown in r-markdown file
+- Comments in code
 
 
 
