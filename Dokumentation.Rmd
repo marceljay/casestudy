@@ -1,0 +1,28 @@
+# Dokumentation
+
+## Komponenten tidyen
+
+Sven und Xiufu basieren die R Projekte auf die Arbeit bisher von Marcel (2 August 2019)
+
+Nach dem rebase auf Marcels Script haben wir die gleiche tidy_data.R Datei für die Änderung und Imports Der Komponenten angepasst -> umbenannt in tidy_data_Komponente.R
+
+Wir nehmen an, das Datum wurde als 5 Stellige Zahl an das Origin 1970-1-1 addiert. Ist das Eine Norm?
+
+Erstes Problem: Dateien beinhalten " ", lassen sich nicht mit read_csv2 einlesen (read_csv sollte extra für den euro Raum verwendet werden, Marcel hatte es für seine Parts import Commands verwendet)
+
+* Lösung: Da die vorhadnenen CSV und TXT Dateien unterschiedlich "" haben oder nicht, muss Der R Code auf diesen Punkt beim Import jedes Mal prüfen
+
+### Lösung?
+
+* Eine Funktion, die alle Dokumente in einem Ordner durchzählt (while Schleife?)
+* Eine Funktion, die prüft, ob "" in Der jetzt bevorstehend zu importierenden Datei vorkommt
+* Eine Funktion, die entscheidet, ob read_csv oder csv2 je nach "" Existenz für die anstehende Datei benutzt wird
+* Eine Funktion, die prüft, ob Eine CSV oder Eine TXT Datei ansteht und welche Formel (read_csv, read_txt) dafür genutzt wird
+
+
+
+## Generelle Überlegungen
+
+Wenn nur die Produktionsdauer eines Wagentyps wichtig ist, zählt nur das frühste Produktionsdatum eines Der 4 Teile, Komponente sind somit völlig unwichtig, da nur das Produktionsdatum des fertigen Wagentyps wieder relevant wird
+
+* Ist zumindest das Datum Der Komponenten irrelevant? Komponenten werden nur benötigt, um die Teile zu den Wagentypen zuzuordnen?

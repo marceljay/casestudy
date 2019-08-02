@@ -33,9 +33,10 @@ library(data.table)
 library(lubridate)
 
 #Import Komponent.csv matching the required format 
-path <- "Data/Komponente/Komponente_K1BE1.csv"
+path <- "Data/Komponente/Komponente_K1BE2.csv"
 
-df <- read_csv(path)
+
+df <- read_csv2(path) # The quotation marks in the file ("") prevented us from opening it easily with read_csv2 -> Instead read_csv works
 df2 <- df
 
 #Store all counted days in vector
@@ -44,7 +45,7 @@ daycount <-df$Produktionsdatum_Origin_01011970
 #Check if origin has a single unique value
 if (length(unique(df$origin))==1) {
   # Reformat date from data frame to fit as.Date
-  betterDates <- as.Date(daycount, origin = "01-01-1970")
+  betterDates <- as.Date(daycount, origin = "1970-01-01")
 } else {
   print("Aborting, multiple values found!")
 }
