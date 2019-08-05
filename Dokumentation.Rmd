@@ -1,4 +1,10 @@
-# Dokumentation
+---
+title: "Documentation"
+author: "Xiufu Yao & Sven Herbold"
+date: "5 August 2019"
+output: html_document
+---
+
 
 ## Komponenten tidyen
 
@@ -6,23 +12,26 @@ Sven und Xiufu basieren die R Projekte auf die Arbeit bisher von Marcel (2 Augus
 
 Nach dem rebase auf Marcels Script haben wir die gleiche tidy_data.R Datei für die Änderung und Imports Der Komponenten angepasst -> umbenannt in tidy_data_Komponente.R
 
-Wir nehmen an, das Datum wurde als 5 Stellige Zahl an das Origin 1970-1-1 addiert. Ist das Eine Norm?
+Wir nehmen an, das Datum wurde als 5 Stellige Zahl an das Origin 1970-1-1 addiert. Ist das eine Norm?
 
-Erstes Problem: Dateien beinhalten " ", lassen sich nicht mit read_csv2 einlesen (read_csv sollte extra für den euro Raum verwendet werden, Marcel hatte es für seine Parts import Commands verwendet)
+### Probleme
 
-* Lösung: Da die vorhadnenen CSV und TXT Dateien unterschiedlich "" haben oder nicht, muss Der R Code auf diesen Punkt beim Import jedes Mal prüfen
+1. Dateien beinhalten " ", lassen sich nicht mit read_csv2 einlesen (read_csv sollte extra für den Euro Raum verwendet werden, Marcel hatte es für seine Parts import Commands verwendet)
+   * Da die vorhandenen CSV und TXT Dateien unterschiedlich "" haben oder nicht, muss Der R Code auf diesen Punkt beim Import jedes Mal prüfen
+2. Dateien sind in unterschiedlichem Format vorhanden (.txt und .csv). Diese zu öffnen erfordert unterschiedliche Funktionen: read.csv oder read.delim oder die readr Version read_csv bzw. read_delim. Allerdings ist keine offensichtliche Reihenfolge für die unterschiedlichen Dateiendungen zu erkennen, wenn nicht automatisiert werden kann, muss jede Datei manuell mit einer Funktion eingelesen werden0
+3. Es kann sein, dass die Aufgabenstellung erfordert, dass für die endgültige Shiny App ein Filter für die OEM Werke benötigt wird. Die Werke sind vielleicht im Ordner Geodaten zu finden. Eventuell müssen hier später Werknamen (Locations) die 3-stelligen Werksnummern ersetzen.
 
 ### Lösung?
 
 * Eine Funktion, die alle Dokumente in einem Ordner durchzählt (while Schleife?)
 * Eine Funktion, die prüft, ob "" in Der jetzt bevorstehend zu importierenden Datei vorkommt
 * Eine Funktion, die entscheidet, ob read_csv oder csv2 je nach "" Existenz für die anstehende Datei benutzt wird
-* Eine Funktion, die prüft, ob Eine CSV oder Eine TXT Datei ansteht und welche Formel (read_csv, read_txt) dafür genutzt wird
+* Eine Funktion, die prüft, ob Eine CSV oder Eine TXT Datei ansteht und welche Formel (read_csv, read_delim) dafür genutzt wird
 
 
 
 ## Generelle Überlegungen
 
-Wenn nur die Produktionsdauer eines Wagentyps wichtig ist, zählt nur das frühste Produktionsdatum eines Der 4 Teile, Komponente sind somit völlig unwichtig, da nur das Produktionsdatum des fertigen Wagentyps wieder relevant wird
+Wenn nur die Produktionsdauer eines Wagentyps wichtig ist, zählt nur das frühste Produktionsdatum eines der 4 Teile, Komponente sind somit völlig unwichtig, da nur das Produktionsdatum des fertigen Wagentyps wieder relevant wird
 
-* Ist zumindest das Datum Der Komponenten irrelevant? Komponenten werden nur benötigt, um die Teile zu den Wagentypen zuzuordnen?
+* Ist zumindest das Datum der Komponenten irrelevant? Komponenten werden nur benötigt, um die Teile zu den Wagentypen zuzuordnen?
