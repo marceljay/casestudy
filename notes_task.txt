@@ -1,0 +1,46 @@
+---------------------------------
+General Info:
+--------------------------------
+Case Study:
+-Load only necessary data to save time
+-Reduce data from several gb to smaller size (rm columns)
+Goal: program an app adressed at laymans without statistical knowledge
+
+
+Principles of tidy data:
+Each variable is in its own column
+Each observation is in its own row
+Each value is in its own cell
+
+
+---------------------------------
+Task
+---------------------------------
+Info:
+-only regard 01-01-2015 TO 31-12-2016 
+
+Parts: 
+1-201-2011-3:
+(1) Part T1
+(2) produced by manufacturer "201"
+(3) in factory "2011"
+(4) 3. part from this series (consecutive number)
+
+
+Requirements for Analysis:
+-Box plot showing production time:
+Time between production of a part and
+production of the entire vehicle for each vehicle type
+
+-Shiny App: Order and display cars by OEM Factory 
+
+-Boxplots should update automatically when clicked
+
+-Tidy data principles
+
+-all data in single data frame
+
+
+Requirements for Documentation:
+- Approach shown in r-markdown file
+- Comments in code

@@ -1,0 +1,32 @@
+---
+title: "Case Study Documentatation"
+author: "IDA Group 7"
+date: "July 2019"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# Installation of dependencies
+if( !require(readr)){
+  install.packages("readr")
+}
+
+if( !require(shiny)){
+  install.packages("shiny")
+}
+
+# Loading libraries
+#library(readr)
+#library(shiny)
+
+```
+
+
+### 1. Approach
+
+### 2. Import
+
+### 3. Tidy
+
+### 4. Analysis
