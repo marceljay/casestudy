@@ -35,3 +35,11 @@ Wir nehmen an, das Datum wurde als 5 Stellige Zahl an das Origin 1970-1-1 addier
 Wenn nur die Produktionsdauer eines Wagentyps wichtig ist, zählt nur das frühste Produktionsdatum eines der 4 Teile, Komponente sind somit völlig unwichtig, da nur das Produktionsdatum des fertigen Wagentyps wieder relevant wird
 
 * Ist zumindest das Datum der Komponenten irrelevant? Komponenten werden nur benötigt, um die Teile zu den Wagentypen zuzuordnen?
+
+# Treffen 6.08.2019
+
+* Marcel Macht die Einzelteine csv fertig, Viktor die Einzelteile txt (| zählen und in R ein Zeilenende Der Datei hinzufügen?)
+* Sinan hat Git gelernt und tidiet die Fahrzeugtypen, vermutlich mit Marcels Coade aus dem dev Branch
+* Xiufu und Sven sitzen weiterhin am cleanen von Komponenten, nehmen Inspiration von Marcels Code und vllt ebenfalls die gleiche Mwethode ie Viktor, um txt einzulesen
+* Möglichst Bis Ende Der Woche mit cleanen fertig werden
+
