@@ -48,41 +48,53 @@ list_C <- c("T12", "T17", "T30")
 
 # Get a char vector with all the paths
 pathVector <- list.files("Data/Einzelteil")
-paste("Data/Einzelteil/", pathVector)
+pathVector <- paste("Data/Einzelteil/", pathVector)
 
 path <- "Data/Einzelteil/Einzelteil_T04.csv"
 
-determineTidyFunction <- function(pathVector){
+determineTidyFunction <- function(pathVector) {
   for (i in 1:length(pathVector)) {
-    
+    if (length(which(str_detect(pathVector[i], list_A))) == 1){
+      print(paste(i, pathVector[i])) # console logging
+      tidyCSV_a(pathVector[i])
+    } else if (length(which(str_detect(pathVector[i], list_B))) == 1){
+      print(paste(i, pathVector[i])) # console logging
+      tidyCSV_b(pathVector[i])
+    } else if (length(which(str_detect(pathVector[i], list_C))) == 1){
+      print(paste(i, pathVector[i])) # console logging
+      tidyCSV_c(pathVector[i])
+    }  else {
+      print("txt file or multiple matches found, aborting...");
+    }
   }
-  
-  
-  return(object)
 }
 
 
 tidyCSV_a <- function(path){
-  # return data.frame
+  # return tidy data.frame for pattern a csv
+  print(path)
+  print("called tidy a fn")
 }
 
-
 tidyCSV_b <- function(path){
-  # return data.frame
+  # return tidy data.frame for pattern b csv
+  print("called tidy b fn")
 }
 
 
 tidyCSV_c <- function(pathVector){
-  # return data.frame
+  # return tidy data.frame for pattern c csv
+  print("called tidy c fn")
 }
 
 tidyTXT_a <- function(pathVector){
-  # return data.frame
+  # return tidy data.frame for pattern a txt
 }
 
 tidyTXT_xyz <- function(pathVector){
   # return data.frame
 }
+
 
 
 
