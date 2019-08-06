@@ -50,7 +50,6 @@ list_C <- c("T12", "T17", "T30")
 pathVector <- list.files("Data/Einzelteil")
 pathVector <- paste("Data/Einzelteil/", pathVector)
 
-path <- "Data/Einzelteil/Einzelteil_T04.csv"
 
 determineTidyFunction <- function(pathVector) {
   for (i in 1:length(pathVector)) {
@@ -74,6 +73,35 @@ tidyCSV_a <- function(path){
   # return tidy data.frame for pattern a csv
   print(path)
   print("called tidy a fn")
+  
+  #Read CSV and store in temporary data frame (df)
+  df <- read_csv2(path)
+  #Store all counted days in vector
+  daycount <-df$Produktionsdatum_Origin_01011970
+  
+  #Check if origin has a single unique value and reformat
+  if (length(unique(df$origin))==1) {
+    # Reformat date from data frame to fit as.Date
+    betterDates <- as.Date(daycount, origin = "1970-01-01")
+  } else {
+    print("Aborting, multiple values found!")
+  }
+  
+  # Add date column with correctly formatted dates
+  df$date <- betterDates
+  
+  
+  # Tidy: Deleting Columns
+  #Check if X1 == X1_1
+  if (sum(!df$X1 == df$X1_1) == 0) {
+    # Delete X1_1
+    df2$X1_1 <- NULL
+  }
+  
+  # Drop previously date-related columns
+  df2$Produktionsdatum_Origin_01011970 <- NULL
+  df2$origin <- NULL
+  
 }
 
 tidyCSV_b <- function(path){
@@ -87,6 +115,8 @@ tidyCSV_c <- function(pathVector){
   print("called tidy c fn")
 }
 
+### Functions to tidy txt data
+
 tidyTXT_a <- function(pathVector){
   # return tidy data.frame for pattern a txt
 }
@@ -95,38 +125,3 @@ tidyTXT_xyz <- function(pathVector){
   # return data.frame
 }
 
-
-
-
-#Read CSV 
-df <- read_csv2(path)
-df2 <- df
-
-#Read TXT ( | | delimited)
-dftxt <- read_table(path2)
-
-#Store all counted days in vector
-daycount <-df$Produktionsdatum_Origin_01011970
-
-#Check if origin has a single unique value
-if (length(unique(df$origin))==1) {
-  # Reformat date from data frame to fit as.Date
-  betterDates <- as.Date(daycount, origin = "1970-01-01")
-} else {
-  print("Aborting, multiple values found!")
-}
-
-# Add date column with correctly formatted dates
-df2$date <- betterDates
-
-### Tidy: Deleting Columns
-
-#Check if X1 == X1_1
-if (sum(!df$X1 == df$X1_1) == 0) {
-  # Delete X1_1
-  df2$X1_1 <- NULL
-}
-
-# Drop previously date-related columns
-df2$Produktionsdatum_Origin_01011970 <- NULL
-df2$origin <- NULL
