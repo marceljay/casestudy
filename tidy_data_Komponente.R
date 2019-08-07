@@ -35,35 +35,37 @@ library(stringr) # For analyzing strings
 
 
 # # CSV with pattern A (clean, 5 main cols)
-list_A <- c("K1BE1", "K1BE2", "K1DI1", "K1DI2")
+list_A <- c("K1BE1.csv", "K1BE2.csv", "K1DI1.csv", "K1DI2.csv", "K6.csv")
 
 # #CSV with pattern B (clean, but only 4 main cols)
-list_B <- c("K2LE1", "K2LE2", )
+list_B <- c("K2LE1.csv", "K2LE2.csv", "K2ST2.csv", "K3AG1.csv", "K3AG2.csv", "K3SG1.csv", "K3SG2.csv", "K4.csv", "K5.csv")
 
 # CSV with pattern B2 (clean, 4 main cols + extra cols)
-list_B2 <- c("K2ST1")
+list_B2 <- c("K2ST1.csv")
 
-# #CSV with pattern C (dirty with extra cols)
-list_C <- c("T12", "T17", "T30")
+# #CSV with pattern C (clean, 6 main cols)
+list_C <- c("K7.csv")
 
 # TXT with pattern D (simple formatted txt)
-list_D <- c("K7")
+list_D <- c("K7.txt")
 
 # TXT with pattern E (sep = "\")
-list_E <- c("K2LE2", "K3AG2")
+list_E <- c("K2LE2.txt", "K3AG2.txt")
 
 # TXT with pattern F (sep = "|")
-list_F <- c("K2ST1")
+list_F <- c("K2ST1.txt")
 
 
 #### Importing the data frames
 
 # Get a char vector with all the paths
-partFileNames <- list.files("Data/Einzelteil")
-pathVector <- paste("Data/Einzelteil/", partFileNames, sep="")
+partFileNames <- list.files("Data/Komponente")
+pathVector <- paste("Data/Komponente/", partFileNames, sep="")
 
 # #Reduction for testing purposes
 # pathVector <- pathVector[1:5] 
+
+
 
 
 determineTidyFunction <- function(pathVector) {
@@ -78,6 +80,9 @@ determineTidyFunction <- function(pathVector) {
     } else if (length(which(str_detect(pathVector[i], list_B))) == 1){
       print(paste("logging:", i, pathVector[i])) # console logging
       tidyCSV_b(pathVector[i], list_B[i])
+    } else if (length(which(str_detect(pathVector[i], list_B2))) == 1){
+      print(paste("logging:", i, pathVector[i])) # console logging
+      tidyCSV_c(pathVector[i], list_B2[i])
     } else if (length(which(str_detect(pathVector[i], list_C))) == 1){
       print(paste("logging:", i, pathVector[i])) # console logging
       tidyCSV_c(pathVector[i], list_C[i])
@@ -89,6 +94,14 @@ determineTidyFunction <- function(pathVector) {
 }
 
 df <- 1 #define data frame
+
+# #import .txt files
+# temp <- list.files(path = "Data/Komponente/", pattern="*.txt")
+# batchpath <- paste("Data/Komponente/",temp, sep="")
+# 
+# txtfile <- read.table(batchpath[1], sep="\\")
+
+
 
 tidyCSV_a <- function(path, fileName) {
   # return tidy data.frame for pattern a csv
