@@ -18,7 +18,8 @@ Wir nehmen an, das Datum wurde als 5 Stellige Zahl an das Origin 1970-1-1 addier
 
 1. Dateien beinhalten " ", lassen sich nicht mit read_csv2 einlesen (read_csv sollte extra für den Euro Raum verwendet werden, Marcel hatte es für seine Parts import Commands verwendet)
    * Da die vorhandenen CSV und TXT Dateien unterschiedlich "" haben oder nicht, muss Der R Code auf diesen Punkt beim Import jedes Mal prüfen
-2. Dateien sind in unterschiedlichem Format vorhanden (.txt und .csv). Diese zu öffnen erfordert unterschiedliche Funktionen: read.csv oder read.delim oder die readr Version read_csv bzw. read_delim. Allerdings ist keine offensichtliche Reihenfolge für die unterschiedlichen Dateiendungen zu erkennen, wenn nicht automatisiert werden kann, muss jede Datei manuell mit einer Funktion eingelesen werden0
+2. Dateien sind in unterschiedlichem Format vorhanden (.txt und .csv). Diese zu öffnen erfordert unterschiedliche Funktionen: read.csv oder read.delim oder die readr Version read_csv bzw. read_delim. Allerdings ist keine offensichtliche Reihenfolge für die unterschiedlichen Dateiendungen zu erkennen, wenn nicht automatisiert werden kann, muss jede Datei manuell mit einer Funktion eingelesen werden
+   * Gut formatierte .txt Dateien über read.table() einlesbar, aber nicht formatierte .txt Dateien ohne Zeilenenden nicht, wie kann das Zeilenende vermittelt werden?
 3. Es kann sein, dass die Aufgabenstellung erfordert, dass für die endgültige Shiny App ein Filter für die OEM Werke benötigt wird. Die Werke sind vielleicht im Ordner Geodaten zu finden. Eventuell müssen hier später Werknamen (Locations) die 3-stelligen Werksnummern ersetzen.
 
 ### Lösung?
@@ -30,13 +31,19 @@ Wir nehmen an, das Datum wurde als 5 Stellige Zahl an das Origin 1970-1-1 addier
 
 
 
+## txt Import testing
+
+
+
+
+
 ## Generelle Überlegungen
 
 Wenn nur die Produktionsdauer eines Wagentyps wichtig ist, zählt nur das frühste Produktionsdatum eines der 4 Teile, Komponente sind somit völlig unwichtig, da nur das Produktionsdatum des fertigen Wagentyps wieder relevant wird
 
 * Ist zumindest das Datum der Komponenten irrelevant? Komponenten werden nur benötigt, um die Teile zu den Wagentypen zuzuordnen?
 
-# Treffen 6.08.2019
+## Treffen 6.08.2019
 
 * Marcel Macht die Einzelteine csv fertig, Viktor die Einzelteile txt (| zählen und in R ein Zeilenende Der Datei hinzufügen?)
 * Sinan hat Git gelernt und tidiet die Fahrzeugtypen, vermutlich mit Marcels Coade aus dem dev Branch
