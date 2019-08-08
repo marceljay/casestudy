@@ -52,14 +52,10 @@ list_C <- c("T12", "T17", "T30")
 partFileNames <- list.files("Data/Einzelteil")
 pathVector <- paste("Data/Einzelteil/", partFileNames, sep="")
 
-# #Reduction for testing purposes
-# pathVector <- pathVector[1:5] 
 
-
+# Function determines, based on predefined lists, which tidy function shall be applied
 determineTidyFunction <- function(filePath) {
   
-  # # Reduction for testing purposes
-  # for (i in 1:5) {
     if (length(which(str_detect(filePath, list_A))) == 1){
       print(paste("found match in list_A:", filePath)) # console logging
       tidyCSV_a(filePath)
@@ -74,7 +70,7 @@ determineTidyFunction <- function(filePath) {
       tidyCSV_c(filePath)
     }  else {
       print(paste("logging:", filePath)) # console logging
-      print("txt file or multiple matches found, aborting...");
+      tidyTXT_a(filePath)
     }
 }
 
@@ -145,12 +141,14 @@ tidyCSV_c <- function(path){
 tidyTXT_a <- function(path){
   # return tidy data.frame for pattern a txt
   print("---- called tidyTXT_a ----")
+  
+  # Create dummy data frame (because of errors)
+  df <<- data.frame(ID = c(1, 2, 3, 4, 5),
+                    var1 = c('a', 'b', 'c', 'd', 'e'),
+                    var2 = c(1, 1, 0, 0, 1))
+  return(df)
 }
 
-tidyTXT_xyz <- function(path){
-  # return data.frame
-  print("---- called tidyTXT_xyz ----")
-}
 
 
 #################################
