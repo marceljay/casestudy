@@ -83,8 +83,8 @@ determineTidyFunction <- function(filePath) {
 df <- 1 
 
 # Function to tidy CSV with format "a"
+# returns data frame
 tidyCSV_a <- function(path, delim = ";") {
-  # return tidy data.frame for pattern a csv
   print(paste0("tidyCSV_a called with path: ", path))
   
   #Read CSV and store in temporary data frame (df)
@@ -129,8 +129,8 @@ tidyCSV_a <- function(path, delim = ";") {
 }
 
 # Function to tidy CSV with format "b"
+# returns data frame
 tidyCSV_b <- function(path, delim = ";") {
-  # return tidy data.frame for pattern b csv
   print("---- called tidyCSV_b ----")
   
   #Read CSV and store in temporary data frame (df)
@@ -160,16 +160,9 @@ tidyCSV_b <- function(path, delim = ";") {
   return(df)
 }
 
-
-# tidyCSV_c <- function(path){
-#   # return tidy data.frame for pattern c csv
-#   print("---- called tidyCSV_c ----")
-# }
-
 ### Functions to tidy txt data
-
+# returns data frame
 tidyTXT_a <- function(path){
-  # return tidy data.frame for pattern a txt
   print("---- called tidyTXT_a ----")
   
   # Create dummy data frame (because of errors)
@@ -185,13 +178,14 @@ tidyTXT_a <- function(path){
 # Run the function / Script
 #################################
 
+# Call this function to start importing all data from ./Einzelteile/
 startImport <- function() {
   print("starting importing")
   df_list <<- list()
   for (i in seq_along(pathVector)) {
     df_list[[i]] <<- determineTidyFunction(pathVector[i])
     
-    # # Renaming items in data frame list
+    # # Renaming items in data frame list, implement when txt imports are done
     # names(df_list) <- gsub("\\Einzelteil+", "", partFileNames)
     # names(df_list) <- gsub("\\.csv$", "", partFileNames)
     # names(df_list) <- gsub("\\.txt$", "", partFileNames)
