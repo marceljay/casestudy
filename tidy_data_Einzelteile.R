@@ -24,6 +24,10 @@ if( !require(lubridate)){
   install.packages("lubridate")
 }
 
+# if( !require(pryr)){
+#   install.packages("pryr")
+# }
+
 
 # Loading libraries
 
@@ -32,6 +36,7 @@ library(dplyr)
 library(data.table)
 library(lubridate) # For date functions
 library(stringr) # For analyzing strings
+# library(pryr) # memory management
 
 
 # # CSV with pattern A (clean)
@@ -39,11 +44,11 @@ list_A <- c("T04", "T06", "T10", "T13", "T14", "T18", "T21", "T26", "T40") # sem
 
 list_A2 <- c("T08", "T25", "T33", "T37") # comma
 
-# #CSV with pattern B (dirty)
-list_B <- c("T15", "T23", "T32", "T38")
+# #CSV with pattern B (extra cols)
+list_B <- c("T12", "T15", "T17", "T23", "T32") # semicolon
 
-# #CSV with pattern C (dirty with extra cols)
-list_C <- c("T12", "T17", "T30")
+list_B2 <- c("T30", "T38") # comma
+
 
 
 #### Importing the data frames
@@ -63,11 +68,11 @@ determineTidyFunction <- function(filePath) {
       print(paste("found match in list_A2:", filePath)) # console logging
       tidyCSV_a(filePath, ",")
     } else if (length(which(str_detect(filePath, list_B))) == 1){
-      print(paste("found match in list_A:", filePath)) # console logging
+      print(paste("found match in list_B:", filePath)) # console logging
       tidyCSV_b(filePath)
-    } else if (length(which(str_detect(filePath, list_C))) == 1){
-      print(paste("found match in list_A:", filePath)) # console logging
-      tidyCSV_c(filePath)
+    } else if (length(which(str_detect(filePath, list_B2))) == 1){
+      print(paste("found match in list_B2:", filePath)) # console logging
+      tidyCSV_b(filePath, ",")
     }  else {
       print(paste("logging:", filePath)) # console logging
       tidyTXT_a(filePath)
@@ -120,21 +125,46 @@ tidyCSV_a <- function(path, delim = ";") {
   df <<- subset(df, !date<"2015-01-01")
   df <<- subset(df, !date>"2016-12-31")
   
-  # print(df)
+  return(df)
+}
+
+# Function to tidy CSV with format "b"
+tidyCSV_b <- function(path, delim = ";") {
+  # return tidy data.frame for pattern b csv
+  print("---- called tidyCSV_b ----")
+  
+  #Read CSV and store in temporary data frame (df)
+  if (delim == ",") {
+    df <<- read_csv(path)
+  } else {
+    df <<- read_csv2(path)
+  }
+  
+  # Renaming
+  colnames(df)[4] <<- "date"
+  
+  # Tidy: Deleting Columns
+  #Check if X1 == X1_1
+  if (sum(!df$X1 == df$X1_1) == 0) {1
+    # Delete X1_1
+    df$X1_1 <<- NULL
+    print("Column X1_1 deleted")
+  }
+  # Delete other columns
+  df <<- df[1:6]
+  
+  # Deleting rows that shall be disregarded because of date range
+  df <<- subset(df, !date<"2015-01-01")
+  df <<- subset(df, !date>"2016-12-31")
+  
   return(df)
 }
 
 
-tidyCSV_b <- function(path){
-  # return tidy data.frame for pattern b csv
-  print("---- called tidyCSV_b ----")
-}
-
-
-tidyCSV_c <- function(path){
-  # return tidy data.frame for pattern c csv
-  print("---- called tidyCSV_c ----")
-}
+# tidyCSV_c <- function(path){
+#   # return tidy data.frame for pattern c csv
+#   print("---- called tidyCSV_c ----")
+# }
 
 ### Functions to tidy txt data
 
@@ -152,15 +182,20 @@ tidyTXT_a <- function(path){
 
 
 #################################
+# Run the function / Script
+#################################
 
 startImport <- function() {
   print("starting importing")
   df_list <<- list()
   for (i in seq_along(pathVector)) {
     df_list[[i]] <<- determineTidyFunction(pathVector[i])
+    
+    # # Renaming items in data frame list
+    # names(df_list) <- gsub("\\Einzelteil+", "", partFileNames)
+    # names(df_list) <- gsub("\\.csv$", "", partFileNames)
+    # names(df_list) <- gsub("\\.txt$", "", partFileNames)
   }
 }
 
-# Run the function / Script
-# df_list <- lapply(pathVector, determineTidyFunction(pathVector))
-# names(df_list) <- gsub("\\Einzelteil+", "", partFileNames)
+
