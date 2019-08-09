@@ -38,31 +38,80 @@ library(lubridate) # For date functions
 library(stringr) # For analyzing strings
 library(lessR)
 
-# Bestandteile
+#################################################################################################################
+#PATTERNS
+#################################################################################################################
+
+# Bestandteile Dateien
 # # CSV with pattern A (clean, 5 main cols)
-BE_list_A <- c("K1BE1.csv", "K1BE2.csv", "K1DI1.csv", "K1DI2.csv", "K6.csv")
+BE_list_A <- c("Bestandteile_Komponente_K1BE1", "Bestandteile_Komponente_K1BE2", "Bestandteile_Komponente_K1DI1", 
+               "Bestandteile_Komponente_K1DI2", "Bestandteile_Komponente_K6")
 
 # #CSV with pattern B (clean, but only 4 main cols)
-BE_list_B <- c("K2LE1.csv", "K2LE2.csv", "K2ST2.csv", "K3AG1.csv", "K3AG2.csv", "K3SG1.csv", "K3SG2.csv", "K4.csv", "K5.csv")
+BE_list_B <- c("Bestandteile_Komponente_K2LE1", "Bestandteile_Komponente_K2LE2", "Bestandteile_Komponente_K2ST2", 
+               "Bestandteile_Komponente_K3AG1", "Bestandteile_Komponente_K3AG2", "Bestandteile_Komponente_K3SG1", 
+               "Bestandteile_Komponente_K3SG2", "Bestandteile_Komponente_K4", "Bestandteile_Komponente_K5")
 
 # CSV with pattern B2 (clean, 4 main cols + extra cols)
-BE_list_B2 <- c("K2ST1.csv")
+BE_list_B2 <- c("Bestandteile_Komponente_K2ST1")
 
 # #CSV with pattern C (clean, 6 main cols)
-BE_list_C <- c("K7.csv")
+BE_list_C <- c("Bestandteile_Komponente_K7")
 
+#####################################################
 
-# Produktionsdatum
-# CSV
+# Produktionsdatum Dateien
+# CSV with pattern A (clean, sep = ; 10 total cols, needs date cleaning)
+Kcsv_list_A <- c("Komponente_K1BE2", "Komponente_K2ST2", "Komponente_K6")
 
-# TXT with pattern D (simple formatted txt sep = \t)
+# CSV with pattern B (fairly clean, sep = , 10 total cols, needs date cleaning)
+Kcsv_list_B <- c("Komponente_K1BE1", "Komponente_K3SG2")
+
+# CSV with pattern C1 (very dirty, sep = , 23 total cols with .x .y normal, ascending second col X1_1 skipping numbers,
+# cols have different arrangement: x1,x1_1,ID_Motor.x,Proddatum.x,Herstllnr.x,Werknr.x,Fehlr.x,Fehlrdatum.x,FehlrFahr.x...
+# from first col x1 = 1 values are in the first cols ID_Motor.x...
+# from first col x1 = 477053 values are in the mid cols ID_Motor.y... 
+# from first col x1 = 715579 values are in the Last cols ID_Motor...)
+Kcsv_list_Cxyz1 <- c("Komponente_K1DI1")
+
+# CSV with pattern C2 (very dirty, sep = , 23 total cols with .x .y normal, ascending second col X1_1 skipping numbers,
+# cols have different arrangement: x1,x1_1,ID_Schaltung.x,Proddatum.x,Herstllnr.x,Werknr.x,Fehlr.x,Fehlrdatum.x,FehlrFahr.x...
+# from first col x1 = 1 values are in the first cols ID_Schaltung.x...
+# from first col x1 = 143116 values are in the mid cols ID_Schaltung.y... 
+# from first col x1 = 381642 values are in the Last cols ID_Schaltung...)
+Kcsv_list_Cxyz2 <- c("Komponente_K3AG1")
+
+# CSV with pattern CX (very dirty, sep = , 16 total cols with .x .y, ascending second col X1_1 skipping numbers,
+# cols have different arrangement: x1,x1_1,ID_Schaltung.x,Proddatum.x,Herstllnr.x,Werknr.x,Fehlr.x,Fehlrdatum.x,FehlrFahr.x...
+# from first col x1 = 1 values are in the first cols ID_Schaltung.x...
+# from first col x1 = 763284 values are in the mid cols ID_Schaltung.y...)
+Kcsv_list_Cxy1 <- c("Komponente_K3SG1")
+
+# CSV with pattern CX (very dirty, sep = , 16 total cols with .x .y, ascending second col X1_1 skipping numbers,
+# cols have different arrangement: x1,x1_1,ID_Karosserie.x,Proddatum.x,Herstllnr.x,Werknr.x,Fehlr.x,Fehlrdatum.x,FehlrFahr.x...
+# from first col x1 = 1 values are in the first cols ID_Karosserie.x...
+# from first col x1 = 326477 values are in the mid cols ID_Karosserie.y...)
+Kcsv_list_Cxy2 <- c("Komponente_K5")
+
+# CSV with pattern CX (very dirty, sep = ; 16 total cols with .x .y, ascending second col X1_1 skipping numbers,
+# cols have different arrangement: x1,x1_1,ID_Karosserie.x,Proddatum.x,Herstllnr.x,Werknr.x,Fehlr.x,Fehlrdatum.x,FehlrFahr.x...
+# from first col x1 = 1 values are in the first cols ID_Karosserie.x...
+# from first col x1 = 790866 values are in the mid cols ID_Karosserie.y...)
+Kcsv_list_Cxy3 <- c("Komponente_K4")
+
+######################################################
+
+# TXT with pattern A (simple formatted txt sep = \t)
 Ktxt_list_A <- c("K7.txt")
 
-# TXT with pattern E (sep = "\")
+# TXT with pattern B (sep = "\")
 Ktxt_list_B <- c("K2LE2.txt", "K3AG2.txt")
 
-# TXT with pattern F (sep = "|")
+# TXT with pattern C (sep = "|")
 Ktxt_list_C <- c("K2ST1.txt")
+
+
+#################################################################################################################
 
 
 #### Importing the data frames
