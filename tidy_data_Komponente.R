@@ -24,6 +24,10 @@ if( !require(lubridate)){
   install.packages("lubridate")
 }
 
+if( !require(lessR)){
+  install.packages("lessR")
+}
+
 
 # Loading libraries
 
@@ -32,28 +36,33 @@ library(dplyr)
 library(data.table)
 library(lubridate) # For date functions
 library(stringr) # For analyzing strings
+library(lessR)
 
-
+# Bestandteile
 # # CSV with pattern A (clean, 5 main cols)
-list_A <- c("K1BE1.csv", "K1BE2.csv", "K1DI1.csv", "K1DI2.csv", "K6.csv")
+BE_list_A <- c("K1BE1.csv", "K1BE2.csv", "K1DI1.csv", "K1DI2.csv", "K6.csv")
 
 # #CSV with pattern B (clean, but only 4 main cols)
-list_B <- c("K2LE1.csv", "K2LE2.csv", "K2ST2.csv", "K3AG1.csv", "K3AG2.csv", "K3SG1.csv", "K3SG2.csv", "K4.csv", "K5.csv")
+BE_list_B <- c("K2LE1.csv", "K2LE2.csv", "K2ST2.csv", "K3AG1.csv", "K3AG2.csv", "K3SG1.csv", "K3SG2.csv", "K4.csv", "K5.csv")
 
 # CSV with pattern B2 (clean, 4 main cols + extra cols)
-list_B2 <- c("K2ST1.csv")
+BE_list_B2 <- c("K2ST1.csv")
 
 # #CSV with pattern C (clean, 6 main cols)
-list_C <- c("K7.csv")
+BE_list_C <- c("K7.csv")
 
-# TXT with pattern D (simple formatted txt)
-list_D <- c("K7.txt")
+
+# Produktionsdatum
+# CSV
+
+# TXT with pattern D (simple formatted txt sep = \t)
+Ktxt_list_A <- c("K7.txt")
 
 # TXT with pattern E (sep = "\")
-list_E <- c("K2LE2.txt", "K3AG2.txt")
+Ktxt_list_B <- c("K2LE2.txt", "K3AG2.txt")
 
 # TXT with pattern F (sep = "|")
-list_F <- c("K2ST1.txt")
+Ktxt_list_C <- c("K2ST1.txt")
 
 
 #### Importing the data frames
@@ -62,38 +71,40 @@ list_F <- c("K2ST1.txt")
 partFileNames <- list.files("Data/Komponente")
 pathVector <- paste("Data/Komponente/", partFileNames, sep="")
 
-# #Reduction for testing purposes
-# pathVector <- pathVector[1:5] 
 
+# Function determines, based on predefined lists, which tidy function shall be applied
+determineTidyFunction <- function(filePath) {
 
-
-
-determineTidyFunction <- function(pathVector) {
-  
-  # # Reduction for testing purposes
-  # for (i in 1:5) {
-  
-  for (i in length(pathVector)) {
-    if (length(which(str_detect(pathVector[i], list_A))) == 1){
-      print(paste("logging:", i, pathVector[i])) # console logging
-      tidyCSV_a(pathVector[i], list_A[i])
-    } else if (length(which(str_detect(pathVector[i], list_B))) == 1){
-      print(paste("logging:", i, pathVector[i])) # console logging
-      tidyCSV_b(pathVector[i], list_B[i])
-    } else if (length(which(str_detect(pathVector[i], list_B2))) == 1){
-      print(paste("logging:", i, pathVector[i])) # console logging
-      tidyCSV_c(pathVector[i], list_B2[i])
-    } else if (length(which(str_detect(pathVector[i], list_C))) == 1){
-      print(paste("logging:", i, pathVector[i])) # console logging
-      tidyCSV_c(pathVector[i], list_C[i])
-    }  else {
-      print(paste("logging:", i, pathVector[i])) # console logging
-      print("txt file or multiple matches found, aborting...");
-    }
+  if (length(which(str_detect(filePath, BE_list_A))) == 1){
+    print(paste("found match in BE_list_A:", filePath)) # console logging
+    tidyCSV_a(filePath)
+  } else if (length(which(str_detect(filePath, BE_list_B))) == 1){
+    print(paste("found match in BE_list_B:", filePath)) # console logging
+    tidyCSV_b(filePath)
+  } else if (length(which(str_detect(filePath, BE_list_B2))) == 1){
+    print(paste("found match in BE_list_B2:", filePath)) # console logging
+    tidyCSV_b2(filePath)
+  } else if (length(which(str_detect(filePath, BE_list_C))) == 1){
+    print(paste("found match in BE_list_C:", filePath)) # console logging
+    tidyCSV_c(filePath)
+  } else if (length(which(str_detect(filePath, Ktxt_list_A))) == 1){
+    print(paste("found match in Ktxt_list_A:", filePath)) # console logging
+    tidyTXT_d(filePath)
+  } else if (length(which(str_detect(filePath, Ktxt_list_B))) == 1){
+    print(paste("found match in Ktxt_list_B:", filePath)) # console logging
+    tidyTXT_e(filePath)
+  } else if (length(which(str_detect(filePath, Ktxt_list_C))) == 1){
+    print(paste("found match in Ktxt_list_C:", filePath)) # console logging
+    tidyTXT_f(filePath)
+  } else {
+    print(paste("logging:", filePath)) # console logging
+    tidyTXT_a(filePath) # for the oneliner txts
   }
+  
 }
 
-df <- 1 #define data frame
+# define data frame variable, necessary for returning data frame from function
+df <- 1 
 
 # #import .txt files
 # temp <- list.files(path = "Data/Komponente/", pattern="*.txt")
@@ -102,13 +113,75 @@ df <- 1 #define data frame
 # txtfile <- read.table(batchpath[1], sep="\\")
 
 
-
-tidyCSV_a <- function(path, fileName) {
-  # return tidy data.frame for pattern a csv
+# Function to tidy CSV with format "a"
+# returns data frame
+tidyCSV_a <- function(path, delim = ";") {
   print(paste0("tidyCSV_a called with path: ", path))
   
   #Read CSV and store in temporary data frame (df)
-  df <<- read_csv2(path)
+  if (delim == ",") {
+    df <<- read_csv(path)
+  } else {
+    df <<- read_csv2(path)
+  }
+  
+  #Store all counted days in vector
+  daycount <<-df$Produktionsdatum_Origin_01011970
+  
+  #Check if origin has a single unique value and reformat
+  if (length(unique(df$origin))==1) {
+    # Reformat date from data frame to fit as.Date
+    betterDates <<- as.Date(daycount, origin = "1970-01-01")
+  } else {
+    print("Aborting, multiple values found for 'origin'")
+  }
+  
+  # Add date column with correctly formatted dates
+  df$date <<- betterDates
+  
+  
+  # Tidy: Deleting Columns
+  #Check if X1 == X1_1
+  if (sum(!df$X1 == df$X1_1) == 0) {1
+    # Delete X1_1
+    df$X1_1 <<- NULL
+    print("Column X1_1 deleted")
+  }
+  
+  # Drop previously date-related columns
+  df$Produktionsdatum_Origin_01011970 <<- NULL
+  df$origin <<- NULL
+  
+  # Deleting rows that shall be disregarded because of date range
+  df <<- subset(df, !date<"2015-01-01")
+  df <<- subset(df, !date>"2016-12-31")
+  
+  # print(df)
+  return(df)
+}
+
+tidyCSV_b <- function(path, fileName){
+  # return tidy data.frame for pattern b csv
+  print("---- called tidy b fn ----")
+}
+
+
+tidyCSV_c <- function(path, fileName){
+  # return tidy data.frame for pattern c csv
+  print("---- called tidy c fn ----")
+}
+
+### Functions to tidy txt data
+
+tidyTXT_d <- function(path, delim = "\\"){
+  print(paste0("tidyTXT_d called with path: ", path))
+  
+  #Read TXT and store in temporary data frame (df)
+  if (delim == "|") {
+    df <<- read.table(path, SEP = "|")
+  } else {
+    df <<- read.table(path)
+  }
   
   #Store all counted days in vector
   daycount <<-df$Produktionsdatum_Origin_01011970
@@ -144,30 +217,29 @@ tidyCSV_a <- function(path, fileName) {
   return(df)
 }
 
-tidyCSV_b <- function(path){
-  # return tidy data.frame for pattern b csv
-  print("---- called tidy b fn ----")
-}
-
-
-tidyCSV_c <- function(pathVector){
-  # return tidy data.frame for pattern c csv
-  print("---- called tidy c fn ----")
-}
-
-### Functions to tidy txt data
-
-tidyTXT_a <- function(pathVector){
-  # return tidy data.frame for pattern a txt
-}
-
-tidyTXT_xyz <- function(pathVector){
+tidyTXT_e <- function(pathVector){
   # return data.frame
 }
 
 
+
+
+#################################
+# Run the function / Script
 #################################
 
-# Run the function / Script
-determineTidyFunction(pathVector)
+# Call this function to start importing all data from ./Einzelteile/
+startImport <- function() {
+  print("starting importing")
+  df_list <<- list()
+  for (i in seq_along(pathVector)) {
+    df_list[[i]] <<- determineTidyFunction(pathVector[i])
+    
+    # # Renaming items in data frame list, implement when txt imports are done
+    # names(df_list) <- gsub("\\Einzelteil+", "", partFileNames)
+    # names(df_list) <- gsub("\\.csv$", "", partFileNames)
+    # names(df_list) <- gsub("\\.txt$", "", partFileNames)
+  }
+}
+
 
