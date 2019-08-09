@@ -172,7 +172,79 @@ tidyTXT_a <- function(path){
   return(df)
 }
 
+#Pattern Number 1
 
+tx  <- readLines("Data/Einzelteil/Einzelteil_T01.txt")
+tx2 <- gsub(pattern = "\\| \\|", replace = "\\|", x = tx)
+tx3  <- gsub(pattern = '" "', replace = '"\n"', x = tx2)
+tx4  <- gsub(pattern = '[^\\|] "', replace = '\n"', x = tx3)
+writeLines(tx4, con = "backup.txt")
+
+einzelteil_1 <- read.table("Einzelteil/backup", sep="|", header=TRUE)
+
+#Pattern Number 2
+
+#Pattern Number 3 
+tx  <- readLines("Data/Einzelteil/Einzelteil_T03.txt")
+tx2  <- gsub(pattern = '', replace = '\n', x = tx)
+tx3  <- gsub(pattern = '\\|', replace = ',', x = tx2)
+writeLines(tx3, con = "backup.txt")
+
+einzelteil_3 <- read.table("backup",sep = ",", header=TRUE)
+
+#Pattern Number 7 
+tx  <- readLines("Data/Einzelteil/Einzelteil_T07.txt")
+tx2  <- gsub(pattern = '""', replace = '"\n"', x = tx)
+writeLines(tx2, con = "backup.txt")
+
+
+einzelteil_7 <- read.table("backup.txt", header = TRUE)
+
+#Pattern Number 9 
+tx  <- readLines("Data/Einzelteil/Einzelteil_T09.txt")
+tx2  <- gsub(pattern = '', replace = '\n', x = tx)
+tx3  <- gsub(pattern = '\\\\', replace = ',', x = tx2)
+writeLines(tx3, con = "backup.txt")
+
+einzelteil_9 <- read.table("backup.txt",sep = ",", header=TRUE)
+
+#Pattern Number 11 
+tx  <- readLines("Data/Einzelteil/Einzelteil_T11.txt")
+tx2  <- gsub(pattern = '', replace = '\n', x = tx)
+writeLines(tx2, con = "backup.txt")
+
+einzelteil_11 <- read.table("backup.txt", header=TRUE)
+
+#Pattern Number 16
+
+#For T20 same as Pattern Number 1
+tx  <- readLines("Data/Einzelteil/Einzelteil_T20.txt")
+tx2 <- gsub(pattern = "\\| \\|", replace = "\\|", x = tx)
+tx3  <- gsub(pattern = '" "', replace = '"\n"', x = tx2)
+tx4  <- gsub(pattern = '[^\\|] "', replace = '\n"', x = tx3)
+writeLines(tx4, con = "backup.txt")
+
+einzelteil_20 <- read.table("backup.txt", sep="|", header=TRUE)
+
+#Pattern Number 22
+
+#For T24 same as Pattern 11
+tx  <- readLines("Data/Einzelteil/Einzelteil_T24.txt")
+tx2  <- gsub(pattern = '', replace = '\n', x = tx)
+writeLines(tx2, con = "backup.txt")
+
+einzelteil_24 <- read.table("backup.txt", header=TRUE)
+
+
+
+#Pattern Number 35
+tx  <- readLines("Data/Einzelteil/Einzelteil_T35.txt")
+tx2  <- gsub(pattern = '""', replace = '"\n"', x = tx)
+tx3  <- gsub(pattern = 'A"', replace = 'A\n"', x = tx2)
+tx4  <- gsub(pattern = '\\\\', replace = ' ', x = tx3)
+writeLines(tx4, con = "backup.txt")
+
+einzelteil_35 <- read.table("backup.txt", header = TRUE, row.names=NULL)
 
 #################################
 # Run the function / Script
