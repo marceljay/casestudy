@@ -126,28 +126,51 @@ determineTidyFunction <- function(filePath) {
 
   if (length(which(str_detect(filePath, BE_list_A))) == 1){
     print(paste("found match in BE_list_A:", filePath)) # console logging
-    tidyCSV_a(filePath)
+    tidyCSV_BE_A(filePath)
   } else if (length(which(str_detect(filePath, BE_list_B))) == 1){
     print(paste("found match in BE_list_B:", filePath)) # console logging
-    tidyCSV_b(filePath)
+    tidyCSV_BE_B(filePath)
   } else if (length(which(str_detect(filePath, BE_list_B2))) == 1){
     print(paste("found match in BE_list_B2:", filePath)) # console logging
-    tidyCSV_b2(filePath)
+    tidyCSV_BE_B2(filePath)
   } else if (length(which(str_detect(filePath, BE_list_C))) == 1){
     print(paste("found match in BE_list_C:", filePath)) # console logging
-    tidyCSV_c(filePath)
+    tidyCSV_BE_C(filePath)
+    
+  } else if (length(which(str_detect(filePath, Kcsv_list_A))) == 1){
+    print(paste("found match in Kcsv_list_A:", filePath)) # console logging
+    tidyCSV_Kcsv_A(filePath)
+  } else if (length(which(str_detect(filePath, Kcsv_list_B))) == 1){
+    print(paste("found match in Kcsv_list_B:", filePath)) # console logging
+    tidyCSV_Kcsv_B(filePath, sep=",")
+  } else if (length(which(str_detect(filePath, Kcsv_list_Cxyz1))) == 1){
+    print(paste("found match in Kcsv_list_Cxyz1:", filePath)) # console logging
+    tidyCSV_Kcsv_Cxyz1(filePath, sep=",")
+  } else if (length(which(str_detect(filePath, Kcsv_list_Cxyz2))) == 1){
+    print(paste("found match in Kcsv_list_Cxyz2:", filePath)) # console logging
+    tidyCSV_Kcsv_Cxyz2(filePath, sep=",")
+  } else if (length(which(str_detect(filePath, Kcsv_list_Cxy1))) == 1){
+    print(paste("found match in Kcsv_list_Cxy1:", filePath)) # console logging
+    tidyCSV_Kcsv_Cxy1(filePath, sep=",")
+  } else if (length(which(str_detect(filePath, Kcsv_list_Cxy2))) == 1){
+    print(paste("found match in Kcsv_list_Cxy2:", filePath)) # console logging
+    tidyCSV_Kcsv_Cxy2(filePath, sep=",")
+  } else if (length(which(str_detect(filePath, Kcsv_list_Cxy3))) == 1){
+    print(paste("found match in Kcsv_list_Cxy3:", filePath)) # console logging
+    tidyCSV_Kcsv_Cxy3(filePath)
+    
   } else if (length(which(str_detect(filePath, Ktxt_list_A))) == 1){
     print(paste("found match in Ktxt_list_A:", filePath)) # console logging
-    tidyTXT_d(filePath)
+    tidyTXT_A(filePath)
   } else if (length(which(str_detect(filePath, Ktxt_list_B))) == 1){
     print(paste("found match in Ktxt_list_B:", filePath)) # console logging
-    tidyTXT_e(filePath)
+    tidyTXT_B(filePath, sep="\\")
   } else if (length(which(str_detect(filePath, Ktxt_list_C))) == 1){
     print(paste("found match in Ktxt_list_C:", filePath)) # console logging
-    tidyTXT_f(filePath)
+    tidyTXT_C(filePath, sep="|")
   } else {
     print(paste("logging:", filePath)) # console logging
-    tidyTXT_a(filePath) # for the oneliner txts
+    tidyTXT_X(filePath) # for the oneliner txts
   }
   
 }
@@ -164,7 +187,7 @@ df <- 1
 
 # Function to tidy CSV with format "a"
 # returns data frame
-tidyCSV_a <- function(path, delim = ";") {
+tidyCSV_BE_A <- function(path, delim = ";") {
   print(paste0("tidyCSV_a called with path: ", path))
   
   #Read CSV and store in temporary data frame (df)
