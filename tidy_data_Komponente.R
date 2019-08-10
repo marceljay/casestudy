@@ -24,10 +24,6 @@ if( !require(lubridate)){
   install.packages("lubridate")
 }
 
-if( !require(lessR)){
-  install.packages("lessR")
-}
-
 
 # Loading libraries
 
@@ -36,7 +32,6 @@ library(dplyr)
 library(data.table)
 library(lubridate) # For date functions
 library(stringr) # For analyzing strings
-library(lessR)
 
 #################################################################################################################
 #PATTERNS
@@ -64,36 +59,36 @@ BE_list_C <- c("Bestandteile_Komponente_K7")
 # CSV with pattern A (clean, sep = ; 10 total cols, needs date cleaning)
 Kcsv_list_A <- c("Komponente_K1BE2", "Komponente_K2ST2", "Komponente_K6")
 
-# CSV with pattern B (fairly clean, sep = , 10 total cols, needs date cleaning)
+# CSV with pattern B (fairly clean, sep = , 10 total cols, needs date cleaning) -> can use Code for A
 Kcsv_list_B <- c("Komponente_K1BE1", "Komponente_K3SG2")
 
-# CSV with pattern C1 (very dirty, sep = , 23 total cols with .x .y normal, ascending second col X1_1 skipping numbers,
+# CSV with pattern Cxyz1 (very dirty, sep = , 23 total cols with .x .y normal, ascending second col X1_1 skipping numbers,
 # cols have different arrangement: x1,x1_1,ID_Motor.x,Proddatum.x,Herstllnr.x,Werknr.x,Fehlr.x,Fehlrdatum.x,FehlrFahr.x...
 # from first col x1 = 1 values are in the first cols ID_Motor.x...
 # from first col x1 = 477053 values are in the mid cols ID_Motor.y... 
 # from first col x1 = 715579 values are in the Last cols ID_Motor...)
 Kcsv_list_Cxyz1 <- c("Komponente_K1DI1")
 
-# CSV with pattern C2 (very dirty, sep = , 23 total cols with .x .y normal, ascending second col X1_1 skipping numbers,
+# CSV with pattern Cxyz2 (very dirty, sep = , 23 total cols with .x .y normal, ascending second col X1_1 skipping numbers,
 # cols have different arrangement: x1,x1_1,ID_Schaltung.x,Proddatum.x,Herstllnr.x,Werknr.x,Fehlr.x,Fehlrdatum.x,FehlrFahr.x...
 # from first col x1 = 1 values are in the first cols ID_Schaltung.x...
 # from first col x1 = 143116 values are in the mid cols ID_Schaltung.y... 
 # from first col x1 = 381642 values are in the Last cols ID_Schaltung...)
 Kcsv_list_Cxyz2 <- c("Komponente_K3AG1")
 
-# CSV with pattern CX (very dirty, sep = , 16 total cols with .x .y, ascending second col X1_1 skipping numbers,
+# CSV with pattern Cxy1 (very dirty, sep = , 16 total cols with .x .y, ascending second col X1_1 skipping numbers,
 # cols have different arrangement: x1,x1_1,ID_Schaltung.x,Proddatum.x,Herstllnr.x,Werknr.x,Fehlr.x,Fehlrdatum.x,FehlrFahr.x...
 # from first col x1 = 1 values are in the first cols ID_Schaltung.x...
 # from first col x1 = 763284 values are in the mid cols ID_Schaltung.y...)
 Kcsv_list_Cxy1 <- c("Komponente_K3SG1")
 
-# CSV with pattern CX (very dirty, sep = , 16 total cols with .x .y, ascending second col X1_1 skipping numbers,
+# CSV with pattern Cxy2 (very dirty, sep = , 16 total cols with .x .y, ascending second col X1_1 skipping numbers,
 # cols have different arrangement: x1,x1_1,ID_Karosserie.x,Proddatum.x,Herstllnr.x,Werknr.x,Fehlr.x,Fehlrdatum.x,FehlrFahr.x...
 # from first col x1 = 1 values are in the first cols ID_Karosserie.x...
 # from first col x1 = 326477 values are in the mid cols ID_Karosserie.y...)
 Kcsv_list_Cxy2 <- c("Komponente_K5")
 
-# CSV with pattern CX (very dirty, sep = ; 16 total cols with .x .y, ascending second col X1_1 skipping numbers,
+# CSV with pattern Cxy3 (very dirty, sep = ; 16 total cols with .x .y, ascending second col X1_1 skipping numbers,
 # cols have different arrangement: x1,x1_1,ID_Karosserie.x,Proddatum.x,Herstllnr.x,Werknr.x,Fehlr.x,Fehlrdatum.x,FehlrFahr.x...
 # from first col x1 = 1 values are in the first cols ID_Karosserie.x...
 # from first col x1 = 790866 values are in the mid cols ID_Karosserie.y...)
@@ -109,6 +104,12 @@ Ktxt_list_B <- c("K2LE2.txt", "K3AG2.txt")
 
 # TXT with pattern C (sep = "|")
 Ktxt_list_C <- c("K2ST1.txt")
+
+# TXT with pattern D (sep = "\" zeilenende \t) SEE VICTORS CODE
+Ktxt_list_D <- c("K1DI2.txt")
+
+# TXT with pattern E (sep = "II", zeilenende "") SEE VICTORS CODE
+Ktxt_list_E <- c("K2LE1.txt")
 
 
 #################################################################################################################
@@ -139,10 +140,10 @@ determineTidyFunction <- function(filePath) {
     
   } else if (length(which(str_detect(filePath, Kcsv_list_A))) == 1){
     print(paste("found match in Kcsv_list_A:", filePath)) # console logging
-    tidyCSV_Kcsv_A(filePath)
+    tidyCSV_Kcsv_AB(filePath)
   } else if (length(which(str_detect(filePath, Kcsv_list_B))) == 1){
     print(paste("found match in Kcsv_list_B:", filePath)) # console logging
-    tidyCSV_Kcsv_B(filePath, sep=",")
+    tidyCSV_Kcsv_AB(filePath, sep=",")
   } else if (length(which(str_detect(filePath, Kcsv_list_Cxyz1))) == 1){
     print(paste("found match in Kcsv_list_Cxyz1:", filePath)) # console logging
     tidyCSV_Kcsv_Cxyz1(filePath, sep=",")
@@ -164,10 +165,16 @@ determineTidyFunction <- function(filePath) {
     tidyTXT_A(filePath)
   } else if (length(which(str_detect(filePath, Ktxt_list_B))) == 1){
     print(paste("found match in Ktxt_list_B:", filePath)) # console logging
-    tidyTXT_B(filePath, sep="\\")
+    tidyTXT_BC(filePath, sep="\\")
   } else if (length(which(str_detect(filePath, Ktxt_list_C))) == 1){
     print(paste("found match in Ktxt_list_C:", filePath)) # console logging
-    tidyTXT_C(filePath, sep="|")
+    tidyTXT_BC(filePath, sep="|")
+  } else if (length(which(str_detect(filePath, Ktxt_list_D))) == 1){
+    print(paste("found match in Ktxt_list_D:", filePath)) # console logging
+    tidyTXT_D(filePath)
+  } else if (length(which(str_detect(filePath, Ktxt_list_E))) == 1){
+    print(paste("found match in Ktxt_list_E:", filePath)) # console logging
+    tidyTXT_E(filePath)
   } else {
     print(paste("logging:", filePath)) # console logging
     tidyTXT_X(filePath) # for the oneliner txts
@@ -178,16 +185,71 @@ determineTidyFunction <- function(filePath) {
 # define data frame variable, necessary for returning data frame from function
 df <- 1 
 
-# #import .txt files
-# temp <- list.files(path = "Data/Komponente/", pattern="*.txt")
-# batchpath <- paste("Data/Komponente/",temp, sep="")
-# 
-# txtfile <- read.table(batchpath[1], sep="\\")
-
-
-# Function to tidy CSV with format "a"
+# Function to tidy CSV with format "BE"-------------------------------------------
 # returns data frame
 tidyCSV_BE_A <- function(path, delim = ";") {
+  print(paste0("tidyCSV_a called with path: ", path))
+  
+  #Read CSV and store in temporary data frame (df)
+  if (delim == ",") {
+    df <<- read_csv(path)
+  } else {
+    df <<- read_csv2(path)
+  }
+
+  # print(df)
+  return(df)
+}
+
+tidyCSV_BE_B <- function(path, delim = ";") {
+  print(paste0("tidyCSV_a called with path: ", path))
+  
+  #Read CSV and store in temporary data frame (df)
+  if (delim == ",") {
+    df <<- read_csv(path)
+  } else {
+    df <<- read_csv2(path)
+  }
+  
+  # print(df)
+  return(df)
+}
+
+tidyCSV_BE_B2 <- function(path, delim = ";") {
+  print(paste0("tidyCSV_a called with path: ", path))
+  
+  #Read CSV and store in temporary data frame (df)
+  if (delim == ",") {
+    df <<- read_csv(path)
+  } else {
+    df <<- read_csv2(path)
+  }
+  
+  # delete col X
+  df$X <<- NULL
+  print("Column X deleted")
+  
+  # print(df)
+  return(df)
+}
+
+tidyCSV_BE_C <- function(path, delim = ";") {
+  print(paste0("tidyCSV_a called with path: ", path))
+  
+  #Read CSV and store in temporary data frame (df)
+  if (delim == ",") {
+    df <<- read_csv(path)
+  } else {
+    df <<- read_csv2(path)
+  }
+  
+  # print(df)
+  return(df)
+}
+
+# Function to tidy CSV with format "Kcsv"----------------------------------------
+# returns data frame
+tidyCSV_Kcsv_AB <- function(path, delim = ";") {
   print(paste0("tidyCSV_a called with path: ", path))
   
   #Read CSV and store in temporary data frame (df)
@@ -232,20 +294,174 @@ tidyCSV_BE_A <- function(path, delim = ";") {
   return(df)
 }
 
-tidyCSV_b <- function(path, fileName){
-  # return tidy data.frame for pattern b csv
-  print("---- called tidy b fn ----")
+tidyCSV_Kcsv_Cxyz1 <- function(path, delim = ";") {
+  print(paste0("tidyCSV_a called with path: ", path))
+  
+  #Read CSV and store in temporary data frame (df)
+  if (delim == ",") {
+    df <<- read_csv(path)
+  } else {
+    df <<- read_csv2(path)
+  }
+  
+  # combine .x .y .z into one acc. to swap in specific rows
+  
+  # Tidy: Deleting Columns
+  # Delete X1_1
+  df$X1_1 <<- NULL
+  print("Column X1_1 deleted")
+  
+  # Deleting rows that shall be disregarded because of date range
+  df <<- subset(df, !Produktionsdatum<"2015-01-01")
+  df <<- subset(df, !Produktionsdatum>"2016-12-31")
+  
+  # print(df)
+  return(df)
 }
 
-
-tidyCSV_c <- function(path, fileName){
-  # return tidy data.frame for pattern c csv
-  print("---- called tidy c fn ----")
+tidyCSV_Kcsv_Cxyz2 <- function(path, delim = ";") {
+  print(paste0("tidyCSV_a called with path: ", path))
+  
+  #Read CSV and store in temporary data frame (df)
+  if (delim == ",") {
+    df <<- read_csv(path)
+  } else {
+    df <<- read_csv2(path)
+  }
+  
+  # combine .x .y .z into one acc. to swap in specific rows
+  
+  # Tidy: Deleting Columns
+  # Delete X1_1
+  df$X1_1 <<- NULL
+  print("Column X1_1 deleted")
+  
+  # Deleting rows that shall be disregarded because of date range
+  df <<- subset(df, !Produktionsdatum<"2015-01-01")
+  df <<- subset(df, !Produktionsdatum>"2016-12-31")
+  
+  # print(df)
+  return(df)
 }
 
-### Functions to tidy txt data
+tidyCSV_Kcsv_Cxy1 <- function(path, delim = ";") {
+  print(paste0("tidyCSV_a called with path: ", path))
+  
+  #Read CSV and store in temporary data frame (df)
+  if (delim == ",") {
+    df <<- read_csv(path)
+  } else {
+    df <<- read_csv2(path)
+  }
+  
+  # combine .x .y into one acc. to swap in specific rows
+  
+  # Tidy: Deleting Columns
+  # Delete X1_1
+  df$X1_1 <<- NULL
+  print("Column X1_1 deleted")
+  
+  # Deleting rows that shall be disregarded because of date range
+  df <<- subset(df, !Produktionsdatum<"2015-01-01")
+  df <<- subset(df, !Produktionsdatum>"2016-12-31")
+  
+  # print(df)
+  return(df)
+}
 
-tidyTXT_d <- function(path, delim = "\\"){
+tidyCSV_Kcsv_Cxy2 <- function(path, delim = ";") {
+  print(paste0("tidyCSV_a called with path: ", path))
+  
+  #Read CSV and store in temporary data frame (df)
+  if (delim == ",") {
+    df <<- read_csv(path)
+  } else {
+    df <<- read_csv2(path)
+  }
+  
+  # combine .x .y into one acc. to swap in specific rows
+  
+  # Tidy: Deleting Columns
+  # Delete X1_1
+  df$X1_1 <<- NULL
+  print("Column X1_1 deleted")
+  
+  # Deleting rows that shall be disregarded because of date range
+  df <<- subset(df, !Produktionsdatum<"2015-01-01")
+  df <<- subset(df, !Produktionsdatum>"2016-12-31")
+  
+  # print(df)
+  return(df)
+}
+
+tidyCSV_Kcsv_Cxy3 <- function(path, delim = ";") {
+  print(paste0("tidyCSV_a called with path: ", path))
+  
+  #Read CSV and store in temporary data frame (df)
+  if (delim == ",") {
+    df <<- read_csv(path)
+  } else {
+    df <<- read_csv2(path)
+  }
+  
+  # combine .x .y into one acc. to swap in specific rows
+  
+  # Tidy: Deleting Columns
+  # Delete X1_1
+  df$X1_1 <<- NULL
+  print("Column X1_1 deleted")
+  
+  # Deleting rows that shall be disregarded because of date range
+  df <<- subset(df, !Produktionsdatum<"2015-01-01")
+  df <<- subset(df, !Produktionsdatum>"2016-12-31")
+  
+  # print(df)
+  return(df)
+}
+
+### Functions to tidy TXT------------------------------------------------------
+
+tidyTXT_A <- function(path){
+  print(paste0("tidyTXT_d called with path: ", path))
+  
+  #Read TXT and store in temporary data frame (df)
+  df <<- read.table(path)
+  
+  #Store all counted days in vector
+  daycount <<-df$Produktionsdatum_Origin_01011970
+  
+  #Check if origin has a single unique value and reformat
+  if (length(unique(df$origin))==1) {
+    # Reformat date from data frame to fit as.Date
+    betterDates <<- as.Date(daycount, origin = "1970-01-01")
+  } else {
+    print("Aborting, multiple values found!")
+  }
+  
+  # Add date column with correctly formatted dates
+  df$date <<- betterDates
+  
+  
+  # Tidy: Deleting Columns
+  #Check if X1 == X1_1
+  if (sum(!df$X1 == df$X1_1) == 0) {1
+    # Delete X1_1
+    df$X1_1 <<- NULL
+  }
+  
+  # Drop previously date-related columns
+  df$Produktionsdatum_Origin_01011970 <<- NULL
+  df$origin <<- NULL
+  
+  # Deleting rows that shall be disregarded because of date range
+  df <<- subset(df, !date<"2015-01-01")
+  df <<- subset(df, !date>"2016-12-31")
+  
+  # print(df)
+  return(df)
+}
+
+tidyTXT_BC <- function(path, delim = "\\"){
   print(paste0("tidyTXT_d called with path: ", path))
   
   #Read TXT and store in temporary data frame (df)
@@ -289,11 +505,76 @@ tidyTXT_d <- function(path, delim = "\\"){
   return(df)
 }
 
-tidyTXT_e <- function(pathVector){
-  # return data.frame
+tidyTXT_D <- function(path){
+  print(paste0("tidyTXT_d called with path: ", path))
+  
+
+  tx <- readLines(path)
+  tx2 <- gsub(pattern='"\t"', replace = '"\n"', x = tx)
+  writeLines(tx2, con = "backup_Komp.txt")
+  
+  df <- read.table("backup_Komp.txt", sep = "\\")
+  # Maybe delete the temporary backup_Komp.txt
+  
+  #Store all counted days in vector
+  daycount <<-df$Produktionsdatum_Origin_01011970
+  
+  #Check if origin has a single unique value and reformat
+  if (length(unique(df$origin))==1) {
+    # Reformat date from data frame to fit as.Date
+    betterDates <<- as.Date(daycount, origin = "1970-01-01")
+  } else {
+    print("Aborting, multiple values found!")
+  }
+  
+  # Add date column with correctly formatted dates
+  df$date <<- betterDates
+  
+  
+  # Tidy: Deleting Columns
+  #Check if X1 == X1_1
+  if (sum(!df$X1 == df$X1_1) == 0) {1
+    # Delete X1_1
+    df$X1_1 <<- NULL
+  }
+  
+  # Drop previously date-related columns
+  df$Produktionsdatum_Origin_01011970 <<- NULL
+  df$origin <<- NULL
+  
+  # Deleting rows that shall be disregarded because of date range
+  df <<- subset(df, !date<"2015-01-01")
+  df <<- subset(df, !date>"2016-12-31")
+  
+  # print(df)
+  return(df)
 }
 
+tidyTXT_E <- function(path){
+  print(paste0("tidyTXT_d called with path: ", path))
+  
+  # Unfinished Code, requires more testing
+  tx <- readLines("Data/Komponente/Komponente_K2LE1.txt")
+  tx2 <- gsub(pattern='', replace = '"\n"', x = tx)
+  #tx3 <- gsub(pattern = '\"', replace =" ", x = tx2)
+  tx4 <- gsub(pattern = "II", replace = "\\", x = tx2)
+  writeLines(tx4, con = "testing.txt")
+  df <- read.table("testing.txt", sep = "\\")
+  
+  df <- read.table("backup_Komp.txt", sep = "\\")
+  # Maybe delete the temporary backup_Komp.txt
+  
+  
+  # combine .x .y into one acc. to swap in specific rows
 
+  
+  # Deleting rows that shall be disregarded because of date range
+  df <<- subset(df, !Produktionsdatum<"2015-01-01")
+  df <<- subset(df, !Produktionsdatum>"2016-12-31")
+  
+  # print(df)
+  return(df)
+}
 
 
 #################################
