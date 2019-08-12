@@ -1,0 +1,50 @@
+# title: "Case Study Documentatation"
+# author: "IDA Group 7"
+# date: "July 2019"
+
+
+# Installation of dependencies
+if( !require(readr)){
+  install.packages("readr")
+}
+
+if( !require(shiny)){
+  install.packages("shiny")
+}
+
+if( !require(dplyr)){
+  install.packages("dplyr")
+}
+
+if( !require(data.table)){
+  install.packages("data.table")
+}
+
+if( !require(lubridate)){
+  install.packages("lubridate")
+}
+
+
+# Loading libraries
+
+library(readr)
+library(dplyr)
+library(data.table)
+library(lubridate)
+
+
+#Import Fahrzeuge_OEM1_Typ12.csv matching the required format 
+
+Bestandteile_Fahrzeuge_OEM1_Typ12 <- read_delim("Case Study/Fahrzeuge/Bestandteile_Fahrzeuge_OEM1_Typ12.csv", 
+                                                ";", escape_double = FALSE, trim_ws = TRUE)
+df12 <- Bestandteile_Fahrzeuge_OEM1_Typ12
+
+
+View(df12)
+
+
+
+
+
+
+
