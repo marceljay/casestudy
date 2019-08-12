@@ -40,9 +40,9 @@ library(stringr) # For analyzing strings
 
 
 # # CSV with pattern A (clean)
-list_A <- c("T04", "T06", "T10", "T13", "T14", "T18", "T21", "T26", "T40") # semicolon
+list_A <- c("T04", "T10", "T13", "T14", "T18", "T21", "T26", "T40") # semicolon
 
-list_A2 <- c("T08", "T25", "T33", "T37") # comma
+list_A2 <- c("T06", "T08", "T25", "T33", "T37") # comma
 
 # #CSV with pattern B (extra cols)
 list_B <- c("T12", "T15", "T17", "T23", "T32") # semicolon
@@ -135,8 +135,7 @@ tidyCSV_a <- function(path, delim = ";") {
     i = length(importStats)
     
     # Analyze for NAs and append to list importStats
-    M <- sapply(df, function(x) sum(is.na(x))); 
-    importStats[[i+1]] <<- M[M>0]
+    importStats[[i+1]] <<- sapply(df, function(x) sum(is.na(x))); 
   } else {
     print("Good, no NA values found")
   }
