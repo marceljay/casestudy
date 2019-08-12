@@ -49,7 +49,7 @@ list_B <- c("T12", "T15", "T17", "T23", "T32") # semicolon
 
 list_B2 <- c("T30", "T38") # comma
 
-
+list_B2_error <- c("T38") # comma
 
 #### Importing the data frames
 
@@ -81,6 +81,10 @@ determineTidyFunction <- function(filePath) {
 
 # define data frame variable, necessary for returning data frame from function
 df <- 1 
+
+# Define empty list for data frames reporting
+# NA values found in imported data frames
+importStats <- list()
 
 # Function to tidy CSV with format "a"
 # returns data frame
@@ -125,6 +129,18 @@ tidyCSV_a <- function(path, delim = ";") {
   df <<- subset(df, !date<"2015-01-01")
   df <<- subset(df, !date>"2016-12-31")
   
+  # Check for NA values, should be elaborated for better detection
+  if(length(which(is.na(df)))>0) {
+    print("Found NA values")
+    i = length(importStats)
+    
+    # Analyze for NAs and append to list importStats
+    M <- sapply(df, function(x) sum(is.na(x))); 
+    importStats[[i+1]] <<- M[M>0]
+  } else {
+    print("Good, no NA values found")
+  }
+  
   return(df)
 }
 
@@ -156,6 +172,18 @@ tidyCSV_b <- function(path, delim = ";") {
   # Deleting rows that shall be disregarded because of date range
   df <<- subset(df, !date<"2015-01-01")
   df <<- subset(df, !date>"2016-12-31")
+  
+  # Check for NA values, should be elaborated for better detection
+  if(length(which(is.na(df)))>0) {
+    print("Found NA values")
+    i = length(importStats)
+    
+    # Analyze for NAs and append to list importStats
+    M <- sapply(df, function(x) sum(is.na(x))); 
+    importStats[[i+1]] <<- M[M>0]
+  } else {
+    print("Good, no NA values found")
+  }
   
   return(df)
 }
