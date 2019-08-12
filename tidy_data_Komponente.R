@@ -303,17 +303,25 @@ tidyCSV_Kcsv_Cxyz1 <- function(path, delim = ";") {
   } else {
     df <<- read_csv2(path)
   }
+
+  # combine .x .y cols into one 
+  df <- unite(df, "prod_date", "Produktionsdatum.x", "Produktionsdatum.y", "Produktionsdatum", sep="_")
+  df <- unite(df, "oem", "Herstellernummer.x", "Herstellernummer.y", "Herstellernummer", sep="_")
+  df <- unite(df, "factory", "Werksnummer.x", "Werksnummer.y", "Werksnummer", sep="_")
+  df <- unite(df, "ID", "ID_Motor.x", "ID_Motor.y", "ID_Motor", sep="_")
   
-  # combine .x .y .z into one acc. to swap in specific rows
+  # Clean newly united col names from NA
+  df$prod_date <- gsub(pattern="_NA|NA_",replace="",x=df$prod_date)
+  df$oem <- gsub(pattern="_NA|NA_",replace="",x=df$oem)
+  df$factory <- gsub(pattern="_NA|NA_",replace="",x=df$factory)
+  df$ID <- gsub(pattern="_NA|NA_",replace="",x=df$ID)
   
-  # Tidy: Deleting Columns
-  # Delete X1_1
-  df$X1_1 <<- NULL
-  print("Column X1_1 deleted")
+  # Delete unncessary cols
+  df <- df[3:6]
   
   # Deleting rows that shall be disregarded because of date range
-  df <<- subset(df, !Produktionsdatum<"2015-01-01")
-  df <<- subset(df, !Produktionsdatum>"2016-12-31")
+  df <<- subset(df, !prod_date<"2015-01-01")
+  df <<- subset(df, !prod_date>"2016-12-31")
   
   # print(df)
   return(df)
@@ -329,16 +337,24 @@ tidyCSV_Kcsv_Cxyz2 <- function(path, delim = ";") {
     df <<- read_csv2(path)
   }
   
-  # combine .x .y .z into one acc. to swap in specific rows
+  # combine .x .y cols into one
+  df <- unite(df, "prod_date", "Produktionsdatum.x", "Produktionsdatum.y", "Produktionsdatum", sep="_")
+  df <- unite(df, "oem", "Herstellernummer.x", "Herstellernummer.y", "Herstellernummer", sep="_")
+  df <- unite(df, "factory", "Werksnummer.x", "Werksnummer.y", "Werksnummer", sep="_")
+  df <- unite(df, "ID", "ID_Schaltung.x", "ID_Schaltung.y", "ID_Schaltung", sep="_")
   
-  # Tidy: Deleting Columns
-  # Delete X1_1
-  df$X1_1 <<- NULL
-  print("Column X1_1 deleted")
+  # Clean newly united col names from NA
+  df$prod_date <- gsub(pattern="_NA|NA_",replace="",x=df$prod_date)
+  df$oem <- gsub(pattern="_NA|NA_",replace="",x=df$oem)
+  df$factory <- gsub(pattern="_NA|NA_",replace="",x=df$factory)
+  df$ID <- gsub(pattern="_NA|NA_",replace="",x=df$ID)
+  
+  # Delete unncessary cols
+  df <- df[3:6]  
   
   # Deleting rows that shall be disregarded because of date range
-  df <<- subset(df, !Produktionsdatum<"2015-01-01")
-  df <<- subset(df, !Produktionsdatum>"2016-12-31")
+  df <<- subset(df, !prod_date<"2015-01-01")
+  df <<- subset(df, !prod_date>"2016-12-31")
   
   # print(df)
   return(df)
@@ -354,16 +370,24 @@ tidyCSV_Kcsv_Cxy1 <- function(path, delim = ";") {
     df <<- read_csv2(path)
   }
   
-  # combine .x .y into one acc. to swap in specific rows
+  # combine .x .y cols into one 
+  df <- unite(df, "prod_date", "Produktionsdatum.x", "Produktionsdatum.y", sep="_")
+  df <- unite(df, "oem", "Herstellernummer.x", "Herstellernummer.y", sep="_")
+  df <- unite(df, "factory", "Werksnummer.x", "Werksnummer.y", sep="_")
+  df <- unite(df, "ID", "ID_Schaltung.x", "ID_Schaltung.y", sep="_")
   
-  # Tidy: Deleting Columns
-  # Delete X1_1
-  df$X1_1 <<- NULL
-  print("Column X1_1 deleted")
+  # Clean newly united col names from NA
+  df$prod_date <- gsub(pattern="_NA|NA_",replace="",x=df$prod_date)
+  df$oem <- gsub(pattern="_NA|NA_",replace="",x=df$oem)
+  df$factory <- gsub(pattern="_NA|NA_",replace="",x=df$factory)
+  df$ID <- gsub(pattern="_NA|NA_",replace="",x=df$ID)
+  
+  # Delete unncessary cols
+  df <- df[3:6]  
   
   # Deleting rows that shall be disregarded because of date range
-  df <<- subset(df, !Produktionsdatum<"2015-01-01")
-  df <<- subset(df, !Produktionsdatum>"2016-12-31")
+  df <<- subset(df, !prod_date<"2015-01-01")
+  df <<- subset(df, !prod_date>"2016-12-31")
   
   # print(df)
   return(df)
@@ -379,16 +403,24 @@ tidyCSV_Kcsv_Cxy2 <- function(path, delim = ";") {
     df <<- read_csv2(path)
   }
   
-  # combine .x .y into one acc. to swap in specific rows
+  # combine .x .y cols into one
+  df <- unite(df, "prod_date", "Produktionsdatum.x", "Produktionsdatum.y", sep="_")
+  df <- unite(df, "oem", "Herstellernummer.x", "Herstellernummer.y", sep="_")
+  df <- unite(df, "factory", "Werksnummer.x", "Werksnummer.y", sep="_")
+  df <- unite(df, "ID", "ID_Karosserie.x", "ID_Karosserie.y", sep="_")
   
-  # Tidy: Deleting Columns
-  # Delete X1_1
-  df$X1_1 <<- NULL
-  print("Column X1_1 deleted")
+  # Clean newly united col names from NA
+  df$prod_date <- gsub(pattern="_NA|NA_",replace="",x=df$prod_date)
+  df$oem <- gsub(pattern="_NA|NA_",replace="",x=df$oem)
+  df$factory <- gsub(pattern="_NA|NA_",replace="",x=df$factory)
+  df$ID <- gsub(pattern="_NA|NA_",replace="",x=df$ID)
+  
+  # Delete unncessary cols
+  df <- df[3:6]  
   
   # Deleting rows that shall be disregarded because of date range
-  df <<- subset(df, !Produktionsdatum<"2015-01-01")
-  df <<- subset(df, !Produktionsdatum>"2016-12-31")
+  df <<- subset(df, !prod_date<"2015-01-01")
+  df <<- subset(df, !prod_date>"2016-12-31")
   
   # print(df)
   return(df)
@@ -404,16 +436,24 @@ tidyCSV_Kcsv_Cxy3 <- function(path, delim = ";") {
     df <<- read_csv2(path)
   }
   
-  # combine .x .y into one acc. to swap in specific rows
+  # combine .x .y cols into one
+  df <- unite(df, "prod_date", "Produktionsdatum.x", "Produktionsdatum.y", sep="_")
+  df <- unite(df, "oem", "Herstellernummer.x", "Herstellernummer.y", sep="_")
+  df <- unite(df, "factory", "Werksnummer.x", "Werksnummer.y", sep="_")
+  df <- unite(df, "ID", "ID_Karosserie.x", "ID_Karosserie.y", sep="_")
   
-  # Tidy: Deleting Columns
-  # Delete X1_1
-  df$X1_1 <<- NULL
-  print("Column X1_1 deleted")
+  # Clean newly united col names from NA
+  df$prod_date <- gsub(pattern="_NA|NA_",replace="",x=df$prod_date)
+  df$oem <- gsub(pattern="_NA|NA_",replace="",x=df$oem)
+  df$factory <- gsub(pattern="_NA|NA_",replace="",x=df$factory)
+  df$ID <- gsub(pattern="_NA|NA_",replace="",x=df$ID)
+  
+  # Delete unncessary cols
+  df <- df[3:6]  
   
   # Deleting rows that shall be disregarded because of date range
-  df <<- subset(df, !Produktionsdatum<"2015-01-01")
-  df <<- subset(df, !Produktionsdatum>"2016-12-31")
+  df <<- subset(df, !prod_date<"2015-01-01")
+  df <<- subset(df, !prod_date>"2016-12-31")
   
   # print(df)
   return(df)
