@@ -210,9 +210,9 @@ tidyTXT_1 <- function(path){
   readLines(path) %>%
     gsub(pattern = "\\| \\|", replace = "\\|",.) %>%
     gsub(pattern = '(?<=[^\\|]) "', replace = '\n"',.,perl = TRUE) %>%
-    writeLines(con = "Einzelteil/teste.txt")
+    writeLines(con = "backup.txt")
   
-  df <- read.table("Einzelteil/teste.txt", sep="|", header=TRUE) %>%
+  df <- read.table("backup.txt", sep="|", header=TRUE) %>%
     
     
     # combine .x .y cols into one 
@@ -247,9 +247,9 @@ tidyTXT_2 <- function(path){
     gsub(pattern = '(?<=A)\\s+"(?=[0-9][^-])', replace = '\n"', ., perl = TRUE)  %>%
     gsub(pattern = '(?<=[^-]\\d0)\\s+"(?=[0-9][^-])', replace = '\n"', ., perl = TRUE)  %>%
     gsub(pattern = '(?<=[^-][\\d|\\.][0-9])\\s+"(?=[0-9][^-])', replace = '\n"', ., perl = TRUE)  %>%
-    writeLines(., con = "Einzelteil/teste.txt")
+    writeLines(., con = "backup.txt")
   
-  einzelteil_2 <- read.table("Einzelteil/teste.txt", header=TRUE) %>%
+  einzelteil_2 <- read.table("backup.txt", header=TRUE) %>%
     
     # combine .x .y cols into one 
     unite("Produktionsdatum", "Produktionsdatum.x", "Produktionsdatum.y",sep="_") %>%
@@ -281,9 +281,9 @@ tidyTXT_3 <- function(path){
   readLines(path) %>%
     gsub(pattern = '', replace = '\n', .) %>%
     gsub(pattern = '\\|', replace = ',', .) %>%
-    writeLines(., con = "Einzelteil/teste.txt")
+    writeLines(., con = "backup.txt")
   
-  df <- read.table("Einzelteil/teste.txt",sep = ",", header=TRUE) %>%
+  df <- read.table("backup.txt",sep = ",", header=TRUE) %>%
     tidyTXT_a()
   
   return(df)
@@ -292,9 +292,9 @@ tidyTXT_3 <- function(path){
 tidyTXT_7 <- function(path){
   readLines(path) %>%
     gsub(pattern = '""', replace = '"\n"', .) %>%
-    writeLines(., con = "Einzelteil/teste.txt") 
+    writeLines(., con = "backup.txt") 
   
-  df <- read.table(header = TRUE)%>%
+  df <- read.table("backup.txt", header = TRUE)%>%
     tidyTXT_a()
   
   return(df)
@@ -304,9 +304,9 @@ tidyTXT_9 <- function(path){
   readLines(path) %>%
     gsub(pattern = '', replace = '\n', .) %>%
     gsub(pattern = '\\\\', replace = ',', .) %>%
-    writeLines(., con = "Einzelteil/teste.txt")
+    writeLines(., con = "backup.txt")
   
-  df <- read.table("Einzelteil/teste.txt",sep = ",", header=TRUE)%>%
+  df <- read.table("backup.txt",sep = ",", header=TRUE)%>%
     
     
     # combine .x .y cols into one 
@@ -338,9 +338,9 @@ tidyTXT_9 <- function(path){
 tidyTXT_11 <- function(path){
   readLines(path) %>%
     gsub(pattern = '', replace = '\n', .) %>%
-    writeLines(., con = "Einzelteil/teste.txt")
+    writeLines(., con = "backup.txt")
   
-  df <- read.table("Einzelteil/teste.txt", header=TRUE)%>%
+  df <- read.table("backup.txt", header=TRUE)%>%
     tidyTXT_a()
   
   return(df)
@@ -355,7 +355,7 @@ tidyTXT_16 <- function(path){
     gsub(pattern = "\\| \\|", replace = " ", .) %>%
     writeLines(., con = "Einzelteil/teste.txt")
   
-  df <- read.table("Einzelteil/teste.txt", header=TRUE)
+  df <- read.table("backup.txt", header=TRUE)
   
   
   # combine .x .y cols into one 
@@ -389,9 +389,9 @@ tidyTXT_20 <- function(path){
     gsub(pattern = '" "', replace = '"\n"', .) %>%
     gsub(pattern = '[^\\|] "', replace = '\n"', .) %>%
     gsub(pattern = "\\| \\|", replace = " ", .) %>%
-    writeLines(., con = "Einzelteil/teste.txt")
+    writeLines(., con = "backup.txt")
   
-  df <- read.table("Einzelteil/teste.txt",  header=TRUE)%>%
+  df <- read.table("backup.txt",  header=TRUE)%>%
     tidyTXT_a()
   
   return(df)
@@ -400,9 +400,9 @@ tidyTXT_20 <- function(path){
 tidyTXT_22 <- function(path){
   readLines(path) %>%
     gsub(pattern = '(?<!\\s)"(?!\\s)', replace = '\n"', ., perl = TRUE) %>%
-    writeLines(., con = "Einzelteil/teste.txt")
+    writeLines(., con = "backup.txt")
   
-  df <- read.table("Einzelteil/teste.txt", header = TRUE)
+  df <- read.table("backup.txt", header = TRUE)
   
   # combine .x .y cols into one 
   unite("Produktionsdatum", "Produktionsdatum.x", "Produktionsdatum.y", "Produktionsdatum", sep="_") %>%
@@ -433,9 +433,9 @@ tidyTXT_22 <- function(path){
 tidyTXT_24 <- function(path){
   readLines(path) %>%
     gsub(pattern = '', replace = '\n', .) %>%
-    writeLines(., con = "Einzelteil/teste.txt")
+    writeLines(., con = "backup.txt")
   
-  df <- read.table("Einzelteil/teste.txt", header=TRUE) %>%
+  df <- read.table("backup.txt", header=TRUE) %>%
     
     # combine .x .y cols into one 
     unite("Produktionsdatum", "Produktionsdatum.x", "Produktionsdatum.y", "Produktionsdatum", sep="_") %>%
@@ -468,10 +468,10 @@ tidyTXT_27 <- function(path){
     gsub(pattern = '(?<=origin)\\W+(?=[0-9])', replace = '"\n"', ., perl = TRUE) %>%
     gsub(pattern = '(?<=01-1970)"(?=[0-9])', replace = '\n"', ., perl = TRUE) %>%
     gsub(pattern = "\\| \\|", replace = "\\|", .) %>%
-    writeLines(., con = "Einzelteil/teste.txt")
+    writeLines(., con = "backup.txt")
   
   
-  df <- read.table("Einzelteil/teste.txt", header = TRUE)
+  df <- read.table("backup.txt", header = TRUE)
   
   
   daycount <- df$Produktionsdatum_Origin_01011970
@@ -496,9 +496,9 @@ tidyTXT_27 <- function(path){
 tidy_TXT31 <- function(path){
   readLines(path) %>%
     gsub(pattern = '(?<!\\s)"(?=[0-9])', replace = '"\n"', ., perl = TRUE) %>%
-    writeLines(., con = "Einzelteil/teste.txt")
+    writeLines(., con = "backup.txt")
   
-  df <- read.table("Einzelteil/teste.txt", header = TRUE)
+  df <- read.table("backup.txt", header = TRUE)
   
   df <- df[1:9]
   tidyTXT_a(df)
@@ -509,9 +509,9 @@ tidyTXT_35 <- function(path){
     gsub(pattern = '""', replace = '"\n"', .) %>%
     gsub(pattern = '(?<!\\\\)"(?!\\\\|")', replace = '\n"', ., perl = TRUE) %>%
     gsub(pattern = '\\\\', replace = ' ', .) %>%
-    writeLines(., con = "Einzelteil/teste.txt")
+    writeLines(., con = "backup.txt")
   
-  df <- read.table("Einzelteil/teste.txt", header = TRUE) %>%
+  df <- read.table("backup.txt", header = TRUE) %>%
     
     # combine .x .y cols into one 
     unite("Produktionsdatum", "Produktionsdatum.x", "Produktionsdatum.y",sep="_") %>%
@@ -542,9 +542,9 @@ tidyTXT_35 <- function(path){
 tidyTXT_36 <- function(path){
   readLines(path) %>%
     gsub(pattern = '" "', replace = '"\n"', .) %>%
-    writeLines(., con = "Einzelteil/teste.txt")
+    writeLines(., con = "backup.txt")
   
-  df <- read.table("Einzelteil/teste.txt", header = TRUE)%>%
+  df <- read.table("backup.txt", header = TRUE)%>%
     tidyTXT_a()
   
   return(df)
@@ -557,9 +557,9 @@ tidy_TXT39 <- function(path){
     gsub(pattern = '""', replace = '"\n"', .)  %>%
     gsub(pattern = '(?<!\\\\)"(?!\\\\|")', replace = '\n"', ., perl = TRUE)  %>%
     gsub(pattern = '\\\\', replace = ' ', .)  %>%
-    writeLines(., con = "Einzelteil/teste.txt")
+    writeLines(., con = "backup.txt")
   
-  df <- read.table("Einzelteil/teste.txt", header = TRUE) %>%
+  df <- read.table("backup.txt", header = TRUE) %>%
     
     # combine .x .y cols into one 
     unite("ID", "Produktionsdatum.x", "Produktionsdatum.y", sep="_") %>%
@@ -589,22 +589,22 @@ tidy_TXT39 <- function(path){
   return(df)
 }
 
-einzelteil_01 <- tidyTXT_01("Einzelteil/Einzelteil_T36.txt")
-einzelteil_02 <- tidyTXT_02("Einzelteil/Einzelteil_T36.txt")
-einzelteil_03 <- tidyTXT_03("Einzelteil/Einzelteil_T36.txt")
-einzelteil_07 <- tidyTXT_07("Einzelteil/Einzelteil_T36.txt")
-einzelteil_09 <- tidyTXT_09("Einzelteil/Einzelteil_T36.txt")
-einzelteil_11 <- tidyTXT_11("Einzelteil/Einzelteil_T36.txt")
-einzelteil_16 <- tidyTXT_16("Einzelteil/Einzelteil_T36.txt")
-einzelteil_20 <- tidyTXT_20("Einzelteil/Einzelteil_T36.txt")
-einzelteil_22 <- tidyTXT_22("Einzelteil/Einzelteil_T36.txt")
-einzelteil_24 <- tidyTXT_24("Einzelteil/Einzelteil_T36.txt")
-einzelteil_27 <- tidyTXT_27("Einzelteil/Einzelteil_T36.txt")
-einzelteil_31 <- tidyTXT_31("Einzelteil/Einzelteil_T36.txt")
-einzelteil_34 <- tidyTXT_34("Einzelteil/Einzelteil_T36.txt")
-einzelteil_35 <- tidyTXT_35("Einzelteil/Einzelteil_T36.txt")
-einzelteil_36 <- tidyTXT_36("Einzelteil/Einzelteil_T36.txt")
-einzelteil_39 <- tidyTXT_39("Einzelteil/Einzelteil_T36.txt")
+einzelteil_01 <- tidyTXT_01("Data/Einzelteil/Einzelteil_T01.txt")
+einzelteil_02 <- tidyTXT_02("Data/Einzelteil/Einzelteil_T02.txt")
+einzelteil_03 <- tidyTXT_03("Data/Einzelteil/Einzelteil_T03.txt")
+einzelteil_07 <- tidyTXT_07("Data/Einzelteil/Einzelteil_T07.txt")
+einzelteil_09 <- tidyTXT_09("Data/Einzelteil/Einzelteil_T09.txt")
+einzelteil_11 <- tidyTXT_11("Data/Einzelteil/Einzelteil_T11.txt")
+einzelteil_16 <- tidyTXT_16("Data/Einzelteil/Einzelteil_T16.txt")
+einzelteil_20 <- tidyTXT_20("Data/Einzelteil/Einzelteil_T20.txt")
+einzelteil_22 <- tidyTXT_22("Data/Einzelteil/Einzelteil_T22.txt")
+einzelteil_24 <- tidyTXT_24("Data/Einzelteil/Einzelteil_T24.txt")
+einzelteil_27 <- tidyTXT_27("Data/Einzelteil/Einzelteil_T27.txt")
+einzelteil_31 <- tidyTXT_31("Data/Einzelteil/Einzelteil_T31.txt")
+einzelteil_34 <- tidyTXT_34("Data/Einzelteil/Einzelteil_T34.txt")
+einzelteil_35 <- tidyTXT_35("Data/Einzelteil/Einzelteil_T35.txt")
+einzelteil_36 <- tidyTXT_36("Data/Einzelteil/Einzelteil_T36.txt")
+einzelteil_39 <- tidyTXT_39("Data/Einzelteil/Einzelteil_T39.txt")
 
 #################################
 # Run the function / Script
