@@ -358,7 +358,7 @@ tidyTXT_A <- function(path){
   #Check if X == X1
   if (sum(!df$X == df$X1) == 0) {1
     # Delete X1
-    df$X1_1 <<- NULL
+    df$X1 <<- NULL
   }
   
   # Drop columns
@@ -403,7 +403,7 @@ tidyTXT_B <- function(path){
   #Check if X == X1
   if (sum(!df$X == df$X1) == 0) {1
     # Delete X1
-    df$X1_1 <<- NULL
+    df$X1 <<- NULL
   }
   
   # Drop columns
@@ -458,12 +458,12 @@ tidyTXT_C <- function(path){
 tidyTXT_D <- function(path){
   print(paste0("tidyTXT_D called with path: ", path))
   
-
-  tx <- readLines(path)
-  tx2 <- gsub(pattern='"\t"', replace = '"\n"', x = tx)
-  writeLines(tx2, con = "backup_Komp.txt")
   
-  df <- read.table("backup_Komp.txt", sep = "\\")
+  readLines(path) %>% 
+  gsub(pattern='"\t"', replace = '"\n"') %>% 
+  gsub(pattern='\t', replace = "") %>% 
+  paste0('""\\',.) %>% 
+  read.table(text=., sep = "\\", header=TRUE, stringsAsFactors = FALSE) ->> df
   # Maybe delete the temporary backup_Komp.txt
   
   #Store all counted days in vector
@@ -478,23 +478,29 @@ tidyTXT_D <- function(path){
   }
   
   # Add date column with correctly formatted dates
-  df$date <<- betterDates
+  df$prod_date <<- betterDates
   
   
   # Tidy: Deleting Columns
   #Check if X1 == X1_1
-  if (sum(!df$X1 == df$X1_1) == 0) {1
+  if (sum(!df$X == df$X1) == 0) {1
     # Delete X1_1
-    df$X1_1 <<- NULL
+    df$X1 <<- NULL
+    print("Redundant Column X1 deleted")
   }
   
-  # Drop previously date-related columns
-  df$Produktionsdatum_Origin_01011970 <<- NULL
-  df$origin <<- NULL
+  # Drop columns
+  df <<- df[-c(5:9)]
+  
+  # Renaming cols
+  names(df)[1] <<- "id"
+  names(df)[2] <<- "global_id"
+  names(df)[3] <<- "oem"
+  names(df)[4] <<- "factory"
   
   # Deleting rows that shall be disregarded because of date range
-  df <<- subset(df, !date<"2015-01-01")
-  df <<- subset(df, !date>"2016-12-31")
+  df <<- subset(df, !prod_date<"2015-01-01")
+  df <<- subset(df, !prod_date>"2016-12-31")
   
   # print(df)
   return(df)
