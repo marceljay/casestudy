@@ -353,14 +353,6 @@ tidyTXT_A <- function(path){
   # Add date column with correctly formatted dates
   df$prod_date <<- betterDates
   
-  
-  # Tidy: Deleting Columns
-  #Check if X == X1
-  if (sum(!df$X == df$X1) == 0) {1
-    # Delete X1
-    df$X1 <<- NULL
-  }
-  
   # Drop columns
   df <<- df[-c(5:9)]
   
@@ -382,7 +374,7 @@ tidyTXT_B <- function(path){
   print(paste0("tidyTXT_B called with path: ", path))
   
   #Read TXT and store in temporary data frame (df)
-  df <<- read.table(path, sep = "\\", stringsAsFactors = FALSE)
+  df <<- read.table(path, sep = "\\",stringsAsFactors = FALSE)
   
   #Store all counted days in vector
   daycount <<-df$Produktionsdatum_Origin_01011970
@@ -397,14 +389,6 @@ tidyTXT_B <- function(path){
   
   # Add date column with correctly formatted dates
   df$prod_date <<- betterDates
-  
-  
-  # Tidy: Deleting Columns
-  #Check if X == X1
-  if (sum(!df$X == df$X1) == 0) {1
-    # Delete X1
-    df$X1 <<- NULL
-  }
   
   # Drop columns
   df <<- df[-c(5:9)]
@@ -428,14 +412,6 @@ tidyTXT_C <- function(path){
   
   #Read TXT and store in temporary data frame (df)
   df <<- read.table(path, sep = "|", stringsAsFactors = FALSE)
-  
-  
-  # Tidy: Deleting Columns
-  #Check if X == X1
-  # if (sum(!df$X == df$X1) == 0) {1
-  #   # Delete X1
-  #   df$X1_1 <<- NULL
-  # }
   
   # Renaming cols
   names(df)[1] <<- "id"
@@ -510,23 +486,31 @@ tidyTXT_E <- function(path){
   print(paste0("tidyTXT_E called with path: ", path))
   
   # Unfinished Code, requires more testing
-  tx <- readLines("Data/Komponente/Komponente_K2LE1.txt")
-  tx2 <- gsub(pattern='', replace = '"\n"', x = tx)
-  #tx3 <- gsub(pattern = '\"', replace =" ", x = tx2)
-  tx4 <- gsub(pattern = "II", replace = "\\", x = tx2)
-  writeLines(tx4, con = "testing.txt")
-  df <- read.table("testing.txt", sep = "\\")
+  readLines(path) %>% 
+  gsub(pattern='', replace = '\n') %>% 
+  gsub(pattern = "II", replace = ";") %>% 
+  paste0('"";',.) %>% 
+  read.table(text=., sep = ";", header=TRUE,stringsAsFactors = FALSE) ->> df
   
-  df <- read.table("backup_Komp.txt", sep = "\\")
-  # Maybe delete the temporary backup_Komp.txt
+  # combine .x .y into one
+  df <<- unite(df, "prod_date", "Produktionsdatum.x", "Produktionsdatum.y", sep="_")
+  df <<- unite(df, "oem", "Herstellernummer.x", "Herstellernummer.y", sep="_")
+  df <<- unite(df, "factory", "Werksnummer.x", "Werksnummer.y", sep="_")
+  df <<- unite(df, "global_id", "ID_Sitze.x", "ID_Sitze.y", sep="_")
   
+  # Clean newly united col names from NA
+  df$prod_date <<- gsub(pattern="_NA|NA_",replace="",x=df$prod_date)
+  df$oem <<- gsub(pattern="_NA|NA_",replace="",x=df$oem)
+  df$factory <<- gsub(pattern="_NA|NA_",replace="",x=df$factory)
+  df$global_id <<- gsub(pattern="_NA|NA_",replace="",x=df$global_id)
+  names(df)[1] <<- "id"
   
-  # combine .x .y into one acc. to swap in specific rows
-
+  # Delete unncessary cols, reorder
+  df <<- subset(df, select=c(1,3,5,6,4))
   
   # Deleting rows that shall be disregarded because of date range
-  df <<- subset(df, !Produktionsdatum<"2015-01-01")
-  df <<- subset(df, !Produktionsdatum>"2016-12-31")
+  df <<- subset(df, !prod_date<"2015-01-01")
+  df <<- subset(df, !prod_date>"2016-12-31")
   
   # print(df)
   return(df)
