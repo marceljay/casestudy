@@ -3,10 +3,10 @@
 # date: "August 2019"
 
 
-# Installation of dependencies
-# if( !require(tidyverse)){
-#   install.packages("tidyverse")
-# }
+# Installation of dependenciespathv
+if( !require(tidyverse)){
+  install.packages("tidyverse")
+}
 
 if( !require(shiny)){
   install.packages("shiny")
@@ -29,7 +29,7 @@ if( !require(lubridate)){
 # }
 
 
-# Loading libraries
+# Loading libraries 
 
 library(readr)
 library(dplyr)
@@ -41,15 +41,15 @@ library(stringr) # For analyzing strings
 
 # # CSV with pattern A (clean)
 list_A <- c("T04", "T10", "T13", "T14", "T18", "T21", "T26", "T40") # semicolon
-
 list_A2 <- c("T06", "T08", "T25", "T33", "T37") # comma
 
 # #CSV with pattern B (extra cols)
 list_B <- c("T12", "T15", "T17", "T23", "T32") # semicolon
 
-list_B2 <- c("T30", "T38") # comma
 
-list_B2_error <- c("T38") # comma
+list_B2 <- c("T30", "T38") # comma
+# T38 - 16 col
+# T30 - 23 col
 
 #### Importing the data frames
 
@@ -87,7 +87,7 @@ df <- 1
 importStats <- list()
 
 # Function to tidy CSV with format "a"
-# returns data frame
+# returns data frame, standard delimiter ";"
 tidyCSV_a <- function(path, delim = ";") {
   print(paste0("tidyCSV_a called with path: ", path))
   
@@ -110,24 +110,34 @@ tidyCSV_a <- function(path, delim = ";") {
   }
   
   # Add date column with correctly formatted dates
-  df$date <<- betterDates
+  df$prod_date <<- betterDates
   
   
   # Tidy: Deleting Columns
   #Check if X1 == X1_1
-  if (sum(!df$X1 == df$X1_1) == 0) {1
+  if (sum(!df$X1 == df$X1_1) == 0) {
     # Delete X1_1
     df$X1_1 <<- NULL
     print("Column X1_1 deleted")
   }
   
-  # Drop previously date-related columns
-  df$Produktionsdatum_Origin_01011970 <<- NULL
-  df$origin <<- NULL
+  # # Drop previously date-related columns
+  # df$Produktionsdatum_Origin_01011970 <<- NULL
+  # df$origin <<- NULL
+  
+  # Drop columns  
+  df <<- df[-c(5:9)]
+  
+  # Renaming cols
+  names(df)[1] <<- "id"
+  names(df)[2] <<- "global_id"
+  names(df)[3] <<- "oem"
+  names(df)[4] <<- "factory"
+  
   
   # Deleting rows that shall be disregarded because of date range
-  df <<- subset(df, !date<"2015-01-01")
-  df <<- subset(df, !date>"2016-12-31")
+  df <<- subset(df, !prod_date<"2015-01-01")
+  df <<- subset(df, !prod_date>"2016-12-31")
   
   # Check for NA values, should be elaborated for better detection
   if(length(which(is.na(df)))>0) {
@@ -144,42 +154,53 @@ tidyCSV_a <- function(path, delim = ";") {
 }
 
 # Function to tidy CSV with format "b"
-# returns data frame
+# returns data frame, standard delimiter ";"
 tidyCSV_b <- function(path, delim = ";") {
   print("---- called tidyCSV_b ----")
   
-  #Read CSV and store in temporary data frame (df)
+  #Read CSV and store in temporary data frame (df)  
   if (delim == ",") {
-    df <<- read_csv(path)
+    df <<- read.csv(path, stringsAsFactors = FALSE)
   } else {
-    df <<- read_csv2(path)
+    df <<- read.csv2(path, stringsAsFactors = FALSE)
   }
   
-  # Renaming
-  colnames(df)[4] <<- "date"
+  # Combine related columns, since after some row number, values appear in different columns
+    df <<- unite(df, "prod_date", contains("Produktionsdatum"), sep="_")
+    df <<- unite(df, "oem",  contains("Herstellernummer"), sep="_")
+    df <<- unite(df, "factory", contains("Werksnummer"), sep="_")
+    df <<- unite(df, "global_id", contains("ID_T"), sep="_") 
+  
+  # Clean newly united col names from NA
+  df$prod_date <<- gsub(pattern="_NA|NA_", replace="", x=df$prod_date)
+  df$oem <<- gsub(pattern="_NA|NA_", replace="", x=df$oem)
+  df$factory <<- gsub(pattern="_NA|NA_", replace="", x=df$factory)
+  df$global_id <<- gsub(pattern="_NA|NA_", replace="", x=df$global_id)
+  names(df)[1] <<- "id"
+  
   
   # Tidy: Deleting Columns
   #Check if X1 == X1_1
-  if (sum(!df$X1 == df$X1_1) == 0) {1
+  if (sum(!df$X1 == df$X1_1) == 0) {
     # Delete X1_1
     df$X1_1 <<- NULL
     print("Column X1_1 deleted")
   }
-  # Delete other columns
-  df <<- df[1:6]
+  
+  # Delete unnecessary cols, reorder
+  df <<- subset(df, select=c(1,3,5,6,4)) 
   
   # Deleting rows that shall be disregarded because of date range
-  df <<- subset(df, !date<"2015-01-01")
-  df <<- subset(df, !date>"2016-12-31")
-  
+  df <<- subset(df, !prod_date<"2015-01-01")
+
+  df <<- subset(df, !prod_date>"2016-12-31")  
   # Check for NA values, should be elaborated for better detection
   if(length(which(is.na(df)))>0) {
     print("Found NA values")
     i = length(importStats)
     
     # Analyze for NAs and append to list importStats
-    M <- sapply(df, function(x) sum(is.na(x))); 
-    importStats[[i+1]] <<- M[M>0]
+    importStats[[i+1]] <<- sapply(df, function(x) sum(is.na(x))); 
   } else {
     print("Good, no NA values found")
   }
