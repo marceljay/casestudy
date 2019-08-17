@@ -166,6 +166,96 @@ if (sum(!df_F22$X1 == df_F22$X1_1) == 0) {
 # Drop unnecessary column  "Fehlerhaft"
 df_F22$Fehlerhaft <- NULL
 
+
+
+
+#Add column Produktionsstandort to Bestandteile_Fahrzeuge_OEM1_Typ11 
+
+df_B11$Produktionsstandort <- df_B11$ID_Fahrzeug
+
+
+df_B11$Produktionsstandort <- gsub(pattern = ".*-11-.*" , replacement = "Nuernberg" , df_B11$Produktionsstandort)
+df_B11$Produktionsstandort <- gsub(pattern = ".*-12-.*" , replacement = "Bonn" , df_B11$Produktionsstandort)
+
+
+
+
+#Add column Produktionsstandort to Bestandteile_Fahrzeuge_OEM1_Typ12 
+
+df_B12$Produktionsstandort <- df_B12$ID_Fahrzeug
+
+
+df_B12$Produktionsstandort <- gsub(pattern = ".*-12-.*" , replacement = "Bonn" , df_B12$Produktionsstandort)
+
+
+
+
+#Add column Produktionsstandort to Bestandteile_Fahrzeuge_OEM1_Typ21 
+
+df_B21$Produktionsstandort <- df_B21$ID_Fahrzeug
+
+
+df_B21$Produktionsstandort <- gsub(pattern = ".*-21-.*" , replacement = "Goettingen" , df_B21$Produktionsstandort)
+
+
+
+
+#Add column Produktionsstandort to Bestandteile_Fahrzeuge_OEM1_Typ22
+
+df_B22$Produktionsstandort <- df_B22$ID_Fahrzeug
+
+
+df_B22$Produktionsstandort <- gsub(pattern = ".*-21-.*" , replacement = "Goettingen" , df_B22$Produktionsstandort)
+
+
+
+
+#Add column Produktionsstandort to Bestandteile_Fahrzeuge_OEM1_Typ22
+
+df_B22$Produktionsstandort <- df_B22$ID_Fahrzeug
+
+
+df_B22$Produktionsstandort <- gsub(pattern = ".*-21-.*" , replacement = "Goettingen" , df_B22$Produktionsstandort)
+
+
+
+
+#Add column Produktionsstandort to Fahrzeuge_OEM1_Typ11
+
+df_F11$Produktionsstandort <- df_F11$ID_Fahrzeug
+
+df_F11$Produktionsstandort <- gsub(pattern = ".*-11-.*" , replacement = "Nuernberg" , df_F11$Produktionsstandort)
+df_F11$Produktionsstandort <- gsub(pattern = ".*-12-.*" , replacement = "Bonn" , df_F11$Produktionsstandort)
+
+
+
+
+#Add column Produktionsstandort to Fahrzeuge_OEM1_Typ12
+
+df_F12$Produktionsstandort <- df_F12$ID_Fahrzeug
+
+df_F12$Produktionsstandort <- gsub(pattern = ".*-12-.*" , replacement = "Bonn" , df_F12$Produktionsstandort)
+
+
+
+#Add column Produktionsstandort to Fahrzeuge_OEM1_Typ21
+
+df_F21$Produktionsstandort <- df_F21$ID_Fahrzeug
+
+df_F21$Produktionsstandort <- gsub(pattern = ".*-21-.*" , replacement = "Goettingen" , df_F21$Produktionsstandort)
+
+
+#Add column Produktionsstandort to Fahrzeuge_OEM1_Typ22
+
+df_F22$Produktionsstandort <- df_F22$ID_Fahrzeug
+
+df_F22$Produktionsstandort <- gsub(pattern = ".*-21-.*" , replacement = "Goettingen" , df_F22$Produktionsstandort)
+df_F22$Produktionsstandort <- gsub(pattern = ".*-22-.*" , replacement = "Regensburg" , df_F22$Produktionsstandort)
+
+
+
+
+
 # View tidy data frames
 
 View(df_B11)
@@ -176,7 +266,6 @@ View(df_F11)
 View(df_F12)
 View(df_F21)
 View(df_F22)
-
 
 
 
