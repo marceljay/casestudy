@@ -24,6 +24,9 @@ if( !require(lubridate)){
   install.packages("lubridate")
 }
 
+if( !require(tidyr)){
+  install.packages("tidyr")
+}
 
 # Loading libraries
 
@@ -32,6 +35,7 @@ library(dplyr)
 library(data.table)
 library(lubridate) # For date functions
 library(stringr) # For analyzing strings
+library(tidyr)
 
 #################################################################################################################
 #PATTERNS
@@ -154,13 +158,13 @@ determineTidyFunction <- function(filePath) {
     tidyCSV_Kcsv_Cxyz(filePath,",")
   } else if (length(which(str_detect(filePath, Kcsv_list_Cxy1))) == 1){
     print(paste("found match in Kcsv_list_Cxy1:", filePath)) # console logging
-    tidyCSV_Kcsv_Cxy(filePath,",")
+    tidyCSV_Kcsv_Cxyz(filePath,",")
   } else if (length(which(str_detect(filePath, Kcsv_list_Cxy2))) == 1){
     print(paste("found match in Kcsv_list_Cxy2:", filePath)) # console logging
-    tidyCSV_Kcsv_Cxy(filePath,",")
+    tidyCSV_Kcsv_Cxyz(filePath,",")
   } else if (length(which(str_detect(filePath, Kcsv_list_Cxy3))) == 1){
     print(paste("found match in Kcsv_list_Cxy3:", filePath)) # console logging
-    tidyCSV_Kcsv_Cxy(filePath)
+    tidyCSV_Kcsv_Cxyz(filePath)
     
   } else if (length(which(str_detect(filePath, Ktxt_list_A))) == 1){
     print(paste("found match in Ktxt_list_A:", filePath)) # console logging
@@ -274,10 +278,10 @@ tidyCSV_Kcsv_Cxyz <- function(path, delim = ";") {
   }
   
   # Combine .x .y .z cols into one
-  df <<- unite(df, "prod_date", "Produktionsdatum.x", "Produktionsdatum.y", "Produktionsdatum", sep="_")
-  df <<- unite(df, "oem", "Herstellernummer.x", "Herstellernummer.y", "Herstellernummer", sep="_")
-  df <<- unite(df, "factory", "Werksnummer.x", "Werksnummer.y", "Werksnummer", sep="_")
-  df <<- unite(df, "global_id", 3, 10, 14, sep="_")
+  df <<- unite(df, "prod_date", contains("Produktionsdatum"), sep="_")
+  df <<- unite(df, "oem", contains("Herstellernummer"), sep="_")
+  df <<- unite(df, "factory", contains("Werksnummer"), sep="_")
+  df <<- unite(df, "global_id", contains("ID"), sep="_")
   
   # Clean newly united col names from NA
   df$prod_date <<- gsub(pattern="_NA|NA_",replace="",x=df$prod_date)
@@ -297,39 +301,39 @@ tidyCSV_Kcsv_Cxyz <- function(path, delim = ";") {
   return(df)
 }
 
-tidyCSV_Kcsv_Cxy <- function(path, delim = ";") {
-  print(paste0("tidyCSV_KCSV_Cxy called with path: ", path))
-  
-  #Read CSV and store in temporary data frame (df)
-  if (delim == ",") {
-    df <<- read.csv(path, stringsAsFactors = FALSE)
-  } else {
-    df <<- read.csv2(path, stringsAsFactors = FALSE)
-  }
-  
-  # combine .x .y cols into one
-  df <<- unite(df, "prod_date", "Produktionsdatum.x", "Produktionsdatum.y", sep="_")
-  df <<- unite(df, "oem", "Herstellernummer.x", "Herstellernummer.y", sep="_")
-  df <<- unite(df, "factory", "Werksnummer.x", "Werksnummer.y", sep="_")
-  df <<- unite(df, "global_id", 3, 10, sep="_")
-  
-  # Clean newly united col names from NA
-  df$prod_date <<- gsub(pattern="_NA|NA_",replace="",x=df$prod_date)
-  df$oem <<- gsub(pattern="_NA|NA_",replace="",x=df$oem)
-  df$factory <<- gsub(pattern="_NA|NA_",replace="",x=df$factory)
-  df$global_id <<- gsub(pattern="_NA|NA_",replace="",x=df$global_id)
-  names(df)[1] <<- "id"
-  
-  # Delete unncessary cols, reorder
-  df <<- subset(df, select=c(1,3,5,6,4))
-
-  # Deleting rows that shall be disregarded because of date range
-  df <<- subset(df, !prod_date<"2015-01-01")
-  df <<- subset(df, !prod_date>"2016-12-31")
-  
-  # print(df)
-  return(df)
-}
+# tidyCSV_Kcsv_Cxy <- function(path, delim = ";") {
+#   print(paste0("tidyCSV_KCSV_Cxy called with path: ", path))
+#   
+#   #Read CSV and store in temporary data frame (df)
+#   if (delim == ",") {
+#     df <<- read.csv(path, stringsAsFactors = FALSE)
+#   } else {
+#     df <<- read.csv2(path, stringsAsFactors = FALSE)
+#   }
+#   
+#   # combine .x .y cols into one
+#   df <<- unite(df, "prod_date", "Produktionsdatum.x", "Produktionsdatum.y", sep="_")
+#   df <<- unite(df, "oem", "Herstellernummer.x", "Herstellernummer.y", sep="_")
+#   df <<- unite(df, "factory", "Werksnummer.x", "Werksnummer.y", sep="_")
+#   df <<- unite(df, "global_id", 3, 10, sep="_")
+#   
+#   # Clean newly united col names from NA
+#   df$prod_date <<- gsub(pattern="_NA|NA_",replace="",x=df$prod_date)
+#   df$oem <<- gsub(pattern="_NA|NA_",replace="",x=df$oem)
+#   df$factory <<- gsub(pattern="_NA|NA_",replace="",x=df$factory)
+#   df$global_id <<- gsub(pattern="_NA|NA_",replace="",x=df$global_id)
+#   names(df)[1] <<- "id"
+#   
+#   # Delete unncessary cols, reorder
+#   df <<- subset(df, select=c(1,3,5,6,4))
+# 
+#   # Deleting rows that shall be disregarded because of date range
+#   df <<- subset(df, !prod_date<"2015-01-01")
+#   df <<- subset(df, !prod_date>"2016-12-31")
+#   
+#   # print(df)
+#   return(df)
+# }
 
 ### Functions to tidy TXT------------------------------------------------------
 
@@ -545,20 +549,25 @@ startImport <- function() {
 #################################
 
 # bind all dfs together
-dfff <- df_list[[1]]
-for (i in 2:16) {
-  
-  dfff <- rbind(dfff, df_list[[i]])
-  
+
+link_df_list <- function() {
+  print("Linking df_list dfs into one")
+  dfff <- df_list[[1]]
+  for (i in 2:16) {
+    
+    dfff <- rbind(dfff, df_list[[i]])
+    
+  }
 }
 
-# Delete cols with possible wrong entries
-dfff <- dfff[-c(1,3,4)]
 
-# Split unique global_id into components
-df_split <- separate(dfff,col=global_id, into=c("comp", "comp_oem", "comp_factory","comp_serial_id"),sep="-")
-names(df_split)[5] <- "comp_prod_date"
-rownames(df_split) <- c()
-
-# Check for NA
-sum(is.na(df_split))
+# # SPLIT global_id: Delete cols with possible wrong entries-------------------------------
+# dfff <- dfff[-c(1,3,4)]
+# 
+# # Split unique global_id into components
+# df_split <- separate(dfff,col=global_id, into=c("comp", "comp_oem", "comp_factory","comp_serial_id"),sep="-")
+# names(df_split)[5] <- "comp_prod_date"
+# rownames(df_split) <- c()
+# 
+# # Check for NA
+# sum(is.na(df_split))

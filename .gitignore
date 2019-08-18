@@ -12,6 +12,7 @@ Data/
 # Session Data files
 .RData
 tidy_Data_Komponente.Rdata
+comp_df_list.Rdata
 
 # Example code in package build process
 *-Ex.R
@@ -45,7 +46,7 @@ rsconnect/
 
 # Ignore testing scripts
 Testingscript.R
-
+Testing_tidy_data_Fahrzeuge.R
 # Ignore txt import related files
 backup_Komp.txt
 testing.txt
