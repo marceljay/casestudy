@@ -540,4 +540,25 @@ startImport <- function() {
   }
 }
 
+#################################
+# Combine df_list & Tidy
+#################################
 
+# bind all dfs together
+dfff <- df_list[[1]]
+for (i in 2:16) {
+  
+  dfff <- rbind(dfff, df_list[[i]])
+  
+}
+
+# Delete cols with possible wrong entries
+dfff <- dfff[-c(1,3,4)]
+
+# Split unique global_id into components
+df_split <- separate(dfff,col=global_id, into=c("comp", "comp_oem", "comp_factory","comp_serial_id"),sep="-")
+names(df_split)[5] <- "comp_prod_date"
+rownames(df_split) <- c()
+
+# Check for NA
+sum(is.na(df_split))
