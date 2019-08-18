@@ -3,61 +3,46 @@
 # date: "August 2019"
 
 
-# Installation of dependenciespathv
-if( !require(tidyverse)){
-  install.packages("tidyverse")
-}
-
-if( !require(shiny)){
-  install.packages("shiny")
-}
-
-if( !require(dplyr)){
-  install.packages("dplyr")
-}
-
-if( !require(data.table)){
-  install.packages("data.table")
-}
-
-if( !require(lubridate)){
-  install.packages("lubridate")
-}
-if( !require(dplyr)){
-  install.packages("dplyr")
-}
-if( !require(tidyverse)){
-  install.packages("tidyverse")
-}
-
-# if( !require(pryr)){
-#   install.packages("pryr")
-# }
+# # Installation of dependencies (commented for faster testing)
+# if (!require(tidyverse)) { install.packages("tidyverse") }
+# 
+# if (!require(shiny)) { install.packages("shiny") }
+# 
+# if (!require(dplyr)) { install.packages("dplyr") }
+# 
+# if (!require(data.table)) { install.packages("data.table") }
+# 
+# if (!require(lubridate)) { install.packages("lubridate") }
+# 
+# if (!require(dplyr)) { install.packages("dplyr") }
 
 
 # Loading libraries 
-
 library(readr)
 library(dplyr)
+library(tidyr)
 library(data.table)
 library(lubridate) # For date functions
 library(stringr) # For analyzing strings
-library(dplyr)
-library(tidyverse)
-# library(pryr) # memory management
 
 
-# # CSV with pattern A (clean)
+
+# CSV with pattern A (clean)
 list_A <- c("T04", "T10", "T13", "T14", "T18", "T21", "T26", "T40") # semicolon
 list_A2 <- c("T06", "T08", "T25", "T33", "T37") # comma
 
-# #CSV with pattern B (extra cols)
+# CSV with pattern B (extra cols)
 list_B <- c("T12", "T15", "T17", "T23", "T32") # semicolon
-
-
 list_B2 <- c("T30", "T38") # comma
 # T38 - 16 col
 # T30 - 23 col
+
+# TXT  with pattern A (clean)
+list_TXT_A <- c("T03", "T07", "T11" )
+
+# TXT  with pattern A (long, dirty)
+list_TXT_B <- c("T01", "T02", "T09", "T16", "T20", "T22", "T24")
+
 
 #### Importing the data frames
 
@@ -82,13 +67,11 @@ determineTidyFunction <- function(filePath) {
       print(paste("found match in list_B2:", filePath)) # console logging
       tidyCSV_b(filePath, ",")
     }  else {
-      print(paste("logging:", filePath)) # console logging
-      tidyTXT_a(filePath)
+      print(paste("found TXT file:", filePath)) # console logging
+      importTXT(filePath)
     }
 }
 
-# define data frame variable, necessary for returning data frame from function
-df <- 1 
 
 # Define empty list for data frames reporting
 # NA values found in imported data frames
@@ -99,197 +82,204 @@ importStats <- list()
 tidyCSV_a <- function(path, delim = ";") {
   print(paste0("tidyCSV_a called with path: ", path))
   
-  #Read CSV and store in temporary data frame (df)
+  #Import CSV depending on delimiter
   if (delim == ",") {
-    df <<- read_csv(path)
+    df <- read_csv(path)
   } else {
-    df <<- read_csv2(path)
+    df <- read_csv2(path)
   }
 
-  #Store all counted days in vector
-  daycount <<-df$Produktionsdatum_Origin_01011970
-
-  #Check if origin has a single unique value and reformat
-  if (length(unique(df$origin))==1) {
-    # Reformat date from data frame to fit as.Date
-    betterDates <<- as.Date(daycount, origin = "1970-01-01")
-  } else {
-    print("Aborting, multiple values found for 'origin'")
-  }
+  # Tidy dates in short table
+  df <- tidyDate(df)
   
-  # Add date column with correctly formatted dates
-  df$prod_date <<- betterDates
+  # # Tidy: Deleting Columns
+  # #Check if X1 == X1_1
+  # if (sum(!df$X1 == df$X1_1) == 0) {
+  #   # Delete X1_1
+  #   df$X1_1 <- NULL
+  #   print("Column X1_1 deleted")
+  # }
   
-  
-  # Tidy: Deleting Columns
-  #Check if X1 == X1_1
-  if (sum(!df$X1 == df$X1_1) == 0) {
-    # Delete X1_1
-    df$X1_1 <<- NULL
-    print("Column X1_1 deleted")
-  }
-  
-  # # Drop previously date-related columns
-  # df$Produktionsdatum_Origin_01011970 <<- NULL
-  # df$origin <<- NULL
-  
-  # Drop columns  
-  df <<- df[-c(5:9)]
+  # # Drop columns (prod_date was appended as 11th column)
+  df <- df[c(3:5, 11)]
   
   # Renaming cols
-  names(df)[1] <<- "id"
-  names(df)[2] <<- "global_id"
-  names(df)[3] <<- "oem"
-  names(df)[4] <<- "factory"
-  
-  
-  # Deleting rows that shall be disregarded because of date range
-  df <<- subset(df, !prod_date<"2015-01-01")
-  df <<- subset(df, !prod_date>"2016-12-31")
-  
-  # Check for NA values, should be elaborated for better detection
-  if(length(which(is.na(df)))>0) {
-    print("Found NA values")
-    i = length(importStats)
-    
-    # Analyze for NAs and append to list importStats
-    importStats[[i+1]] <<- sapply(df, function(x) sum(is.na(x))); 
-  } else {
-    print("Good, no NA values found")
-  }
+  # names(df)[1] <- "id"  # probably not needed
+  names(df)[1] <- "global_id"
+  names(df)[2] <- "oem"
+  names(df)[3] <- "factory"
+
+  # Check for NA values
+  importAnalysis(df)
   
   return(df)
 }
+
 
 # Function to tidy CSV with format "b"
 # returns data frame, standard delimiter ";"
 tidyCSV_b <- function(path, delim = ";") {
   print("---- called tidyCSV_b ----")
   
-  #Read CSV and store in temporary data frame (df)  
+  #Import CSV depending on delimiter
   if (delim == ",") {
-    df <<- read.csv(path, stringsAsFactors = FALSE)
+    df <- read.csv(path, stringsAsFactors = FALSE)
   } else {
-    df <<- read.csv2(path, stringsAsFactors = FALSE)
+    df <- read.csv2(path, stringsAsFactors = FALSE)
   }
   
-  # Combine related columns, since after some row number, values appear in different columns
-    df <<- unite(df, "prod_date", contains("Produktionsdatum"), sep="_")
-    df <<- unite(df, "oem",  contains("Herstellernummer"), sep="_")
-    df <<- unite(df, "factory", contains("Werksnummer"), sep="_")
-    df <<- unite(df, "global_id", contains("ID_T"), sep="_") 
+  # Unite, rename, filter dates
+  df <- tidyLong(df)
+
+  # Drop columns except the 4 necessary ones
+  df <- df[3:6]
+
+  # Check for NA values
+  importAnalysis(df)
+
+  return(df)
+}
+
+
+# Unite, rename, filter dates
+tidyLong <- function(df) {
+  print("tidyLong called!")
+  
+  # Unite related columns, since after some row number, values appear in different columns
+  df <- unite(df, "prod_date", contains("Produktionsdatum"), sep="_")
+  df <- unite(df, "oem",  contains("Herstellernummer"), sep="_")
+  df <- unite(df, "factory", contains("Werksnummer"), sep="_")
+  df <- unite(df, "global_id", contains("ID_T"), sep="_") 
   
   # Clean newly united col names from NA
-  df$prod_date <<- gsub(pattern="_NA|NA_", replace="", x=df$prod_date)
-  df$oem <<- gsub(pattern="_NA|NA_", replace="", x=df$oem)
-  df$factory <<- gsub(pattern="_NA|NA_", replace="", x=df$factory)
-  df$global_id <<- gsub(pattern="_NA|NA_", replace="", x=df$global_id)
-  names(df)[1] <<- "id"
+  df$prod_date <- gsub(pattern="_NA|NA_", replace="", x=df$prod_date)
+  df$oem <- gsub(pattern="_NA|NA_", replace="", x=df$oem)
+  df$factory <- gsub(pattern="_NA|NA_", replace="", x=df$factory)
+  df$global_id <- gsub(pattern="_NA|NA_", replace="", x=df$global_id)
   
-  
-  # Tidy: Deleting Columns
-  #Check if X1 == X1_1
-  if (sum(!df$X1 == df$X1_1) == 0) {
-    # Delete X1_1
-    df$X1_1 <<- NULL
-    print("Column X1_1 deleted")
-  }
-  
-  # Delete unnecessary cols, reorder
-  df <<- subset(df, select=c(1,3,5,6,4)) 
   
   # Deleting rows that shall be disregarded because of date range
-  df <<- subset(df, !prod_date<"2015-01-01")
-
-  df <<- subset(df, !prod_date>"2016-12-31")  
-  # Check for NA values, should be elaborated for better detection
-  if(length(which(is.na(df)))>0) {
-    print("Found NA values")
-    i = length(importStats)
-    
-    # Analyze for NAs and append to list importStats
-    importStats[[i+1]] <<- sapply(df, function(x) sum(is.na(x))); 
-  } else {
-    print("Good, no NA values found")
-  }
+  df <- subset(df, !prod_date<"2015-01-01")
+  df <- subset(df, !prod_date>"2016-12-31")
   
   return(df)
 }
 
-### Functions to tidy txt data
-# returns data frame
-tidyTXT_a <- function(path){
-  print("---- called tidyTXT_a ----")
-  
-  # Create dummy data frame (because of errors)
-  df <<- data.frame(ID = c(1, 2, 3, 4, 5),
-                    var1 = c('a', 'b', 'c', 'd', 'e'),
-                    var2 = c(1, 1, 0, 0, 1))
-  return(df)
-}
 
-#Function to tidy a dataframe previously imported from a TXT file.
-#Return a tidy dataframe
-tidyTXT_a <- function(df){
+# Function to tidy short table pattern with origin date col
+tidyDate <- function(df) {
+  print("tidyDate called!")
+  
   daycount <- df$Produktionsdatum_Origin_01011970
   
   if (length(unique(df$origin))==1) {
     # Reformat date from data frame to fit as.Date
     betterDates <- as.Date(daycount, origin = "1970-01-01")
   } else {
-    print("Aborting, multiple values found!")
+    print("WARNING! Multiple values found!")
   }
   
   # Add date column with correctly formatted dates
-  df$date <- betterDates
-  
-  # Drop previously date-related columns
-  df$Produktionsdatum_Origin_01011970 <- NULL
-  df$origin <- NULL
+  df$prod_date <- betterDates
   
   # Deleting rows that shall be disregarded because of date range
-  df <- subset(df, !date<"2015-01-01")
-  df <- subset(df, !date>"2016-12-31")
+  df <- subset(df, !prod_date<"2015-01-01")
+  df <- subset(df, !prod_date>"2016-12-31")
+
+  return(df)
+}
+
+# Function to assign the correct import and tidy function to a .txt file
+importTXT <- function(path) {
+  # print("---- called tidyTXT_a ----")
+  
+    if (str_detect(path, "T01.txt")) {
+      tidyTXT_1(path)
+      print("tidyTXT_1 called")
+      
+    } else if(str_detect(path, "T02.txt")) {
+      tidyTXT_2(path)
+      print("tidyTXT_2 called")
+      
+    } else if(str_detect(path, "T03.txt")) {
+      tidyTXT_3(path)
+      print("tidyTXT_3 called")
+    
+    } else if(str_detect(path, "T07.txt")) {
+      tidyTXT_7path)
+      print("tidyTXT_7 called")
+      
+    } else if(str_detect(path, "T09.txt")) {
+      tidyTXT_9(path)
+      print("tidyTXT_9 called")
+      
+    } else if(str_detect(path, "T11.txt")) {
+      tidyTXT_11(path)
+      print("tidyTXT_11 called")
+
+    } else if(str_detect(path, "T16.txt")) {
+      tidyTXT_16(path)
+      print("tidyTXT_16 called")
+      
+    } else if(str_detect(path, "T20.txt")) {
+      tidyTXT_20(path)
+      print("tidyTXT_20 called")
+      
+    } else if(str_detect(path, "T22.txt")) {
+      tidyTXT_22(path)
+      print("tidyTXT_22 called")
+      
+    } else if(str_detect(path, "T24.txt")) {
+      tidyTXT_24(path)
+      print("tidyTXT_24 called")
+      
+    } else if(str_detect(path, "T27.txt")) {
+      tidyTXT_27(path)
+      print("tidyTXT_27 called")
+      
+    } else if(str_detect(path, "T31.txt")) {
+      tidyTXT_31(path)
+      print("tidyTXT_31 called")
+      
+    } else if(str_detect(path, "T34.txt")) {
+      tidyTXT_34(path)
+      print("tidyTXT_34 called")
+      
+    } else if(str_detect(path, "T35.txt")) {
+      tidyTXT_35(path)
+      print("tidyTXT_35 called")
+      
+    } else if(str_detect(path, "T36.txt")) {
+      tidyTXT_36(path)
+      print("tidyTXT_36 called")
+      
+    } else if(str_detect(path, "T39.txt")) {
+      tidyTXT_2(path)
+      print("tidyTXT_39 called")
+    }  
+  
+}
+    
+
+# Structure: wide (dirty)
+tidyTXT_1 <- function(path) {
+
+  x <- readLines(path) %>%
+      gsub(pattern = "\\| \\|", replace = "\\|",.) %>%
+      gsub(pattern = '(?<=[^\\|]) "', replace = '\n"',.,perl = TRUE)
+    
+  for (i in 2:length(x) ) {
+    df <- read.table(textConnection(x[i]), sep="|", header=TRUE)
+  }
+    
+  df <- tidyLong(df)
   
   return(df)
 }
 
-tidyTXT_1 <- function(path){
-  readLines(path) %>%
-    gsub(pattern = "\\| \\|", replace = "\\|",.) %>%
-    gsub(pattern = '(?<=[^\\|]) "', replace = '\n"',.,perl = TRUE) %>%
-    writeLines(con = "backup.txt")
-  
-  df <- read.table("backup.txt", sep="|", header=TRUE) %>%
-    
-    
-    # combine .x .y cols into one 
-    unite("Produktionsdatum", "Produktionsdatum.x", "Produktionsdatum.y", "Produktionsdatum", sep="_")%>%
-    unite("Herstellernummer", "Herstellernummer.x", "Herstellernummer.y", "Herstellernummer", sep="_")%>%
-    unite("Werksnummer", "Werksnummer.x", "Werksnummer.y", "Werksnummer", sep="_")%>%
-    unite("ID", "ID_T01.x", "ID_T01.y", "ID_T01", sep="_")%>%
-    unite("Fehlerhaft", "Fehlerhaft.x", "Fehlerhaft.y", "Fehlerhaft", sep="_")%>%
-    unite("Fehlerhaft_Datum", "Fehlerhaft_Datum.x", "Fehlerhaft_Datum.y", "Fehlerhaft_Datum", sep="_")%>%
-    unite("Fehlerhaft_Fahrleistung", "Fehlerhaft_Fahrleistung.x", "Fehlerhaft_Fahrleistung.y", "Fehlerhaft_Fahrleistung", sep="_")
-  
-  # Clean newly united col names from NA
-  df$Produktionsdatum <- gsub(pattern="_ NA|NA_ ",replace="",x=df$Produktionsdatum)
-  df$Herstellernummer <- gsub(pattern="_ NA|NA_ ",replace="",x=df$Herstellernummer)
-  df$Werksnummer <- gsub(pattern="_ NA|NA_ ",replace="",x=df$Werksnummer)
-  df$ID <- gsub(pattern="_ NA|NA _",replace="",x=df$ID)
-  df$Fehlerhaft <- gsub(pattern="_ NA|NA _",replace="",x=df$Fehlerhaft)
-  df$Fehlerhaft_Datum <- gsub(pattern="_ NA|NA _",replace="",x=df$Fehlerhaft_Datum )
-  df$Fehlerhaft_Fahrleistung <- gsub(pattern="_ NA|NA _",replace="",x=df$Fehlerhaft_Fahrleistung)
-  
-  
-  # Deleting rows that shall be disregarded because of date range
-  df <- subset(df, !Produktionsdatum<" 2015-01-01 ")
-  df <- subset(df, !Produktionsdatum>" 2016-12-31 ")
-  
-  return(df)
-}
-
+# Structure: wide (dirty)
 tidyTXT_2 <- function(path){
+  
   readLines(path) %>%
     gsub(pattern = '(?<=")\\s+"(?=[0-9][^-])', replace = '\n"', ., perl = TRUE)  %>%
     gsub(pattern = '(?<=A)\\s+"(?=[0-9][^-])', replace = '\n"', ., perl = TRUE)  %>%
@@ -297,42 +287,46 @@ tidyTXT_2 <- function(path){
     gsub(pattern = '(?<=[^-][\\d|\\.][0-9])\\s+"(?=[0-9][^-])', replace = '\n"', ., perl = TRUE)  %>%
     writeLines(., con = "backup.txt")
   
-  einzelteil_2 <- read.table("backup.txt", header=TRUE) %>%
+  df <- read.table("backup.txt", header=TRUE) %>%
+  
+  # x <-readLines(path) %>%
+  #   gsub(pattern = '(?<=")\\s+"(?=[0-9][^-])', replace = '\n"', ., perl = TRUE)  %>%
+  #   gsub(pattern = '(?<=A)\\s+"(?=[0-9][^-])', replace = '\n"', ., perl = TRUE)  %>%
+  #   gsub(pattern = '(?<=[^-]\\d0)\\s+"(?=[0-9][^-])', replace = '\n"', ., perl = TRUE)  %>%
+  #   gsub(pattern = '(?<=[^-][\\d|\\.][0-9])\\s+"(?=[0-9][^-])', replace = '\n"', ., perl = TRUE)
+  #   
+  #   for (i in 2:length(x) ) {
+  #     df <- read.table(textConnection(x[i]), sep="|", header=TRUE)
+  #   }
     
-    # combine .x .y cols into one 
-    unite("Produktionsdatum", "Produktionsdatum.x", "Produktionsdatum.y",sep="_") %>%
-    unite("Herstellernummer", "Herstellernummer.x", "Herstellernummer.y", sep="_") %>%
-    unite("Werksnummer", "Werksnummer.x", "Werksnummer.y", sep="_") %>%
-    unite("ID", "ID_T02.x", "ID_T02.y", sep="_") %>%
-    unite("Fehlerhaft", "Fehlerhaft.x", "Fehlerhaft.y", sep="_") %>%
-    unite("Fehlerhaft_Datum", "Fehlerhaft_Datum.x", "Fehlerhaft_Datum.y", sep="_") %>%
-    unite("Fehlerhaft_Fahrleistung", "Fehlerhaft_Fahrleistung.x", "Fehlerhaft_Fahrleistung.y", sep="_")
-  
-  # Clean newly united col names from NA
-  df$Produktionsdatum <- gsub(pattern="_NA|NA_",replace="",x=df$Produktionsdatum)
-  df$Herstellernummer <- gsub(pattern="_NA|NA_",replace="",x=df$Herstellernummer)
-  df$Werksnummer <- gsub(pattern="_NA|NA_",replace="",x=df$Werksnummer)
-  df$ID <- gsub(pattern="_NA|NA_",replace="",x=df$ID)
-  df$Fehlerhaft <- gsub(pattern="_NA|NA_",replace="",x=df$Fehlerhaft)
-  df$Fehlerhaft_Datum <- gsub(pattern="_NA|NA_",replace="",x=df$Fehlerhaft_Datum )
-  df$Fehlerhaft_Fahrleistung <- gsub(pattern="_NA|NA_",replace="",x=df$Fehlerhaft_Fahrleistung)
-  
-  
-  # Deleting rows that shall be disregarded because of date range
-  df <- subset(df, !Produktionsdatum<"2015-01-01")
-  df <- subset(df, !Produktionsdatum>"2016-12-31")
+  # df <- tidyLong(df)
   
   return(df)
 }
 
 tidyTXT_3 <- function(path){
-  readLines(path) %>%
+  x <- readLines(path) %>%
     gsub(pattern = '', replace = '\n', .) %>%
-    gsub(pattern = '\\|', replace = ',', .) %>%
-    writeLines(., con = "backup.txt")
+    gsub(pattern = '\\|', replace = ',', .) 
   
-  df <- read.table("backup.txt",sep = ",", header=TRUE) %>%
-    tidyTXT_a()
+  for (i in 2:length(x) ) {
+    df <- read.table(textConnection(x[i]), sep="|", header=TRUE)
+  }
+  
+  # df <- read.table("backup.txt", sep = ",", header=TRUE)
+  df <- tidyDate(df)
+  
+  # # Drop columns (prod_date was appended as 11th column)
+  df <- df[c(2:4, 10)]
+  
+  # Renaming cols
+  # names(df)[1] <- "id"  # probably not needed
+  names(df)[1] <- "global_id"
+  names(df)[2] <- "oem"
+  names(df)[3] <- "factory"
+  
+  # Check for NA values
+  importAnalysis(df)
   
   return(df)
 }
@@ -348,37 +342,22 @@ tidyTXT_7 <- function(path){
   return(df)
 }
 
+# Structure: wide (dirty)
 tidyTXT_9 <- function(path){
   readLines(path) %>%
     gsub(pattern = '', replace = '\n', .) %>%
     gsub(pattern = '\\\\', replace = ',', .) %>%
     writeLines(., con = "backup.txt")
   
-  df <- read.table("backup.txt",sep = ",", header=TRUE)%>%
+  df <- read.table("backup.txt",sep = ",", header=TRUE)
     
-    
-    # combine .x .y cols into one 
-    unite("Produktionsdatum", "Produktionsdatum.x", "Produktionsdatum.y",sep="_") %>%
-    unite("Herstellernummer", "Herstellernummer.x", "Herstellernummer.y", sep="_") %>%
-    unite("Werksnummer", "Werksnummer.x", "Werksnummer.y", sep="_")%>%
-    unite("ID", "ID_T09.x", "ID_T09.y", sep="_")%>%
-    unite("Fehlerhaft", "Fehlerhaft.x", "Fehlerhaft.y", sep="_")%>%
-    unite("Fehlerhaft_Datum", "Fehlerhaft_Datum.x", "Fehlerhaft_Datum.y", sep="_")%>%
-    dunite("Fehlerhaft_Fahrleistung", "Fehlerhaft_Fahrleistung.x", "Fehlerhaft_Fahrleistung.y", sep="_")
+  df  <- tidyLong(df)
   
-  # Clean newly united col names from NA
-  df$Produktionsdatum <- gsub(pattern="_NA|NA_",replace="",x=df$Produktionsdatum)
-  df$Herstellernummer <- gsub(pattern="_NA|NA_",replace="",x=df$Herstellernummer)
-  df$Werksnummer <- gsub(pattern="_NA|NA_",replace="",x=df$Werksnummer)
-  df$ID <- gsub(pattern="_NA|NA_",replace="",x=df$ID)
-  df$Fehlerhaft <- gsub(pattern="_NA|NA_",replace="",x=df$Fehlerhaft)
-  df$Fehlerhaft_Datum <- gsub(pattern="_NA|NA_",replace="",x=df$Fehlerhaft_Datum )
-  df$Fehlerhaft_Fahrleistung <- gsub(pattern="_NA|NA_",replace="",x=df$Fehlerhaft_Fahrleistung)
+  # Drop columns except the 4 necessary ones
+  df <- df[2:5]
   
-  
-  # Deleting rows that shall be disregarded because of date range
-  df <- subset(df, !Produktionsdatum<"2015-01-01")
-  df <- subset(df, !Produktionsdatum>"2016-12-31")
+  # Check for NA values
+  importAnalysis(df)
   
   return(df)
 }
@@ -394,6 +373,7 @@ tidyTXT_11 <- function(path){
   return(df)
 }
 
+# Structure: wide (dirty)
 tidyTXT_16 <- function(path){
   readLines(path) %>%
     gsub(pattern = '(?<!\\|)\\s+"(?! \\|)', replace = '\n"', ., perl = TRUE) %>%
@@ -405,29 +385,13 @@ tidyTXT_16 <- function(path){
   
   df <- read.table("backup.txt", header=TRUE)
   
+  df  <- tidyLong(df)
   
-  # combine .x .y cols into one 
-  unite("Produktionsdatum", "Produktionsdatum.x", "Produktionsdatum.y", "Produktionsdatum", sep="_") %>%
-    unite("Herstellernummer", "Herstellernummer.x", "Herstellernummer.y", "Herstellernummer", sep="_") %>%
-    unite("Werksnummer", "Werksnummer.x", "Werksnummer.y", "Werksnummer", sep="_") %>%
-    unite("ID", "ID_T16.x", "ID_T16.y", "ID_T16", sep="_") %>%
-    unite("Fehlerhaft", "Fehlerhaft.x", "Fehlerhaft.y", "Fehlerhaft", sep="_") %>%
-    unite("Fehlerhaft_Datum", "Fehlerhaft_Datum.x", "Fehlerhaft_Datum.y", "Fehlerhaft_Datum", sep="_") %>%
-    unite("Fehlerhaft_Fahrleistung", "Fehlerhaft_Fahrleistung.x", "Fehlerhaft_Fahrleistung.y", "Fehlerhaft_Fahrleistung", sep="_")
+  # Drop columns except the 4 necessary ones
+  df <- df[2:5]
   
-  # Clean newly united col names from NA
-  df$Produktionsdatum <- gsub(pattern="_NA|NA_",replace="",x=df$Produktionsdatum)
-  df$Herstellernummer <- gsub(pattern="_NA|NA_",replace="",x=df$Herstellernummer)
-  df$Werksnummer <- gsub(pattern="_NA|NA_",replace="",x=df$Werksnummer)
-  df$ID <- gsub(pattern="_NA|NA_",replace="",x=df$ID)
-  df$Fehlerhaft <- gsub(pattern="_NA|NA_",replace="",x=df$Fehlerhaft)
-  df$Fehlerhaft_Datum <- gsub(pattern="_NA|NA_",replace="",x=df$Fehlerhaft_Datum )
-  df$Fehlerhaft_Fahrleistung <- gsub(pattern="_NA|NA_",replace="",x=df$Fehlerhaft_Fahrleistung)
-  
-  
-  # Deleting rows that shall be disregarded because of date range
-  df <- subset(df, !Produktionsdatum<"2015-01-01")
-  df <- subset(df, !Produktionsdatum>"2016-12-31")
+  # Check for NA values
+  importAnalysis(df)
   
   return(df)
 }
@@ -445,6 +409,7 @@ tidyTXT_20 <- function(path){
   return(df)
 }
 
+# Structure: wide (dirty)
 tidyTXT_22 <- function(path){
   readLines(path) %>%
     gsub(pattern = '(?<!\\s)"(?!\\s)', replace = '\n"', ., perl = TRUE) %>%
@@ -478,6 +443,7 @@ tidyTXT_22 <- function(path){
   return(df)
 }
 
+# Structure: wide (dirty)
 tidyTXT_24 <- function(path){
   readLines(path) %>%
     gsub(pattern = '', replace = '\n', .) %>%
@@ -552,6 +518,7 @@ tidy_TXT31 <- function(path){
   tidyTXT_a(df)
 }
 
+# Structure: wide (dirty)
 tidyTXT_35 <- function(path){
   readLines(path) %>%
     gsub(pattern = '""', replace = '"\n"', .) %>%
@@ -599,7 +566,7 @@ tidyTXT_36 <- function(path){
 }
 
 
-
+# Structure: wide (totally messed up, SPECIAL CASE)
 tidy_TXT39 <- function(path){
   readLines(path)  %>%
     gsub(pattern = '""', replace = '"\n"', .)  %>%
@@ -637,31 +604,36 @@ tidy_TXT39 <- function(path){
   return(df)
 }
 
-einzelteil_01 <- tidyTXT_01("Data/Einzelteil/Einzelteil_T01.txt")
-einzelteil_02 <- tidyTXT_02("Data/Einzelteil/Einzelteil_T02.txt")
-einzelteil_03 <- tidyTXT_03("Data/Einzelteil/Einzelteil_T03.txt")
-einzelteil_07 <- tidyTXT_07("Data/Einzelteil/Einzelteil_T07.txt")
-einzelteil_09 <- tidyTXT_09("Data/Einzelteil/Einzelteil_T09.txt")
-einzelteil_11 <- tidyTXT_11("Data/Einzelteil/Einzelteil_T11.txt")
-einzelteil_16 <- tidyTXT_16("Data/Einzelteil/Einzelteil_T16.txt")
-einzelteil_20 <- tidyTXT_20("Data/Einzelteil/Einzelteil_T20.txt")
-einzelteil_22 <- tidyTXT_22("Data/Einzelteil/Einzelteil_T22.txt")
-einzelteil_24 <- tidyTXT_24("Data/Einzelteil/Einzelteil_T24.txt")
-einzelteil_27 <- tidyTXT_27("Data/Einzelteil/Einzelteil_T27.txt")
-einzelteil_31 <- tidyTXT_31("Data/Einzelteil/Einzelteil_T31.txt")
-einzelteil_34 <- tidyTXT_34("Data/Einzelteil/Einzelteil_T34.txt")
-einzelteil_35 <- tidyTXT_35("Data/Einzelteil/Einzelteil_T35.txt")
-einzelteil_36 <- tidyTXT_36("Data/Einzelteil/Einzelteil_T36.txt")
-einzelteil_39 <- tidyTXT_39("Data/Einzelteil/Einzelteil_T39.txt")
+#################################
+# Helper Functions
+#################################
+
+
+# Function to check for NA values
+importAnalysis <- function(df) {
+  
+  if(length(which(is.na(df)))>0) {
+    print("Found NA values")
+    i = length(importStats)
+    
+    # Analyze for NAs and append to list importStats
+    importStats[[i+1]] <<- sapply(df, function(x) sum(is.na(x))); 
+  } else {
+    print("Good, no NA values found")
+  }
+  
+}
+
 
 #################################
 # Run the function / Script
 #################################
 
 # Call this function to start importing all data from ./Einzelteile/
+df_list <<- list()
+
 startImport <- function() {
   print("starting importing")
-  df_list <<- list()
   for (i in seq_along(pathVector)) {
     df_list[[i]] <<- determineTidyFunction(pathVector[i])
     
