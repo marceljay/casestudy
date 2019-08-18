@@ -255,17 +255,28 @@ df_F22$Produktionsstandort <- gsub(pattern = ".*-22-.*" , replacement = "Regensb
 
 
 
+# Merge data frames Bestandteile_Fahrzeuge_OEM_Typxx
+
+df_B_all <- rbind(df_B11, df_B12, df_B21,df_B21)
+
+
+
+# Merge data frames Fahrzeuge_OEM1
+df_F11_F12 <- rbind(df_F11, df_F12)
+
+
+
+# Merge data frames Fahrzeuge_OEM2
+df_F21_F22 <- rbind(df_F21, df_F22)
+
 
 # View tidy data frames
 
-View(df_B11)
-View(df_B12)
-View(df_B21)
-View(df_B22)
-View(df_F11)
-View(df_F12)
-View(df_F21)
-View(df_F22)
+View(df_B_all)
+View(df_F11_F12)
+View(df_F21_F22)
+
+
 
 
 
