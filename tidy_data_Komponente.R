@@ -514,8 +514,8 @@ startImport <- function() {
 #################################
 # Combine df_list into one & Tidy
 #################################
-comp_df <- 1
-BE_comp_df <- 1
+# comp_df <- 1
+# BE_comp_df <- 1
 # bind all dfs together
 
 link_df_list <- function() {
@@ -546,7 +546,7 @@ link_BE_list <- function() {
 
 # Merge comp_df with BE_comp_df
 comp_BE_merger <- function() {
-  print("Merging comp_df with BE_comp_df")
+  print("Merging comp_df with BE_comp_df, this may take 2 mins...")
   merged_compBE_df <<- merge(comp_df, BE_comp_df, by.x="comp_global_id", by.y= "comp_global_id")
   #merge_df_big <- merge(merge_df, dfT04, by.x="ID_T4", by.y="global_id")
 }
