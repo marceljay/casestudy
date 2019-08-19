@@ -546,10 +546,56 @@ link_BE_list <- function() {
 
 # Merge comp_df with BE_comp_df
 comp_BE_merger <- function() {
-  print("Merging comp_df with BE_comp_df, this may take 2 mins...")
+  print("Merging comp_df with BE_comp_df, this may take 5 mins...")
   merged_compBE_df <<- merge(comp_df, BE_comp_df, by.x="comp_global_id", by.y= "comp_global_id")
-  #merge_df_big <- merge(merge_df, dfT04, by.x="ID_T4", by.y="global_id")
+  
 }
+
+vehicle_BE_merger <- function() {
+  print("Merging vehicle_df with BE_vehicle_df, this may take 5 mins...")
+  merged_vehicleBE_df <<- merge(vehicle_df, BE_vehicle_df, by.x="vehicle_global_id", by.y= "vehicle_global_id")
+  
+}
+
+vehicleToComp_merger <- function() {
+  print("Merging merged_vehicleBE_df with merged_compBE_df, this may take 5 mins...")
+  merged_vehicleToComp_df <<- merge(merged_vehicleBE_df, merged_compBE_df, by.x="comp_global_id", by.y= "comp_global_id")
+  
+}
+
+# Testing alternate merge sequence
+master_merger1 <- function() {
+  print("Merging merged_vehicleBE_df with comp_df, this may take 5 mins...")
+  merged_master1 <<- merge(merged_vehicleBE_df, comp_df, by.x="comp_global_id", by.y= "comp_global_id")
+  
+}
+
+master_merger2 <- function() {
+  print("Merging merged_master1 with BE_comp_df, this may take 5 mins...")
+  merged_master2 <<- merge(merged_master1, BE_comp_df, by.x="comp_global_id", by.y= "comp_global_id")
+  
+}
+
+# Arrange the final result for clarity
+arrange_df <- function() {
+  print("Rearranging columns, this might take 5 mins...")
+  master_df <<- arrange(merged_vehicleToComp_df,vehicle_global_id, comp_global_id, part_global_id)
+  master_df <<- subset(master_df, select=c(2,3,4,1,5,6)) 
+}
+
+
+# Code Execution Sequence for Sinan [TESTING ONLY]
+startImport()
+link_BE_list()
+link_df_list()
+
+comp_BE_merger()
+vehicle_BE_merger()
+vehicleToComp_merger()
+
+arrange_df()
+print("master_df successfully created!")
+View(master_df)
 
 # # SPLIT global_id: Delete cols with possible wrong entries-------------------------------
 # dfff <- dfff[-c(1,3,4)]
