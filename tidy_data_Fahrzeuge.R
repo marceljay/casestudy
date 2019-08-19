@@ -31,22 +31,22 @@ library(readr)
 library(dplyr)
 library(data.table)
 library(lubridate)
-
+library(tidyr)
 
 
 
 
 # Importing Data
 
-df_B11 <- read_csv2("Data/Fahrzeuge/Bestandteile_Fahrzeuge_OEM1_Typ11.csv")
-df_B12 <- read_csv2("Data/Fahrzeuge/Bestandteile_Fahrzeuge_OEM1_Typ12.csv")
-df_B21 <- read_csv2("Data/Fahrzeuge/Bestandteile_Fahrzeuge_OEM2_Typ21.csv")
-df_B22 <- read_csv2("Data/Fahrzeuge/Bestandteile_Fahrzeuge_OEM2_Typ21.csv")
+df_B11 <- read_csv2("Data/Fahrzeug/Bestandteile_Fahrzeuge_OEM1_Typ11.csv")
+df_B12 <- read_csv2("Data/Fahrzeug/Bestandteile_Fahrzeuge_OEM1_Typ12.csv")
+df_B21 <- read_csv2("Data/Fahrzeug/Bestandteile_Fahrzeuge_OEM2_Typ21.csv")
+df_B22 <- read_csv2("Data/Fahrzeug/Bestandteile_Fahrzeuge_OEM2_Typ21.csv")
 
-df_F11 <- read_csv("Data/Fahrzeuge/Fahrzeuge_OEM1_Typ11.csv")
-df_F12 <- read_csv2("Data/Fahrzeuge/Fahrzeuge_OEM1_Typ12.csv")
-df_F21 <- read_csv("Data/Fahrzeuge/Fahrzeuge_OEM2_Typ21.csv")
-df_F22 <- read_csv2("Data/Fahrzeuge/Fahrzeuge_OEM2_Typ22.csv")
+df_F11 <- read_csv("Data/Fahrzeug/Fahrzeuge_OEM1_Typ11.csv")
+df_F12 <- read_csv2("Data/Fahrzeug/Fahrzeuge_OEM1_Typ12.csv")
+df_F21 <- read_csv("Data/Fahrzeug/Fahrzeuge_OEM2_Typ21.csv")
+df_F22 <- read_csv2("Data/Fahrzeug/Fahrzeuge_OEM2_Typ22.csv")
 
 
 
@@ -260,25 +260,54 @@ df_F22$Produktionsstandort <- gsub(pattern = ".*-22-.*" , replacement = "Regensb
 df_B_all <- rbind(df_B11, df_B12, df_B21,df_B21)
 
 
+# Delete unnecessary column Bestandteile_Fahrzeuge_OEM_Typxx
+df_B_all$X1 <- NULL
+
+
+# Gather Bestandteile columns
+df_B_all <- gather(df_B_all, Bestandteile, ID_Bestandteile, -ID_Fahrzeug, -Produktionsstandort)
+
+
+# Delete unnecessary column Bestandteile from Bestandteile_Fahrzeuge_OEM_Typxx
+df_B_all$Bestandteile <- NULL
+
+
+# Rename columns in Fahrzeuge_OEM2
+names(df_B_all)[1] <- "vehicle_id"
+names(df_B_all)[2] <- "vehicle_prod_factory"
+names(df_B_all)[3] <- "Bestandteile_id"
+
+
+# reorder by column name
+df_B_all <- df_B_all[c("vehicle_id", "Bestandteile_id", "vehicle_prod_factory")]
+
+
 
 # Merge data frames Fahrzeuge_OEM1
-df_F11_F12 <- rbind(df_F11, df_F12)
+df_F_all <- rbind(df_F11, df_F12, df_F21, df_F22)
 
 
 
-# Merge data frames Fahrzeuge_OEM2
-df_F21_F22 <- rbind(df_F21, df_F22)
+
+# Delete unnecessary columns Fahrzeuge_OEM2
+
+df_F_all$Herstellernummer <- NULL
+df_F_all$Werksnummer <- NULL
+df_F_all$Fehlerhaft_Datum <- NULL
+df_F_all$Fehlerhaft_Fahrleistung <- NULL
+df_F_all$X1 <- NULL
+
+
+
+# Rename columns in Fahrzeuge_OEM2
+names(df_F_all)[1] <- "vehicle_id"
+names(df_F_all)[2] <- "vehicle_prod_date"
+names(df_F_all)[3] <- "vehicle_prod_factory"
+
+
 
 
 # View tidy data frames
 
 View(df_B_all)
-View(df_F11_F12)
-View(df_F21_F22)
-
-
-
-
-
-
-
+View(df_F_all)
