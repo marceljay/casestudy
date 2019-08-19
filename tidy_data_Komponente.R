@@ -200,16 +200,16 @@ tidyCSV_BE <- function(path) {
   
   # Read CSV and store in temporary data frame (df)
   df <<- read.csv2(path, stringsAsFactors = FALSE)
+  
+  # Gather all ID_T* in one column
+  df <<- gather(df, part, part_global_id, -contains("X"), -contains("K"))
+  
+  # Delete redundant X1
+  df$X1 <<- NULL
+  df$X <<- NULL
+  df$part <<- NULL
+  names(df)[1] <<- "comp_global_id"
 
-  
-  #Check if X == X1
-  if (sum(!df$X == df$X1) == 0) {1
-    # Delete redundant X1
-    df$X1 <<- NULL
-    print("Redundant Column X1 deleted")
-    names(df)[1] <<- "X1"
-  }
-  
   # print(df)
   return(df)
 }
@@ -301,39 +301,6 @@ tidyCSV_Kcsv_Cxyz <- function(path, delim = ";") {
   return(df)
 }
 
-# tidyCSV_Kcsv_Cxy <- function(path, delim = ";") {
-#   print(paste0("tidyCSV_KCSV_Cxy called with path: ", path))
-#   
-#   #Read CSV and store in temporary data frame (df)
-#   if (delim == ",") {
-#     df <<- read.csv(path, stringsAsFactors = FALSE)
-#   } else {
-#     df <<- read.csv2(path, stringsAsFactors = FALSE)
-#   }
-#   
-#   # combine .x .y cols into one
-#   df <<- unite(df, "prod_date", "Produktionsdatum.x", "Produktionsdatum.y", sep="_")
-#   df <<- unite(df, "oem", "Herstellernummer.x", "Herstellernummer.y", sep="_")
-#   df <<- unite(df, "factory", "Werksnummer.x", "Werksnummer.y", sep="_")
-#   df <<- unite(df, "global_id", 3, 10, sep="_")
-#   
-#   # Clean newly united col names from NA
-#   df$prod_date <<- gsub(pattern="_NA|NA_",replace="",x=df$prod_date)
-#   df$oem <<- gsub(pattern="_NA|NA_",replace="",x=df$oem)
-#   df$factory <<- gsub(pattern="_NA|NA_",replace="",x=df$factory)
-#   df$global_id <<- gsub(pattern="_NA|NA_",replace="",x=df$global_id)
-#   names(df)[1] <<- "id"
-#   
-#   # Delete unncessary cols, reorder
-#   df <<- subset(df, select=c(1,3,5,6,4))
-# 
-#   # Deleting rows that shall be disregarded because of date range
-#   df <<- subset(df, !prod_date<"2015-01-01")
-#   df <<- subset(df, !prod_date>"2016-12-31")
-#   
-#   # print(df)
-#   return(df)
-# }
 
 ### Functions to tidy TXT------------------------------------------------------
 
@@ -497,10 +464,10 @@ tidyTXT_E <- function(path){
   read.table(text=., sep = ";", header=TRUE,stringsAsFactors = FALSE) ->> df
   
   # combine .x .y into one
-  df <<- unite(df, "prod_date", "Produktionsdatum.x", "Produktionsdatum.y", sep="_")
-  df <<- unite(df, "oem", "Herstellernummer.x", "Herstellernummer.y", sep="_")
-  df <<- unite(df, "factory", "Werksnummer.x", "Werksnummer.y", sep="_")
-  df <<- unite(df, "global_id", "ID_Sitze.x", "ID_Sitze.y", sep="_")
+  df <<- unite(df, "prod_date", contains("Produktionsdatum"), sep="_")
+  df <<- unite(df, "oem", contains("Herstellernummer"), sep="_")
+  df <<- unite(df, "factory", contains("Werksnummer"), sep="_")
+  df <<- unite(df, "global_id", contains("ID"), sep="_")
   
   # Clean newly united col names from NA
   df$prod_date <<- gsub(pattern="_NA|NA_",replace="",x=df$prod_date)
@@ -545,21 +512,44 @@ startImport <- function() {
 }
 
 #################################
-# Combine df_list & Tidy
+# Combine df_list into one & Tidy
 #################################
-
+comp_df <- 1
+BE_comp_df <- 1
 # bind all dfs together
 
 link_df_list <- function() {
   print("Linking df_list dfs into one")
-  dfff <- df_list[[1]]
+  comp_df <<- df_list[[1]]
+  print(paste0("df added:","1/16"))
   for (i in 2:16) {
-    
-    dfff <- rbind(dfff, df_list[[i]])
-    
+    comp_df <<- rbind(comp_df, df_list[[i]])
+    print(paste0("df added:",i,"/16"))
   }
+  # Remove ID vol, row names, rename cols to comp_*
+  comp_df <<- subset(comp_df, select=c(2,5))
+  rownames(comp_df) <<- c()
+  names(comp_df) <<- c("comp_global_id", "comp_prod_date")
+  print("comp_df tidied successfully!")
 }
 
+link_BE_list <- function() {
+  print("Linking BE_list dfs into one")
+  BE_comp_df <<- BE_list[[1]]
+  print(paste0("df added:","1/16"))
+  for (i in 2:16) {
+    BE_comp_df <<- rbind(BE_comp_df, BE_list[[i]])
+    print(paste0("df added:",i,"/16"))
+  }
+  print("BE_comp_df tidied successfully!")
+}
+
+# Merge comp_df with BE_comp_df
+comp_BE_merger <- function() {
+  print("Merging comp_df with BE_comp_df")
+  merged_compBE_df <<- merge(comp_df, BE_comp_df, by.x="comp_global_id", by.y= "comp_global_id")
+  #merge_df_big <- merge(merge_df, dfT04, by.x="ID_T4", by.y="global_id")
+}
 
 # # SPLIT global_id: Delete cols with possible wrong entries-------------------------------
 # dfff <- dfff[-c(1,3,4)]
@@ -567,7 +557,7 @@ link_df_list <- function() {
 # # Split unique global_id into components
 # df_split <- separate(dfff,col=global_id, into=c("comp", "comp_oem", "comp_factory","comp_serial_id"),sep="-")
 # names(df_split)[5] <- "comp_prod_date"
-# rownames(df_split) <- c()
+# 
 # 
 # # Check for NA
 # sum(is.na(df_split))
