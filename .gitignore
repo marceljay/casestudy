@@ -46,6 +46,7 @@ rsconnect/
 
 # Temp & Testing Data
 comp_df_list.RData
+master_df.RData
 Testing_tidy_data_Fahrzeuge.R
 Testingscript.R
 # Ignore txt import related files
