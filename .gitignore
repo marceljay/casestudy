@@ -41,3 +41,8 @@ vignettes/*.pdf
 
 # Shiny token, see https://shiny.rstudio.com/articles/shinyapps.html
 rsconnect/
+
+# Temp & Testing Data
+comp_df_list.RData
+Testing_tidy_data_Fahrzeuge.R
+Testingscript.R
