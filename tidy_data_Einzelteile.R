@@ -373,6 +373,7 @@ tidyTXT_7 <- function(path){
   return(df)
 }
 
+
 # WORKS FINE
 # Structure: wide (dirty)
 tidyTXT_9 <- function(path) {
@@ -439,20 +440,24 @@ tidyTXT_16 <- function(path){
 }
 
 # DOES NOT WORK
+# Changed
 # Structure: slim (MULTIPLE VALUES FOR origin found !!!)
 tidyTXT_20 <- function(path){
-  readLines(path) %>%
+  x <- readLines(path) %>%
     gsub(pattern = '" "', replace = '"\n"', .) %>%
     gsub(pattern = '[^\\|] "', replace = '\n"', .) %>%
-    gsub(pattern = "\\| \\|", replace = " ", .) %>%
-    writeLines(., con = "backup.txt")
+    gsub(pattern = "\\| \\|", replace = "\\|", .)
   
-  df <- read.table("backup.txt", header=TRUE)
-    
-  # df <- tidyDate(df)
-  # 
+  for (i in 2:length(x) ) {
+    df <- read.table(textConnection(x[i]), sep = "|", header=TRUE)
+  }
+  
+  df["origin"] <- "01-01-1970"
+  
+  df <- tidyDate(df)
+   
   # # Drop columns and rename 
-  # df <- dropAndRename(df)
+  df <- dropAndRename(df)
   
   return(df)
 }
@@ -501,15 +506,24 @@ tidyTXT_24 <- function(path){
 
 
 # DOES NOT WORK
+# Changed: Multiple values found
 # Structure: slim
 tidyTXT_27 <- function(path){
-  readLines(path) %>%
+  x <- readLines(path) %>%
     gsub(pattern = '(?<=origin)\\W+(?=[0-9])', replace = '"\n"', ., perl = TRUE) %>%
-    gsub(pattern = '(?<=01-1970)"(?=[0-9])', replace = '\n"', ., perl = TRUE) %>%
-    gsub(pattern = "\\| \\|", replace = "\\|", .) %>%
-    writeLines(., con = "backup.txt")
+    gsub(pattern = '(?<=01-1970)\\W+(?=[0-9])', replace = '"\n"', ., perl = TRUE) %>%
+    gsub(pattern = "\\| \\|", replace = "\\|", .) 
   
-  df <- read.table("backup.txt", header = TRUE)
+  for (i in 2:length(x) ) {
+    df <- read.table(textConnection(x[i]), sep = "|", header=TRUE)
+  }
+  
+  df["origin"] <- "01-01-1970" #Change all Origin Values to 01-01-1970
+  
+  df <- tidyDate(df)
+  
+  # Drop columns and rename 
+  df <- dropAndRename(df)
   
   return(df)
 }
