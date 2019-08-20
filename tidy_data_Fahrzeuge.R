@@ -306,7 +306,9 @@ names(vehicle_df)[2] <- "vehicle_prod_date"
 names(vehicle_df)[3] <- "vehicle_prod_factory"
 
 
-
+# Check for duplicates
+print(paste0("Number of duplicates in vehicle_df: ", sum(duplicated(vehicle_df$vehicle_global_id))))
+print(paste0("Number of duplicates in BE_vehicle_df: ", sum(duplicated(BE_vehicle_df$comp_global_id))))
 
 # View tidy data frames
 

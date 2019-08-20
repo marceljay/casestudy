@@ -182,8 +182,7 @@ determineTidyFunction <- function(filePath) {
     print(paste("found match in Ktxt_list_E:", filePath)) # console logging
     tidyTXT_E(filePath)
   } else {
-    print(paste("logging:", filePath)) # console logging
-    tidyTXT_X(filePath) # for the oneliner txts
+    print("No Files in List")
   }
   
 }
@@ -259,9 +258,8 @@ tidyCSV_Kcsv_AB <- function(path, delim = ";") {
   names(df)[3] <<- "oem"
   names(df)[4] <<- "factory"
   
-  # Deleting rows that shall be disregarded because of date range
-  df <<- subset(df, !prod_date<"2015-01-01")
-  df <<- subset(df, !prod_date>"2016-12-31")
+  dateFilter()
+  reformatCols()
   
   # print(df)
   return(df)
@@ -293,9 +291,12 @@ tidyCSV_Kcsv_Cxyz <- function(path, delim = ";") {
   # Delete unnecessary cols, reorder
   df <<- subset(df, select=c(1,3,5,6,4)) 
   
-  # Deleting rows that shall be disregarded because of date range
-  df <<- subset(df, !prod_date<"2015-01-01")
-  df <<- subset(df, !prod_date>"2016-12-31")
+  dateFilter()
+  
+  # Reformat date col from chr to date
+  df$prod_date <<- as.Date(df$prod_date)
+  
+  reformatCols()
   
   # print(df)
   return(df)
@@ -333,9 +334,9 @@ tidyTXT_A <- function(path){
   names(df)[3] <<- "oem"
   names(df)[4] <<- "factory"
   
-  # Deleting rows that shall be disregarded because of date range
-  df <<- subset(df, !prod_date<"2015-01-01")
-  df <<- subset(df, !prod_date>"2016-12-31")
+  dateFilter()
+  
+  reformatCols()
   
   # print(df)
   return(df)
@@ -370,9 +371,9 @@ tidyTXT_B <- function(path){
   names(df)[3] <<- "oem"
   names(df)[4] <<- "factory"
   
-  # Deleting rows that shall be disregarded because of date range
-  df <<- subset(df, !prod_date<"2015-01-01")
-  df <<- subset(df, !prod_date>"2016-12-31")
+  dateFilter()
+  
+  reformatCols()
   
   # print(df)
   return(df)
@@ -394,9 +395,12 @@ tidyTXT_C <- function(path){
   # Delete unnecessary cols, reorder
   df <<- subset(df, select=c(1,2,4,5,3)) 
   
-  # Deleting rows that shall be disregarded because of date range
-  df <<- subset(df, !prod_date<"2015-01-01")
-  df <<- subset(df, !prod_date>"2016-12-31")
+  dateFilter()
+  
+  # Reformat date col from chr to date
+  df$prod_date <<- as.Date(df$prod_date)
+  
+  reformatCols()
   
   # print(df)
   return(df)
@@ -445,9 +449,9 @@ tidyTXT_D <- function(path){
   names(df)[3] <<- "oem"
   names(df)[4] <<- "factory"
   
-  # Deleting rows that shall be disregarded because of date range
-  df <<- subset(df, !prod_date<"2015-01-01")
-  df <<- subset(df, !prod_date>"2016-12-31")
+  dateFilter()
+  
+  reformatCols()
   
   # print(df)
   return(df)
@@ -479,14 +483,35 @@ tidyTXT_E <- function(path){
   # Delete unncessary cols, reorder
   df <<- subset(df, select=c(1,3,5,6,4))
   
-  # Deleting rows that shall be disregarded because of date range
-  df <<- subset(df, !prod_date<"2015-01-01")
-  df <<- subset(df, !prod_date>"2016-12-31")
+  dateFilter()
+  
+  # Reformat date col from chr to date
+  df$prod_date <<- as.Date(df$prod_date)
+  
+  reformatCols()
   
   # print(df)
   return(df)
 }
 
+#################################
+# Support Functions
+#################################
+
+# Deleting rows that shall be disregarded because of date range
+dateFilter <- function() {
+  
+  df <<- subset(df, !prod_date<"2015-01-01")
+  df <<- subset(df, !prod_date>"2016-12-31")
+}
+
+# Remove ID vol, row names, rename cols to comp_*
+reformatCols <- function() {
+  
+  df <<- subset(df, select=c(2,5))
+  rownames(df) <<- c()
+  names(df) <<- c("comp_global_id", "comp_prod_date")
+}
 
 #################################
 # Run the function / Script
@@ -518,19 +543,31 @@ startImport <- function() {
 # BE_comp_df <- 1
 # bind all dfs together
 
+dup_checker_df_list <- function() {
+  for (i in 1:16) {
+    print(paste0("Number of duplicates in df_list ", i, "/16: ", sum(duplicated(df_list[[i]]$comp_global_id))))
+  }
+}
+
+dup_checker_BE_list <- function() {
+  for (i in 1:16) {
+    print(paste0("Number of duplicates in df_list ", i, "/16: ", sum(duplicated(BE_list[[i]]$part_global_id))))
+  }
+}
+
 link_df_list <- function() {
   print("Linking df_list dfs into one")
   comp_df <<- df_list[[1]]
   print(paste0("df added:","1/16"))
   for (i in 2:16) {
-    comp_df <<- rbind(comp_df, df_list[[i]])
+    comp_df <<- bind_rows(comp_df, df_list[[i]])
     print(paste0("df added:",i,"/16"))
   }
   # Remove ID vol, row names, rename cols to comp_*
-  comp_df <<- subset(comp_df, select=c(2,5))
-  rownames(comp_df) <<- c()
-  names(comp_df) <<- c("comp_global_id", "comp_prod_date")
-  print("comp_df tidied successfully!")
+  # comp_df <<- subset(comp_df, select=c(2,5))
+  # rownames(comp_df) <<- c()
+  # names(comp_df) <<- c("comp_global_id", "comp_prod_date")
+  print("comp_df created successfully!")
 }
 
 link_BE_list <- function() {
@@ -538,41 +575,41 @@ link_BE_list <- function() {
   BE_comp_df <<- BE_list[[1]]
   print(paste0("df added:","1/16"))
   for (i in 2:16) {
-    BE_comp_df <<- rbind(BE_comp_df, BE_list[[i]])
+    BE_comp_df <<- bind_rows(BE_comp_df, BE_list[[i]])
     print(paste0("df added:",i,"/16"))
   }
-  print("BE_comp_df tidied successfully!")
+  print("BE_comp_df created successfully!")
 }
 
 # Merge comp_df with BE_comp_df
 comp_BE_merger <- function() {
-  print("Merging comp_df with BE_comp_df, this may take 5 mins...")
-  merged_compBE_df <<- merge(comp_df, BE_comp_df, by.x="comp_global_id", by.y= "comp_global_id")
+  print("Joining comp_df with BE_comp_df, this may take 1 min...")
+  merged_compBE_df <<- inner_join(comp_df, BE_comp_df, by ="comp_global_id")
   
 }
 
 vehicle_BE_merger <- function() {
-  print("Merging vehicle_df with BE_vehicle_df, this may take 5 mins...")
-  merged_vehicleBE_df <<- merge(vehicle_df, BE_vehicle_df, by.x="vehicle_global_id", by.y= "vehicle_global_id")
+  print("Joining vehicle_df with BE_vehicle_df, this may take 1 min...")
+  merged_vehicleBE_df <<- inner_join(vehicle_df, BE_vehicle_df, by = "vehicle_global_id")
   
 }
 
 vehicleToComp_merger <- function() {
-  print("Merging merged_vehicleBE_df with merged_compBE_df, this may take 5 mins...")
-  merged_vehicleToComp_df <<- merge(merged_vehicleBE_df, merged_compBE_df, by.x="comp_global_id", by.y= "comp_global_id")
+  print("Joining merged_vehicleBE_df with merged_compBE_df, this may take 1 min...")
+  merged_vehicleToComp_df <<- inner_join(merged_vehicleBE_df, merged_compBE_df, by = "comp_global_id")
   
 }
 
 # Testing alternate merge sequence
 master_merger1 <- function() {
-  print("Merging merged_vehicleBE_df with comp_df, this may take 5 mins...")
-  merged_master1 <<- merge(merged_vehicleBE_df, comp_df, by.x="comp_global_id", by.y= "comp_global_id")
+  print("Joining merged_vehicleBE_df with comp_df, this may take 1 min...")
+  merged_master1 <<- inner_join(merged_vehicleBE_df, comp_df, by = "comp_global_id")
   
 }
 
 master_merger2 <- function() {
-  print("Merging merged_master1 with BE_comp_df, this may take 5 mins...")
-  merged_master2 <<- merge(merged_master1, BE_comp_df, by.x="comp_global_id", by.y= "comp_global_id")
+  print("Joining merged_master1 with BE_comp_df, this may take 1 min...")
+  merged_master2 <<- inner_join(merged_master1, BE_comp_df, by = "comp_global_id")
   
 }
 
@@ -580,12 +617,14 @@ master_merger2 <- function() {
 arrange_df <- function() {
   print("Rearranging columns, this might take 5 mins...")
   master_df <<- arrange(merged_vehicleToComp_df,vehicle_global_id, comp_global_id, part_global_id)
-  master_df <<- subset(master_df, select=c(2,3,4,1,5,6)) 
+  #master_df <<- subset(master_df, select=c(2,3,4,1,5,6)) 
 }
 
 
 # Code Execution Sequence for Sinan [TESTING ONLY]
 startImport()
+dup_checker_df_list()
+dup_checker_BE_list()
 link_BE_list()
 link_df_list()
 
