@@ -210,13 +210,6 @@ df_B22$Produktionsstandort <- gsub(pattern = ".*-21-.*" , replacement = "Goettin
 
 
 
-#Add column Produktionsstandort to Bestandteile_Fahrzeuge_OEM1_Typ22
-
-df_B22$Produktionsstandort <- df_B22$ID_Fahrzeug
-
-
-df_B22$Produktionsstandort <- gsub(pattern = ".*-21-.*" , replacement = "Goettingen" , df_B22$Produktionsstandort)
-
 
 
 
@@ -257,7 +250,9 @@ df_F22$Produktionsstandort <- gsub(pattern = ".*-22-.*" , replacement = "Regensb
 
 # Merge data frames Bestandteile_Fahrzeuge_OEM_Typxx
 
-BE_vehicle_df <- rbind(df_B11, df_B12, df_B21,df_B21)
+BE_vehicle_df <- rbind(df_B11, df_B12, df_B21,df_B22)
+
+
 
 
 # Delete unnecessary column Bestandteile_Fahrzeuge_OEM_Typxx
@@ -305,6 +300,9 @@ names(vehicle_df)[1] <- "vehicle_global_id"
 names(vehicle_df)[2] <- "vehicle_prod_date"
 names(vehicle_df)[3] <- "vehicle_prod_factory"
 
+# Filter for relevant dates
+vehicle_df <- subset(vehicle_df, !vehicle_prod_date<"2015-01-01")
+vehicle_df <- subset(vehicle_df, !vehicle_prod_date>"2016-12-31")
 
 # Check for duplicates
 print(paste0("Number of duplicates in vehicle_df: ", sum(duplicated(vehicle_df$vehicle_global_id))))
