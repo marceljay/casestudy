@@ -33,6 +33,17 @@ master_df_shiny$vehicle_prod_factory <- gsub(pattern = ".*-22-.*" , replacement 
 
 
 
+# Add column vehicle type to master_df_shiny
+
+master_df_shiny$vehicle_type <- master_df_shiny$vehicle_global_id
+
+master_df_shiny$vehicle_type <- gsub(pattern = "^11-.*" , replacement = "11" , master_df_shiny$vehicle_type)
+master_df_shiny$vehicle_type <- gsub(pattern = "^12-.*" , replacement = "12" ,master_df_shiny$vehicle_type)
+master_df_shiny$vehicle_type <- gsub(pattern = "^21-.*" , replacement = "21" , master_df_shiny$vehicle_type)
+master_df_shiny$vehicle_type <- gsub(pattern = "^22-.*" , replacement = "22" , master_df_shiny$vehicle_type)
+
+
+
 
 View(master_df_shiny)
 
