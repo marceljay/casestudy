@@ -202,9 +202,11 @@ dropAndRename <- function(df) {
 
 # Function to assign the correct import and tidy function to a .txt file
 importTXT <- function(path) {
-  # print("---- called tidyTXT_a ----")
+  print("---- called tidyTXT_a ----")
+  print(path)
   
     if (str_detect(path, "T01.txt")) {
+      print("tidyTXT_1 called")
       tidyTXT_1(path)
       print("tidyTXT_1 called")
       
@@ -530,7 +532,7 @@ tidyTXT_27 <- function(path){
 
 # WORKS FINE (or almost, has a weird column at the end with a special character)
 # Structure: slim
-tidy_TXT31 <- function(path) {
+tidyTXT_31 <- function(path) {
   x <- readLines(path) %>%
     gsub(pattern = '(?<!\\s)"(?=[0-9])', replace = '"\n"', ., perl = TRUE) 
   
@@ -548,6 +550,26 @@ tidy_TXT31 <- function(path) {
   
   return(df)
 }
+
+#WORKS FINE 
+# Structure: Slim
+tidyTXT_34 <- function(path) {
+  x <- readLines(path) %>%
+    gsub(pattern = '""', replace = '"\n"', .) %>%
+    gsub(pattern = "\\| \\|", replace = " ",.) 
+  
+  for (i in 2:length(x) ) {
+    df <- read.table(textConnection(x[i]), header=TRUE)
+  }
+  
+  df <- tidyDate(df)
+  
+  # Drop columns and rename 
+  df <- dropAndRename(df)
+  
+  return(df)
+}
+
 
 # WORKS FINE
 # Structure: wide (dirty)
@@ -664,5 +686,3 @@ startImport <- function() {
     # names(df_list) <- gsub("\\.txt$", "", partFileNames)
   }
 }
-
-
