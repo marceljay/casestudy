@@ -34,8 +34,6 @@ list_A2 <- c("T06", "T08", "T25", "T33", "T37") # comma
 # CSV with pattern B (extra cols)
 list_B <- c("T12", "T15", "T17", "T23", "T32") # semicolon
 list_B2 <- c("T30", "T38") # comma
-# T38 - 16 col
-# T30 - 23 col
 
 
 #### Importing the data frames
@@ -95,7 +93,8 @@ tidyCSV_a <- function(path, delim = ";") {
   # }
   
   # # Drop columns (prod_date was appended as 11th column)
-  df <- df[c(3:5, 11)]
+  df <- df[c(3:5, 11)] # Keeps oem and factory columns
+  df <- df[c(3, 11)]
   
   # Renaming cols
   # names(df)[1] <- "id"  # probably not needed
@@ -126,29 +125,32 @@ tidyCSV_b <- function(path, delim = ";") {
   df <- tidyLong(df)
 
   # Drop columns except the 4 necessary ones
-  df <- df[3:6]
-
+  # df <- df[3:6] # Keeps oem and factory
+  df <- df[3:4]
+  
   # Check for NA values
   importAnalysis(df)
 
   return(df)
 }
 
+### GENERAL TIDY FUNCTIONS
 
 # Unite, rename, filter dates
+# Currently not uniting oem and factory columns due to dropping requirements
 tidyLong <- function(df) {
   print("tidyLong called!")
   
   # Unite related columns, since after some row number, values appear in different columns
   df <- unite(df, "prod_date", contains("Produktionsdatum"), sep="_")
-  df <- unite(df, "oem",  contains("Herstellernummer"), sep="_")
-  df <- unite(df, "factory", contains("Werksnummer"), sep="_")
+  # df <- unite(df, "oem",  contains("Herstellernummer"), sep="_")
+  # df <- unite(df, "factory", contains("Werksnummer"), sep="_")
   df <- unite(df, "global_id", contains("ID_T"), sep="_") 
   
   # Clean newly united col names from NA
   df$prod_date <- gsub(pattern="_NA|NA_", replace="", x=df$prod_date)
-  df$oem <- gsub(pattern="_NA|NA_", replace="", x=df$oem)
-  df$factory <- gsub(pattern="_NA|NA_", replace="", x=df$factory)
+  # df$oem <- gsub(pattern="_NA|NA_", replace="", x=df$oem)
+  # df$factory <- gsub(pattern="_NA|NA_", replace="", x=df$factory)
   df$global_id <- gsub(pattern="_NA|NA_", replace="", x=df$global_id)
   
   # Deleting rows that shall be disregarded because of date range
@@ -186,13 +188,14 @@ tidyDate <- function(df) {
 dropAndRename <- function(df) {
   
   #  Drop columns (prod_date was appended as 11th column)
-  df <- df[c(2:4, 10)]
+  # df <- df[c(2:4, 10)] # Keeps Factory / OEM
+  df <- df[c(2, 10)]
   
   # Renaming cols
   # names(df)[1] <- "id"  # probably not needed
   names(df)[1] <- "global_id"
-  names(df)[2] <- "oem"
-  names(df)[3] <- "factory"
+  # names(df)[2] <- "oem"
+  # names(df)[3] <- "factory"
   
   # Check for NA values
   importAnalysis(df)
@@ -202,73 +205,71 @@ dropAndRename <- function(df) {
 
 # Function to assign the correct import and tidy function to a .txt file
 importTXT <- function(path) {
-  print("---- called tidyTXT_a ----")
   print(path)
   
     if (str_detect(path, "T01.txt")) {
       print("tidyTXT_1 called")
-      tidyTXT_1(path)
-      print("tidyTXT_1 called")
+      return(tidyTXT_1(path))
       
     } else if(str_detect(path, "T02.txt")) {
-      tidyTXT_2(path)
       print("tidyTXT_2 called")
+      return(tidyTXT_2(path))
       
     } else if(str_detect(path, "T03.txt")) {
-      tidyTXT_3(path)
       print("tidyTXT_3 called")
+      return(tidyTXT_3(path))
     
     } else if(str_detect(path, "T07.txt")) {
-      tidyTXT_7(path)
       print("tidyTXT_7 called")
+      return(tidyTXT_7(path))
       
     } else if(str_detect(path, "T09.txt")) {
-      tidyTXT_9(path)
       print("tidyTXT_9 called")
+      return(tidyTXT_9(path))
       
     } else if(str_detect(path, "T11.txt")) {
-      tidyTXT_11(path)
       print("tidyTXT_11 called")
+      return(tidyTXT_11(path))
 
     } else if(str_detect(path, "T16.txt")) {
-      tidyTXT_16(path)
       print("tidyTXT_16 called")
+      return(tidyTXT_16(path))
       
     } else if(str_detect(path, "T20.txt")) {
-      tidyTXT_20(path)
       print("tidyTXT_20 called")
+      return(tidyTXT_20(path))
       
     } else if(str_detect(path, "T22.txt")) {
-      tidyTXT_22(path)
       print("tidyTXT_22 called")
+      return(tidyTXT_22(path))
       
     } else if(str_detect(path, "T24.txt")) {
-      tidyTXT_24(path)
       print("tidyTXT_24 called")
+      return(tidyTXT_24(path))
       
     } else if(str_detect(path, "T27.txt")) {
-      tidyTXT_27(path)
       print("tidyTXT_27 called")
+      return(tidyTXT_27(path))
       
     } else if(str_detect(path, "T31.txt")) {
-      tidyTXT_31(path)
       print("tidyTXT_31 called")
+      return(tidyTXT_31(path))
       
     } else if(str_detect(path, "T34.txt")) {
-      tidyTXT_34(path)
       print("tidyTXT_34 called")
+      return(tidyTXT_34(path))
       
     } else if(str_detect(path, "T35.txt")) {
-      tidyTXT_35(path)
       print("tidyTXT_35 called")
+      return(tidyTXT_35(path))
       
     } else if(str_detect(path, "T36.txt")) {
-      tidyTXT_36(path)
       print("tidyTXT_36 called")
+      return(tidyTXT_36(path))
       
     } else if(str_detect(path, "T39.txt")) {
-      tidyTXT_39(path)
       print("tidyTXT_39 called")
+      return(tidyTXT_39(path))
     }  
   
 }
@@ -276,35 +277,35 @@ importTXT <- function(path) {
 # WORKS ALMOST FINE (memory can be bottleneck though, WEIRD WHITESPACE)
 # Structure: wide (dirty)
 tidyTXT_1 <- function(path) {
-  
+
   ##### NUMEROUS EXTRA WHITE SPACES GET IMPORTED ######
   x <- readLines(path) %>%
     gsub(pattern = "\\| \\|", replace = "\\|",.) %>%
     gsub(pattern = '(?<=[^\\|]) "', replace = '\n"',., perl = TRUE)
-  
+
   for (i in 2:length(x) ) {
     df <- read.table(textConnection(x[i]), sep="|", header=TRUE)
   }
-  
+
   # Unite related columns, since after some row number, values appear in different columns
   df <- unite(df, "prod_date", contains("Produktionsdatum"), sep="_")
   df <- unite(df, "oem",  contains("Herstellernummer"), sep="_")
   df <- unite(df, "factory", contains("Werksnummer"), sep="_")
-  df <- unite(df, "global_id", contains("ID_T"), sep="_") 
-  
-# 
-#   # Clean newly united col names from NA
-#   df$prod_date <- gsub(pattern=" _ NA|NA _ ", replace="", x=df$prod_date)
-#   df$oem <- gsub(pattern=" _ NA|NA _ ", replace="", x=df$oem)
-#   df$factory <- gsub(pattern=" _ NA|NA _ ", replace="", x=df$factory)
-#   df$global_id <- gsub(pattern=" _ NA|NA _ ", replace="", x=df$global_id)
-#   
-#   # Deleting rows that shall be disregarded because of date range
-#   df <- subset(df, !prod_date<"2015-01-01")
-#   df <- subset(df, !prod_date>"2016-12-31")
-# 
-#   # Drop columns except the 4 necessary ones
-#   df <- df[2:5]
+  df <- unite(df, "global_id", contains("ID_T"), sep="_")
+
+
+  # Clean newly united col names from NA
+  df$prod_date <- gsub(pattern=" _ NA|NA _ ", replace="", x=df$prod_date)
+  df$oem <- gsub(pattern=" _ NA|NA _ ", replace="", x=df$oem)
+  df$factory <- gsub(pattern=" _ NA |NA _ ", replace="", x=df$factory)
+  df$global_id <- gsub(pattern=" _ NA|NA _ ", replace="", x=df$global_id)
+
+  # Deleting rows that shall be disregarded because of date range
+  df <- subset(df, !prod_date<"2015-01-01")
+  df <- subset(df, !prod_date>"2016-12-31")
+
+  # Drop columns except the 4 necessary ones
+  df <- df[2:5]
 
   # Check for NA values
   importAnalysis(df)
@@ -320,20 +321,20 @@ tidyTXT_2 <- function(path){
     gsub(pattern = '(?<=")\\s+"(?=[0-9][^-])', replace = '\n"', ., perl = TRUE)  %>%
     gsub(pattern = '(?<=A)\\s+"(?=[0-9][^-])', replace = '\n"', ., perl = TRUE)  %>%
     gsub(pattern = '(?<=[^-]\\d0)\\s+"(?=[0-9][^-])', replace = '\n"', ., perl = TRUE)  %>%
-    gsub(pattern = '(?<=[^-][\\d|\\.][0-9])\\s+"(?=[0-9][^-])', replace = '\n"', ., perl = TRUE) 
-  
+    gsub(pattern = '(?<=[^-][\\d|\\.][0-9])\\s+"(?=[0-9][^-])', replace = '\n"', ., perl = TRUE)
+
   for (i in 2:length(x) ) {
     df <- read.table(textConnection(x[i]), header=TRUE)
   }
-  
+
   df  <- tidyLong(df)
-  
+
   # Drop columns except the 4 necessary ones
   df <- df[2:5]
-  
+
   # Check for NA values
   importAnalysis(df)
-  
+
   return(df)
 }
 
@@ -348,7 +349,6 @@ tidyTXT_3 <- function(path){
     df <- read.table(textConnection(x[i]), sep=",", header=TRUE)
   }
   
-  # df <- read.table("backup.txt", sep = ",", header=TRUE)
   df <- tidyDate(df)
 
   # Drop columns and rename
@@ -375,25 +375,29 @@ tidyTXT_7 <- function(path){
   return(df)
 }
 
-
-# WORKS FINE
+#############################################################################
+# DOES NOT WORK
 # Structure: wide (dirty)
 tidyTXT_9 <- function(path) {
    x <- readLines(path) %>%
-        gsub(pattern = '', replace = '\n', .) %>%
-        gsub(pattern = '\\\\', replace = ',', .) 
+        gsub(pattern = '  ', replace = '\n', .) %>%
+        gsub(pattern = '\\\\', replace = ',', .) %>%
+        writeLines(., con = "backup.txt")
+   
+   df <- read.table("backup.txt", header = TRUE)
+     
   
-  for (i in 2:length(x) ) {
-    df <- read.table(textConnection(x[i]), sep=",", header=TRUE)
-  }
+  # for (i in 2:length(x) ) {
+  #   df <- read.table(textConnection(x[i]), sep=",", header=TRUE)
+  # }
     
-  df  <- tidyLong(df)
-  
-  # Drop columns except the 4 necessary ones
-  df <- df[2:5]
-  
-  # Check for NA values
-  importAnalysis(df)
+  # df  <- tidyLong(df)
+  # 
+  # # Drop columns except the 4 necessary ones
+  # df <- df[2:5]
+  # 
+  # # Check for NA values
+  # importAnalysis(df)
   
   return(df)
 }
@@ -405,13 +409,13 @@ tidyTXT_11 <- function(path){
     gsub(pattern = '', replace = '\n', .) 
   
   for (i in 2:length(x) ) {
-    df <- read.table(textConnection(x[i]), header=TRUE)
+    df <- read.table(textConnection(x[i]),                      header=TRUE)
   }
     
   df <- tidyDate(df)
   
   # Drop columns and rename 
-  df <- dropAndRename(df)
+  df <- dropAndRename(df)  
   
   return(df)
 }
@@ -498,7 +502,7 @@ tidyTXT_24 <- function(path){
   df <- tidyLong(df) 
   
   # Drop columns except the 4 necessary ones
-  df <- df[2:5]
+  df <- df[2:3]
   
   # Check for NA values
   importAnalysis(df)
@@ -616,13 +620,14 @@ tidyTXT_36 <- function(path){
 # WORKS FINE
 # Structure: wide (totally messed up, SPECIAL CASE)
 tidyTXT_39 <- function(path){
-  readLines(path)  %>%
+  x <- readLines(path)  %>%
     gsub(pattern = '""', replace = '"\n"', .)  %>%
     gsub(pattern = '(?<!\\\\)"(?!\\\\|")', replace = '\n"', ., perl = TRUE)  %>%
-    gsub(pattern = '\\\\', replace = ' ', .)  %>%
-    writeLines(., con = "backup.txt")
+    gsub(pattern = '\\\\', replace = ' ', .)
   
-  df <- read.table("backup.txt", header = TRUE) %>%
+  for (i in 2:length(x) ) {
+    df <- read.table(textConnection(x[i]), header=TRUE)
+  }
     
   # combine .x .y cols into one 
   unite("global_id", "Produktionsdatum.x", "Produktionsdatum.y", sep="_") %>%
@@ -686,3 +691,5 @@ startImport <- function() {
     # names(df_list) <- gsub("\\.txt$", "", partFileNames)
   }
 }
+
+
