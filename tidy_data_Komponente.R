@@ -513,54 +513,61 @@ reformatCols <- function() {
   names(df) <<- c("comp_global_id", "comp_prod_date")
 }
 
+# Check for NA
+na_checker <- function() {
+  print(paste0("comp_df has ", sum(is.na(comp_df))," NAs"))
+  print(paste0("BE_comp_df has ", sum(is.na(BE_comp_df))," NAs"))
+}
+
+
 #################################
 # Run the function / Script
 #################################
 
 # Call this function to start importing all data from ./Komponenten/
-startImport <- function() {
+startImportComp <- function() {
   print("starting importing Bestandteile")
   BE_list <<- list()
   for (i in seq_along(BEVector)) {
     BE_list[[i]] <<- determineTidyFunction(BEVector[i])
   }
   print("starting importing Komponenten")
-  df_list <<- list()
+  comp_df_list <<- list()
   for (i in seq_along(pathVector)) {
-    df_list[[i]] <<- determineTidyFunction(pathVector[i])
+    comp_df_list[[i]] <<- determineTidyFunction(pathVector[i])
     
     # # Renaming items in data frame list, implement when txt imports are done
-    # names(df_list) <- gsub("\\Einzelteil+", "", partFileNames)
-    # names(df_list) <- gsub("\\.csv$", "", partFileNames)
-    # names(df_list) <- gsub("\\.txt$", "", partFileNames)
+    # names(comp_df_list) <- gsub("\\Einzelteil+", "", partFileNames)
+    # names(comp_df_list) <- gsub("\\.csv$", "", partFileNames)
+    # names(comp_df_list) <- gsub("\\.txt$", "", partFileNames)
   }
 }
 
 #################################
-# Combine df_list into one & Tidy
+# Combine comp_df_list into one & Tidy
 #################################
 # comp_df <- 1
 # BE_comp_df <- 1
 # bind all dfs together
 
-dup_checker_df_list <- function() {
+dup_checker_comp_df_list <- function() {
   for (i in 1:16) {
-    print(paste0("Number of duplicates in df_list ", i, "/16: ", sum(duplicated(df_list[[i]]$comp_global_id))))
+    print(paste0("Number of duplicates in comp_df_list ", i, "/16: ", sum(duplicated(comp_df_list[[i]]$comp_global_id))))
   }
 }
 
 dup_checker_BE_list <- function() {
   for (i in 1:16) {
-    print(paste0("Number of duplicates in df_list ", i, "/16: ", sum(duplicated(BE_list[[i]]$part_global_id))))
+    print(paste0("Number of duplicates in comp_df_list ", i, "/16: ", sum(duplicated(BE_list[[i]]$part_global_id))))
   }
 }
 
-link_df_list <- function() {
-  print("Linking df_list dfs into one")
-  comp_df <<- df_list[[1]]
+link_comp_df_list <- function() {
+  print("Linking comp_df_list dfs into one")
+  comp_df <<- comp_df_list[[1]]
   print(paste0("df added:","1/16"))
-  for (i in 2:16) {
-    comp_df <<- bind_rows(comp_df, df_list[[i]])
+  for (i in 2:length(comp_df_list)) {
+    comp_df <<- bind_rows(comp_df, comp_df_list[[i]])
     print(paste0("df added:",i,"/16"))
   }
   # Remove ID vol, row names, rename cols to comp_*
@@ -622,19 +629,19 @@ arrange_df <- function() {
 
 
 # Code Execution Sequence for Sinan [TESTING ONLY]
-startImport()
-dup_checker_df_list()
+startImportComp()
+dup_checker_comp_df_list()
 dup_checker_BE_list()
 link_BE_list()
-link_df_list()
-
-comp_BE_merger()
-vehicle_BE_merger()
-vehicleToComp_merger()
-
-arrange_df()
-print("master_df successfully created!")
-View(master_df)
+link_comp_df_list()
+na_checker()
+# comp_BE_merger()
+# vehicle_BE_merger()
+# vehicleToComp_merger()
+# 
+# arrange_df()
+# print("master_df successfully created!")
+# View(master_df)
 
 # # SPLIT global_id: Delete cols with possible wrong entries-------------------------------
 # dfff <- dfff[-c(1,3,4)]
@@ -644,5 +651,4 @@ View(master_df)
 # names(df_split)[5] <- "comp_prod_date"
 # 
 # 
-# # Check for NA
-# sum(is.na(df_split))
+

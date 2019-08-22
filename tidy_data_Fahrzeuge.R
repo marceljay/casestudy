@@ -304,9 +304,11 @@ names(vehicle_df)[3] <- "vehicle_prod_factory"
 vehicle_df <- subset(vehicle_df, !vehicle_prod_date<"2015-01-01")
 vehicle_df <- subset(vehicle_df, !vehicle_prod_date>"2016-12-31")
 
-# Check for duplicates
+# Check for duplicates & NAs
 print(paste0("Number of duplicates in vehicle_df: ", sum(duplicated(vehicle_df$vehicle_global_id))))
 print(paste0("Number of duplicates in BE_vehicle_df: ", sum(duplicated(BE_vehicle_df$comp_global_id))))
+print(paste0("vehicle_df has ", sum(is.na(vehicle_df))," NAs"))
+print(paste0("BE_vehicle_df has ", sum(is.na(BE_vehicle_df))," NAs"))
 
 # View tidy data frames
 
