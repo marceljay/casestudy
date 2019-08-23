@@ -280,31 +280,17 @@ tidyTXT_1 <- function(path) {
   ##### NUMEROUS EXTRA WHITE SPACES GET IMPORTED ######
   x <- readLines(path) %>%
     gsub(pattern = "\\| \\|", replace = "\\|",.) %>%
-    gsub(pattern = '(?<=[^\\|]) "', replace = '\n"',., perl = TRUE)
+    gsub(pattern = '(?<=[^\\|]) "', replace = '\n"',., perl = TRUE)%>%
+    gsub(pattern = " ", replace = "",.) # Corrects the Whitespace problem
   
   for (i in 2:length(x) ) {
     df <- read.table(textConnection(x[i]), sep="|", header=TRUE)
   }
   
-  # Unite related columns, since after some row number, values appear in different columns
-  df <- unite(df, "prod_date", contains("Produktionsdatum"), sep="_")
-  df <- unite(df, "oem",  contains("Herstellernummer"), sep="_")
-  df <- unite(df, "factory", contains("Werksnummer"), sep="_")
-  df <- unite(df, "global_id", contains("ID_T"), sep="_") 
+  df  <- tidyLong(df)
   
-# 
-#   # Clean newly united col names from NA
-#   df$prod_date <- gsub(pattern=" _ NA|NA _ ", replace="", x=df$prod_date)
-#   df$oem <- gsub(pattern=" _ NA|NA _ ", replace="", x=df$oem)
-#   df$factory <- gsub(pattern=" _ NA|NA _ ", replace="", x=df$factory)
-#   df$global_id <- gsub(pattern=" _ NA|NA _ ", replace="", x=df$global_id)
-#   
-#   # Deleting rows that shall be disregarded because of date range
-#   df <- subset(df, !prod_date<"2015-01-01")
-#   df <- subset(df, !prod_date>"2016-12-31")
-# 
-#   # Drop columns except the 4 necessary ones
-#   df <- df[2:5]
+  # Drop columns except the 4 necessary ones
+  df <- df[2:5]
 
   # Check for NA values
   importAnalysis(df)
