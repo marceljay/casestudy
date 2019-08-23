@@ -278,33 +278,15 @@ tidyTXT_1 <- function(path) {
     gsub(pattern = '(?<=[^\\|]) "', replace = '\n"',., perl = TRUE) %>%
     gsub(pattern = " ", replace = "",.) # Corrects the Whitespace problem
 
-  for (i in 2:length(x) ) {
-    df <- read.table(textConnection(x[i]), sep="|", header=TRUE)
-  }
-
-  # Unite related columns, since after some row number, values appear in different columns
-  df <- unite(df, "prod_date", contains("Produktionsdatum"), sep="_")
-  # df <- unite(df, "oem",  contains("Herstellernummer"), sep="_")
-  # df <- unite(df, "factory", contains("Werksnummer"), sep="_")
-  df <- unite(df, "global_id", contains("ID_T"), sep="_")
-
-
-  # Clean newly united col names from NA
-  df$prod_date <- gsub(pattern=" _ NA|NA _ ", replace="", x=df$prod_date)
-  # df$oem <- gsub(pattern=" _ NA|NA _ ", replace="", x=df$oem)
-  # df$factory <- gsub(pattern=" _ NA |NA _ ", replace="", x=df$factory)
-  df$global_id <- gsub(pattern=" _ NA|NA _ ", replace="", x=df$global_id)
-
-  # Deleting rows that shall be disregarded because of date range
-  df <- subset(df, !prod_date<"2015-01-01")
-  df <- subset(df, !prod_date>"2016-12-31")
-
+  
+  df  <- tidyLong(df)
+  
   # Drop columns except the 2 necessary ones
   df <- df[2:3]
-
+  
   # Check for NA values
   importAnalysis(df)
-
+  
   return(df)
 }
 
@@ -374,17 +356,14 @@ tidyTXT_7 <- function(path){
 # DOES NOT WORK
 # Structure: wide (dirty)
 tidyTXT_9 <- function(path) {
-   x <- readLines(path) %>%
-        gsub(pattern = '  ', replace = '\n', .) %>%
-        gsub(pattern = '\\\\', replace = ',', .) %>%
-        writeLines(., con = "backup.txt")
-   
-   df <- read.table("backup.txt", header = TRUE)
+  x <- readLines(path) %>%
+    gsub(pattern = '', replace = '\n', .) %>%
+    gsub(pattern = '\\\\', replace = ',', .)
      
   
-  # for (i in 2:length(x) ) {
-  #   df <- read.table(textConnection(x[i]), sep=",", header=TRUE)
-  # }
+   for (i in 2:length(x) ) {
+     df <- read.table(textConnection(x[i]), sep=",", header=TRUE)
+   }
     
   df  <- tidyLong(df)
 
@@ -392,7 +371,7 @@ tidyTXT_9 <- function(path) {
   df <- df[2:3]
   # 
   # # Check for NA values
-  # importAnalysis(df)
+   importAnalysis(df)
   
   return(df)
 }
