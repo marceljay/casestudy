@@ -1,0 +1,129 @@
+---
+title: "General_Tasks_Group07"
+author: "Group07"
+date: "8/23/2019"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(warning = FALSE)
+
+#Installation of dependencies
+
+if( !require(dplyr)){
+  install.packages("dplyr")
+}
+if( !require(readr)){
+  install.packages("readr")
+}
+if( !require(stringr)){
+  install.packages("stringr")
+}
+
+# Loading libraries
+
+
+library(dplyr)
+library(readr)
+library(stringr)
+
+```
+# Question 1
+_a. How is the logistics delay distributed? Justify your selection and briefly describe your approach._
+
+_b. What is the minimum/maximum time between delivering and receiving goods?_
+
+_c. Determine the mean of the logistics delay._
+
+_d. Visualize the distribution in an appropriate way._
+
+# Question 2
+_Why does it make sense to store the available data in separate files instead of saving everything in a huge table? How do you call the underlying data base concept?_
+
+It makes sense to store available data in seperate files instead of saving everything in a huge table for several reasons. Sepa-rate data sets connected by a primary key will only contain specific information ensuring data dependencies make sense. Thus extraction from specific data will be easier. Furthermore duplicate data throughout can be easier identified and eliminated, enhancing the efficiency of the code and saving memory space/cache.Furthermore the different tables will be more flexible for adaptations and newly introduced data. 
+The underlying concept is called *Database Normalization*.
+
+# Question 3
+_How many of the components K7 ended up in vehicles registered in the city of Dortmund?_
+
+Import of datasets which contain the components of the vehicles
+```{r import, message=FALSE, cache=FALSE}
+# Import parts of vehicles OEM 1 Type 11
+type11 <- read_delim("Data/Fahrzeug/Bestandteile_Fahrzeuge_OEM1_Typ11.csv", delim =
+    ";")
+# Import parts of vehicles OEM 1 Type 12
+type12 <- read_delim("Data/Fahrzeug/Bestandteile_Fahrzeuge_OEM1_Typ12.csv", delim =
+    ";")
+# Import parts of vehicles OEM 2 Type 21
+type21 <- read_delim("Data/Fahrzeug/Bestandteile_Fahrzeuge_OEM2_Typ21.csv", delim =
+    ";")
+# Import parts of vehicles OEM 2 Type 22
+type22 <- read_delim("Data/Fahrzeug/Bestandteile_Fahrzeuge_OEM2_Typ22.csv", delim =
+    ";")
+# Import registrations for vehicles
+registrations <- read_delim("Data/Zulassungen/Zulassungen_alle_Fahrzeuge.csv", delim = ";")
+```
+
+Deleting uneccessary first row of each table
+
+```{r}
+type11$X1 <- NULL
+type12$X1 <- NULL
+type21$X1 <- NULL
+type22$X1 <- NULL
+registrations$X1 <- NULL
+```
+
+ Binding all vehicle types tables into one 
+
+```{r}
+components_vehicles <- bind_rows(type11, type12, type21, type22)
+```
+
+Merging registrations with components_vehicles by ID and filtering for component K7 and registration in city of Dortmund
+
+```{r}
+Vehicles_Dortmund_K7 <- left_join(components_vehicles, registrations, by = c("ID_Fahrzeug" = "IDNummer")) %>%
+  filter(Gemeinden == "DORTMUND" & str_detect(ID_Karosserie, "K7"))
+```
+
+Counting Observations
+
+```{r}
+nrow(Vehicles_Dortmund_K7)
+```
+5275 components of K7 ended up in vehicles registered in Dortmund.
+
+# Question 4
+_Which data types do the attributes of the registration table "Zulassungen_aller_Fahrzeuge" have?_
+```{r}
+# Inspecting Structure of "Zulassungen_aller_Fahrzeuge"
+str(registrations)
+```
+The data types of the attributes are:
+* (X1: Double)
+* IDNummer: Character
+* Gemeinden: Character
+* Zulassung: Date
+
+
+# Question 5
+_You want to publish your application. Why does it make sense to store the data sets in a database on a server? Why is it not recommended to store the data sets on your personal computer?_
+
+It makes sense to store the data sets in a database on a server for simultaneous, remote acess to the data sets of your application without the need of physical access to your personal computer. Furthermore it is not recommended to store the data sets on your personal computer for security and efficiency reasons.
+
+# Question 6
+_On 11 August 2010 there was an accident involving a car produced by your firm. The driver left the scene without a trace. The license plate of the car, which caused the accident, is still missing. Since you work for the Federal Motor Transport Authority, the police asks for your help to find out where the vehicle with the engine code "K1BE2-104-1041-32049" (corresponds to the engine ID number) was registered._
+
+We will use the table containing all OEM vehicle types and components from question 3, to filter for the engine code. The resulting observation will then be joined with the registrations table to find the place of registration.
+
+```{r}
+Vehicle_Accident <-  filter(components_vehicles, ID_Motor == "K1BE2-104-1041-32049") %>%
+left_join(registrations, by = c("ID_Fahrzeug" = "IDNummer")) 
+ 
+```
+
+The vehicle with the engine code "K1BE2-104-1041-32049" was registered in Leipzig.
