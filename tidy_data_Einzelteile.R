@@ -84,23 +84,17 @@ tidyCSV_a <- function(path, delim = ";") {
   # Tidy dates in short table
   df <- tidyDate(df)
   
-  # # Tidy: Deleting Columns
-  # #Check if X1 == X1_1
-  # if (sum(!df$X1 == df$X1_1) == 0) {
-  #   # Delete X1_1
-  #   df$X1_1 <- NULL
-  #   print("Column X1_1 deleted")
-  # }
   
   # # Drop columns (prod_date was appended as 11th column)
-  df <- df[c(3:5, 11)] # Keeps oem and factory columns
+  # df <- df[c(3:5, 11)] # Keeps oem and factory columns
   df <- df[c(3, 11)]
   
   # Renaming cols
   # names(df)[1] <- "id"  # probably not needed
   names(df)[1] <- "global_id"
-  names(df)[2] <- "oem"
-  names(df)[3] <- "factory"
+  
+  # names(df)[2] <- "oem"
+  # names(df)[3] <- "factory"
 
   # Check for NA values
   importAnalysis(df)
@@ -281,7 +275,8 @@ tidyTXT_1 <- function(path) {
   ##### NUMEROUS EXTRA WHITE SPACES GET IMPORTED ######
   x <- readLines(path) %>%
     gsub(pattern = "\\| \\|", replace = "\\|",.) %>%
-    gsub(pattern = '(?<=[^\\|]) "', replace = '\n"',., perl = TRUE)
+    gsub(pattern = '(?<=[^\\|]) "', replace = '\n"',., perl = TRUE) %>%
+    gsub(pattern = " ", replace = "",.) # Corrects the Whitespace problem
 
   for (i in 2:length(x) ) {
     df <- read.table(textConnection(x[i]), sep="|", header=TRUE)
@@ -289,23 +284,23 @@ tidyTXT_1 <- function(path) {
 
   # Unite related columns, since after some row number, values appear in different columns
   df <- unite(df, "prod_date", contains("Produktionsdatum"), sep="_")
-  df <- unite(df, "oem",  contains("Herstellernummer"), sep="_")
-  df <- unite(df, "factory", contains("Werksnummer"), sep="_")
+  # df <- unite(df, "oem",  contains("Herstellernummer"), sep="_")
+  # df <- unite(df, "factory", contains("Werksnummer"), sep="_")
   df <- unite(df, "global_id", contains("ID_T"), sep="_")
 
 
   # Clean newly united col names from NA
   df$prod_date <- gsub(pattern=" _ NA|NA _ ", replace="", x=df$prod_date)
-  df$oem <- gsub(pattern=" _ NA|NA _ ", replace="", x=df$oem)
-  df$factory <- gsub(pattern=" _ NA |NA _ ", replace="", x=df$factory)
+  # df$oem <- gsub(pattern=" _ NA|NA _ ", replace="", x=df$oem)
+  # df$factory <- gsub(pattern=" _ NA |NA _ ", replace="", x=df$factory)
   df$global_id <- gsub(pattern=" _ NA|NA _ ", replace="", x=df$global_id)
 
   # Deleting rows that shall be disregarded because of date range
   df <- subset(df, !prod_date<"2015-01-01")
   df <- subset(df, !prod_date>"2016-12-31")
 
-  # Drop columns except the 4 necessary ones
-  df <- df[2:5]
+  # Drop columns except the 2 necessary ones
+  df <- df[2:3]
 
   # Check for NA values
   importAnalysis(df)
@@ -329,9 +324,9 @@ tidyTXT_2 <- function(path){
 
   df  <- tidyLong(df)
 
-  # Drop columns except the 4 necessary ones
-  df <- df[2:5]
-
+  # Drop columns except the 2 necessary ones
+  df <- df[2:3]
+  
   # Check for NA values
   importAnalysis(df)
 
@@ -375,7 +370,7 @@ tidyTXT_7 <- function(path){
   return(df)
 }
 
-#############################################################################
+
 # DOES NOT WORK
 # Structure: wide (dirty)
 tidyTXT_9 <- function(path) {
@@ -391,10 +386,10 @@ tidyTXT_9 <- function(path) {
   #   df <- read.table(textConnection(x[i]), sep=",", header=TRUE)
   # }
     
-  # df  <- tidyLong(df)
-  # 
-  # # Drop columns except the 4 necessary ones
-  # df <- df[2:5]
+  df  <- tidyLong(df)
+
+  # Drop columns except the 2 necessary ones
+  df <- df[2:3]
   # 
   # # Check for NA values
   # importAnalysis(df)
@@ -436,8 +431,8 @@ tidyTXT_16 <- function(path){
   
   df  <- tidyLong(df)
 
-  # Drop columns except the 4 necessary ones
-  df <- df[2:5]
+  # Drop columns except the 2 necessary ones
+  df <- df[2:3]
 
   # Check for NA values
   importAnalysis(df)
@@ -480,8 +475,8 @@ tidyTXT_22 <- function(path){
 
   df <- tidyLong(df) 
   
-  # Drop columns except the 4 necessary ones
-  df <- df[2:5]
+  # Drop columns except the 2 necessary ones
+  df <- df[2:3]
   
   # Check for NA values
   importAnalysis(df)
@@ -501,7 +496,7 @@ tidyTXT_24 <- function(path){
     
   df <- tidyLong(df) 
   
-  # Drop columns except the 4 necessary ones
+  # Drop columns except the 2 necessary ones
   df <- df[2:3]
   
   # Check for NA values
@@ -510,8 +505,6 @@ tidyTXT_24 <- function(path){
   return(df)
 }
 
-
-# DOES NOT WORK
 # Changed: Multiple values found
 # Structure: slim
 tidyTXT_27 <- function(path){
@@ -555,7 +548,7 @@ tidyTXT_31 <- function(path) {
   return(df)
 }
 
-#WORKS FINE 
+# WORKS FINE 
 # Structure: Slim
 tidyTXT_34 <- function(path) {
   x <- readLines(path) %>%
@@ -589,8 +582,8 @@ tidyTXT_35 <- function(path){
     
   df <- tidyLong(df) 
   
-  # Drop columns except the 4 necessary ones
-  df <- df[2:5]
+  # Drop columns except the 2 necessary ones
+  df <- df[2:3]
   
   # Check for NA values
   importAnalysis(df)
@@ -630,15 +623,11 @@ tidyTXT_39 <- function(path){
   }
     
   # combine .x .y cols into one 
-  unite("global_id", "Produktionsdatum.x", "Produktionsdatum.y", sep="_") %>%
-  unite("prod_date", "Herstellernummer.x", "Herstellernummer.y",sep="_") %>%
-  unite("oem", "Werksnummer.x", "Werksnummer.y", sep="_") %>%
-  unite("factory", "Fehlerhaft.x", "Fehlerhaft.y", sep="_") 
+  df <- unite(df, "global_id", "Produktionsdatum.x", "Produktionsdatum.y", sep="_")
+  df <- unite(df, "prod_date", "Herstellernummer.x", "Herstellernummer.y",sep="_")
 
   # Clean newly united col names from NA
   df$prod_date <- gsub(pattern="_NA|NA_",replace="",x=df$prod_date)
-  df$oem <- gsub(pattern="_NA|NA_",replace="",x=df$oem)
-  df$factory <- gsub(pattern="_NA|NA_",replace="",x=df$factory)
   df$global_id <- gsub(pattern="_NA|NA_",replace="",x=df$global_id)
 
   
@@ -647,7 +636,8 @@ tidyTXT_39 <- function(path){
   df <- subset(df, !prod_date>"2016-12-31")
   
   # Drop columns except the 4 necessary ones
-  df <- df[3:6]
+  df <- df[3:4]
+
   
   return(df)
 }
