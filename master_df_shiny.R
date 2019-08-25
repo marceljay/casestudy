@@ -44,7 +44,33 @@ master_df_shiny$vehicle_type <- gsub(pattern = "^22-.*" , replacement = "22" , m
 
 
 
+#### Adjustments for boxplot
+
+
+# Convert column vehicle_type to factor
+master_df_shiny$vehicle_type <- as.factor(master_df_shiny$vehicle_type)
+
+ALL <- master_df_shiny$vehicle_type
+
+
+# Create data frame for table
+master_df_table <- master_df_shiny
+
+
+
+#Delete column vehicle_global_id
+master_df_table$vehicle_global_id <- NULL
+
+
+
+# Rename columns of master_df_shiny for table
+names(master_df_table)[1] <- "production time"
+names(master_df_table)[2] <- "OEM factory"
+names(master_df_table)[3] <- "vehicle type"
+
+
+
 
 View(master_df_shiny)
-
+View(master_df_table)
 
