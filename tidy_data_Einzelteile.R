@@ -29,11 +29,11 @@ library(stringr) # For analyzing strings
 
 # CSV with pattern A (clean)
 list_A <- c("T04", "T10", "T13", "T14", "T18", "T21", "T26", "T40") # semicolon
-list_A2 <- c("T06", "T08", "T25", "T33", "T37") # comma
+list_A2 <- c("T06", "T08", "T19", "T25", "T33", "T37") # comma
 
 # CSV with pattern B (extra cols)
 list_B <- c("T12", "T15", "T17", "T23", "T32") # semicolon
-list_B2 <- c("T30", "T38") # comma
+list_B2 <- c("T05","T30", "T38") # comma
 
 
 #### Importing the data frames
@@ -277,6 +277,10 @@ tidyTXT_1 <- function(path) {
     gsub(pattern = "\\| \\|", replace = "\\|",.) %>%
     gsub(pattern = '(?<=[^\\|]) "', replace = '\n"',., perl = TRUE) %>%
     gsub(pattern = " ", replace = "",.) # Corrects the Whitespace problem
+  
+  for (i in 2:length(x) ) {
+    df <- read.table(textConnection(x[i]), sep="|", header=TRUE)
+  }
 
   for (i in 2:length(x) ) {
     df <- read.table(textConnection(x[i]), header=TRUE)
