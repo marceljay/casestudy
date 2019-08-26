@@ -46,22 +46,22 @@ pathVector <- paste("Data/Einzelteil/", partFileNames, sep="")
 # Function determines, based on predefined lists, which tidy function shall be applied
 determineTidyFunction <- function(filePath) {
   
-    if (length(which(str_detect(filePath, list_A))) == 1){
-      print(paste("found match in list_A:", filePath)) # console logging
-      tidyCSV_a(filePath)
-    } else if (length(which(str_detect(filePath, list_A2))) == 1){
-      print(paste("found match in list_A2:", filePath)) # console logging
-      tidyCSV_a(filePath, ",")
-    } else if (length(which(str_detect(filePath, list_B))) == 1){
-      print(paste("found match in list_B:", filePath)) # console logging
-      tidyCSV_b(filePath)
-    } else if (length(which(str_detect(filePath, list_B2))) == 1){
-      print(paste("found match in list_B2:", filePath)) # console logging
-      tidyCSV_b(filePath, ",")
-    }  else {
-      print(paste("found TXT file:", filePath)) # console logging
-      importTXT(filePath)
-    }
+  if (length(which(str_detect(filePath, list_A))) == 1){
+    print(paste("found match in list_A:", filePath)) # console logging
+    tidyCSV_a(filePath)
+  } else if (length(which(str_detect(filePath, list_A2))) == 1){
+    print(paste("found match in list_A2:", filePath)) # console logging
+    tidyCSV_a(filePath, ",")
+  } else if (length(which(str_detect(filePath, list_B))) == 1){
+    print(paste("found match in list_B:", filePath)) # console logging
+    tidyCSV_b(filePath)
+  } else if (length(which(str_detect(filePath, list_B2))) == 1){
+    print(paste("found match in list_B2:", filePath)) # console logging
+    tidyCSV_b(filePath, ",")
+  }  else {
+    print(paste("found TXT file:", filePath)) # console logging
+    importTXT(filePath)
+  }
 }
 
 
@@ -80,7 +80,7 @@ tidyCSV_a <- function(path, delim = ";") {
   } else {
     df <- read_csv2(path)
   }
-
+  
   # Tidy dates in short table
   df <- tidyDate(df)
   
@@ -95,7 +95,7 @@ tidyCSV_a <- function(path, delim = ";") {
   
   # names(df)[2] <- "oem"
   # names(df)[3] <- "factory"
-
+  
   # Check for NA values
   importAnalysis(df)
   
@@ -117,14 +117,14 @@ tidyCSV_b <- function(path, delim = ";") {
   
   # Unite, rename, filter dates
   df <- tidyLong(df)
-
+  
   # Drop columns except the 4 necessary ones
   # df <- df[3:6] # Keeps oem and factory
   df <- df[3:4]
   
   # Check for NA values
   importAnalysis(df)
-
+  
   return(df)
 }
 
@@ -175,7 +175,7 @@ tidyDate <- function(df) {
   # Deleting rows that shall be disregarded because of date range
   df <- subset(df, !prod_date<"2015-01-01")
   df <- subset(df, !prod_date>"2016-12-31")
-
+  
   return(df)
 }
 
@@ -201,77 +201,77 @@ dropAndRename <- function(df) {
 importTXT <- function(path) {
   print(path)
   
-    if (str_detect(path, "T01.txt")) {
-      print("tidyTXT_1 called")
-      return(tidyTXT_1(path))
-      
-    } else if(str_detect(path, "T02.txt")) {
-      print("tidyTXT_2 called")
-      return(tidyTXT_2(path))
-      
-    } else if(str_detect(path, "T03.txt")) {
-      print("tidyTXT_3 called")
-      return(tidyTXT_3(path))
+  if (str_detect(path, "T01.txt")) {
+    print("tidyTXT_1 called")
+    return(tidyTXT_1(path))
     
-    } else if(str_detect(path, "T07.txt")) {
-      print("tidyTXT_7 called")
-      return(tidyTXT_7(path))
-      
-    } else if(str_detect(path, "T09.txt")) {
-      print("tidyTXT_9 called")
-      return(tidyTXT_9(path))
-      
-    } else if(str_detect(path, "T11.txt")) {
-      print("tidyTXT_11 called")
-      return(tidyTXT_11(path))
-
-    } else if(str_detect(path, "T16.txt")) {
-      print("tidyTXT_16 called")
-      return(tidyTXT_16(path))
-      
-    } else if(str_detect(path, "T20.txt")) {
-      print("tidyTXT_20 called")
-      return(tidyTXT_20(path))
-      
-    } else if(str_detect(path, "T22.txt")) {
-      print("tidyTXT_22 called")
-      return(tidyTXT_22(path))
-      
-    } else if(str_detect(path, "T24.txt")) {
-      print("tidyTXT_24 called")
-      return(tidyTXT_24(path))
-      
-    } else if(str_detect(path, "T27.txt")) {
-      print("tidyTXT_27 called")
-      return(tidyTXT_27(path))
-      
-    } else if(str_detect(path, "T31.txt")) {
-      print("tidyTXT_31 called")
-      return(tidyTXT_31(path))
-      
-    } else if(str_detect(path, "T34.txt")) {
-      print("tidyTXT_34 called")
-      return(tidyTXT_34(path))
-      
-    } else if(str_detect(path, "T35.txt")) {
-      print("tidyTXT_35 called")
-      return(tidyTXT_35(path))
-      
-    } else if(str_detect(path, "T36.txt")) {
-      print("tidyTXT_36 called")
-      return(tidyTXT_36(path))
-      
-    } else if(str_detect(path, "T39.txt")) {
-      print("tidyTXT_39 called")
-      return(tidyTXT_39(path))
-    }  
+  } else if(str_detect(path, "T02.txt")) {
+    print("tidyTXT_2 called")
+    return(tidyTXT_2(path))
+    
+  } else if(str_detect(path, "T03.txt")) {
+    print("tidyTXT_3 called")
+    return(tidyTXT_3(path))
+    
+  } else if(str_detect(path, "T07.txt")) {
+    print("tidyTXT_7 called")
+    return(tidyTXT_7(path))
+    
+  } else if(str_detect(path, "T09.txt")) {
+    print("tidyTXT_9 called")
+    return(tidyTXT_9(path))
+    
+  } else if(str_detect(path, "T11.txt")) {
+    print("tidyTXT_11 called")
+    return(tidyTXT_11(path))
+    
+  } else if(str_detect(path, "T16.txt")) {
+    print("tidyTXT_16 called")
+    return(tidyTXT_16(path))
+    
+  } else if(str_detect(path, "T20.txt")) {
+    print("tidyTXT_20 called")
+    return(tidyTXT_20(path))
+    
+  } else if(str_detect(path, "T22.txt")) {
+    print("tidyTXT_22 called")
+    return(tidyTXT_22(path))
+    
+  } else if(str_detect(path, "T24.txt")) {
+    print("tidyTXT_24 called")
+    return(tidyTXT_24(path))
+    
+  } else if(str_detect(path, "T27.txt")) {
+    print("tidyTXT_27 called")
+    return(tidyTXT_27(path))
+    
+  } else if(str_detect(path, "T31.txt")) {
+    print("tidyTXT_31 called")
+    return(tidyTXT_31(path))
+    
+  } else if(str_detect(path, "T34.txt")) {
+    print("tidyTXT_34 called")
+    return(tidyTXT_34(path))
+    
+  } else if(str_detect(path, "T35.txt")) {
+    print("tidyTXT_35 called")
+    return(tidyTXT_35(path))
+    
+  } else if(str_detect(path, "T36.txt")) {
+    print("tidyTXT_36 called")
+    return(tidyTXT_36(path))
+    
+  } else if(str_detect(path, "T39.txt")) {
+    print("tidyTXT_39 called")
+    return(tidyTXT_39(path))
+  }  
   
 }
-    
+
 # WORKS ALMOST FINE (memory can be bottleneck though, WEIRD WHITESPACE)
 # Structure: wide (dirty)
 tidyTXT_1 <- function(path) {
-
+  
   ##### NUMEROUS EXTRA WHITE SPACES GET IMPORTED ######
   x <- readLines(path) %>%
     gsub(pattern = "\\| \\|", replace = "\\|",.) %>%
@@ -281,10 +281,7 @@ tidyTXT_1 <- function(path) {
   for (i in 2:length(x) ) {
     df <- read.table(textConnection(x[i]), sep="|", header=TRUE)
   }
-
-  for (i in 2:length(x) ) {
-    df <- read.table(textConnection(x[i]), header=TRUE)
-  }
+  
   
   df  <- tidyLong(df)
   
@@ -306,19 +303,19 @@ tidyTXT_2 <- function(path){
     gsub(pattern = '(?<=A)\\s+"(?=[0-9][^-])', replace = '\n"', ., perl = TRUE)  %>%
     gsub(pattern = '(?<=[^-]\\d0)\\s+"(?=[0-9][^-])', replace = '\n"', ., perl = TRUE)  %>%
     gsub(pattern = '(?<=[^-][\\d|\\.][0-9])\\s+"(?=[0-9][^-])', replace = '\n"', ., perl = TRUE)
-
+  
   for (i in 2:length(x) ) {
     df <- read.table(textConnection(x[i]), header=TRUE)
   }
-
+  
   df  <- tidyLong(df)
-
+  
   # Drop columns except the 2 necessary ones
   df <- df[2:3]
   
   # Check for NA values
   importAnalysis(df)
-
+  
   return(df)
 }
 
@@ -334,7 +331,7 @@ tidyTXT_3 <- function(path){
   }
   
   df <- tidyDate(df)
-
+  
   # Drop columns and rename
   df <- dropAndRename(df)
   
@@ -366,19 +363,19 @@ tidyTXT_9 <- function(path) {
   x <- readLines(path) %>%
     gsub(pattern = '', replace = '\n', .) %>%
     gsub(pattern = '\\\\', replace = ',', .)
-     
   
-   for (i in 2:length(x) ) {
-     df <- read.table(textConnection(x[i]), sep=",", header=TRUE)
-   }
-    
+  
+  for (i in 2:length(x) ) {
+    df <- read.table(textConnection(x[i]), sep=",", header=TRUE)
+  }
+  
   df  <- tidyLong(df)
-
+  
   # Drop columns except the 2 necessary ones
   df <- df[2:3]
   # 
   # # Check for NA values
-   importAnalysis(df)
+  importAnalysis(df)
   
   return(df)
 }
@@ -392,7 +389,7 @@ tidyTXT_11 <- function(path){
   for (i in 2:length(x) ) {
     df <- read.table(textConnection(x[i]),                      header=TRUE)
   }
-    
+  
   df <- tidyDate(df)
   
   # Drop columns and rename 
@@ -416,13 +413,13 @@ tidyTXT_16 <- function(path){
   }
   
   df  <- tidyLong(df)
-
+  
   # Drop columns except the 2 necessary ones
   df <- df[2:3]
-
+  
   # Check for NA values
   importAnalysis(df)
-
+  
   return(df)
 }
 
@@ -442,7 +439,7 @@ tidyTXT_20 <- function(path){
   df["origin"] <- "01-01-1970"
   
   df <- tidyDate(df)
-   
+  
   # # Drop columns and rename 
   df <- dropAndRename(df)
   
@@ -458,7 +455,7 @@ tidyTXT_22 <- function(path){
   for (i in 2:length(x) ) {
     df <- read.table(textConnection(x[i]), header=TRUE)
   }
-
+  
   df <- tidyLong(df) 
   
   # Drop columns except the 2 necessary ones
@@ -479,7 +476,7 @@ tidyTXT_24 <- function(path){
   for (i in 2:length(x) ) {
     df <- read.table(textConnection(x[i]), header=TRUE)
   }
-    
+  
   df <- tidyLong(df) 
   
   # Drop columns except the 2 necessary ones
@@ -565,7 +562,7 @@ tidyTXT_35 <- function(path){
   for (i in 2:length(x) ) {
     df <- read.table(textConnection(x[i]), header=TRUE)
   }
-    
+  
   df <- tidyLong(df) 
   
   # Drop columns except the 2 necessary ones
@@ -607,15 +604,15 @@ tidyTXT_39 <- function(path){
   for (i in 2:length(x) ) {
     df <- read.table(textConnection(x[i]), header=TRUE)
   }
-    
+  
   # combine .x .y cols into one 
   df <- unite(df, "global_id", "Produktionsdatum.x", "Produktionsdatum.y", sep="_")
   df <- unite(df, "prod_date", "Herstellernummer.x", "Herstellernummer.y",sep="_")
-
+  
   # Clean newly united col names from NA
   df$prod_date <- gsub(pattern="_NA|NA_",replace="",x=df$prod_date)
   df$global_id <- gsub(pattern="_NA|NA_",replace="",x=df$global_id)
-
+  
   
   # Deleting rows that shall be disregarded because of date range
   df <- subset(df, !prod_date<"2015-01-01")
@@ -623,7 +620,7 @@ tidyTXT_39 <- function(path){
   
   # Drop columns except the 4 necessary ones
   df <- df[3:4]
-
+  
   
   return(df)
 }
@@ -668,5 +665,4 @@ startImport <- function() {
   }
 }
 
-startImport()
 
