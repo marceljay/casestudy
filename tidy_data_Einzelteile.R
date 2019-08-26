@@ -278,6 +278,9 @@ tidyTXT_1 <- function(path) {
     gsub(pattern = '(?<=[^\\|]) "', replace = '\n"',., perl = TRUE) %>%
     gsub(pattern = " ", replace = "",.) # Corrects the Whitespace problem
 
+  for (i in 2:length(x) ) {
+    df <- read.table(textConnection(x[i]), header=TRUE)
+  }
   
   df  <- tidyLong(df)
   
@@ -661,4 +664,5 @@ startImport <- function() {
   }
 }
 
+startImport()
 

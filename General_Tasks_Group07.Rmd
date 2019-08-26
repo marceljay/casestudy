@@ -2,9 +2,7 @@
 title: "General_Tasks_Group07"
 author: "Group07"
 date: "8/23/2019"
-output:
-  pdf_document: default
-  html_document: default
+output: html_document
 ---
 
 ```{r setup, include=FALSE}
@@ -34,23 +32,70 @@ library(stringr)
 # Question 1
 _a. How is the logistics delay distributed? Justify your selection and briefly describe your approach._
 
+Importing necessary data and checking structure
+```{r import, message=FALSE, cache=FALSE}
+component_K7 <- read_delim("./Data/Logistikverzug/Komponente_K7.csv", delim = ";")
+logistic_delay_K7 <- read_delim("./Data/Logistikverzug/Logistikverzug_K7.csv", delim = ";")
+
+str(component_K7)
+
+str(logistic_delay_K7)
+```
+
+Deleting unused column X1 & changing column Wareneingang for logistics_delay to date format
+```{r}
+component_K7$X1 <- NULL
+logistic_delay_K7$X1 <- NULL
+
+logistic_delay_K7$Wareneingang <- as.Date(logistic_delay_K7$Wareneingang, format = "%d.%m.%Y")
+```
+
+Creating Data Set "Logistics Delay"
+```{r}
+Logistics_Delay <- data.frame(delay = logistic_delay_K7$Wareneingang - component_K7$Produktionsdatum)
+```
+
+Distribution of Logistics Delay
+```{r}
+hist(as.numeric(Logistics_Delay$delay))
+```
+Normal distribution????
+...
+
 _b. What is the minimum/maximum time between delivering and receiving goods?_
 
+
+
+```{r}
+max(Logistics_Delay$delay)
+```
+The maximum difference time between delivering and receiving goods is 13 days.
+```{r}
+min(Logistics_Delay$delay)
+```
+The minimum difference time between delivering and receiving goods is 2 days.
+
 _c. Determine the mean of the logistics delay._
+```{r}
+mean(Logistics_Delay$delay)
+```
+The mean of the logistics delay is 5,08 days.
 
 _d. Visualize the distribution in an appropriate way._
+...
+
 
 # Question 2
 _Why does it make sense to store the available data in separate files instead of saving everything in a huge table? How do you call the underlying data base concept?_
 
-It makes sense to store available data in seperate files instead of saving everything in a huge table for several reasons. Sepa-rate data sets connected by a primary key will only contain specific information ensuring data dependencies make sense. Thus extraction from specific data will be easier. Furthermore duplicate data throughout can be easier identified and eliminated, enhancing the efficiency of the code and saving memory space/cache.Furthermore the different tables will be more flexible for adaptations and newly introduced data. 
+It makes sense to sotore available data in seperate files instead of saving everything in a huge table for several reasons. Seperate data sets connected by a primary key will only contain specific information ensuring data dependencies make sense. Thus extraction from specific data will be easier. Furthermore duplicate data throughout can be easier identified and eliminated, enhancing the efficiency of the code and saving memory space/cache.Furthermore the different tables will be more flexible for adaptations and newly introduced data. 
 The underlying concept is called *Database Normalization*.
 
 # Question 3
 _How many of the components K7 ended up in vehicles registered in the city of Dortmund?_
 
 Import of datasets which contain the components of the vehicles
-```{r import, message=FALSE, cache=FALSE}
+```{r import 2, message=FALSE, cache=FALSE}
 # Import parts of vehicles OEM 1 Type 11
 type11 <- read_delim("Data/Fahrzeug/Bestandteile_Fahrzeuge_OEM1_Typ11.csv", delim =
     ";")
@@ -123,6 +168,7 @@ We will use the table containing all OEM vehicle types and components from quest
 ```{r}
 Vehicle_Accident <-  filter(components_vehicles, ID_Motor == "K1BE2-104-1041-32049") %>%
 left_join(registrations, by = c("ID_Fahrzeug" = "IDNummer")) 
+Vehicle_Accident
  
 ```
 
