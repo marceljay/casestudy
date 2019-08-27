@@ -645,6 +645,32 @@ importAnalysis <- function(df) {
   
 }
 
+# Link df_list into one df
+link_part_df_list <- function() {
+  print("Linking df_list dfs into one df")
+  part_df <<- df_list[[1]]
+  print(paste0("df added:","1/38"))
+  for (i in 2:length(df_list)) {
+    part_df <<- bind_rows(part_df, df_list[[i]])
+    print(paste0("df added:",i,"/38"))
+  }
+  
+  print("part_df created successfully!")
+}
+
+# Drop rownames, rename cols
+reformatPartCols <- function() {
+  
+  rownames(part_df) <<- c()
+  names(part_df) <<- c("part_global_id", "part_prod_date")
+}
+
+# Reformat date col from chr to date
+DateAsDate <- function() {
+  for (i in 1:length(df_list)) {
+    df_list[[i]]$prod_date <<- as.Date(df_list[[i]]$prod_date)
+  }
+}
 
 #################################
 # Run the function / Script
@@ -665,4 +691,7 @@ startImport <- function() {
   }
 }
 
-
+startImport()
+DateAsDate()
+link_part_df_list()
+reformatPartCols()

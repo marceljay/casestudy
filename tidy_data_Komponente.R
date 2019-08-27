@@ -130,7 +130,7 @@ pathVector <- fullPath[17:32]
 
 # Function determines, based on predefined lists, which tidy function shall be applied
 determineTidyFunction <- function(filePath) {
-
+  
   if (length(which(str_detect(filePath, BE_list_A))) == 1){
     print(paste("found match in BE_list_A:", filePath)) # console logging
     tidyCSV_BE(filePath)
@@ -208,7 +208,7 @@ tidyCSV_BE <- function(path) {
   df$X <<- NULL
   df$part <<- NULL
   names(df)[1] <<- "comp_global_id"
-
+  
   # print(df)
   return(df)
 }
@@ -251,7 +251,7 @@ tidyCSV_Kcsv_AB <- function(path, delim = ";") {
   
   # Drop columns
   df <<- df[-c(5:9)]
-
+  
   # Renaming cols
   names(df)[1] <<- "id"
   names(df)[2] <<- "global_id"
@@ -411,10 +411,10 @@ tidyTXT_D <- function(path){
   
   
   readLines(path) %>% 
-  gsub(pattern='"\t"', replace = '"\n"') %>% 
-  gsub(pattern='\t', replace = "") %>% 
-  paste0('""\\',.) %>% 
-  read.table(text=., sep = "\\", header=TRUE, stringsAsFactors = FALSE) ->> df
+    gsub(pattern='"\t"', replace = '"\n"') %>% 
+    gsub(pattern='\t', replace = "") %>% 
+    paste0('""\\',.) %>% 
+    read.table(text=., sep = "\\", header=TRUE, stringsAsFactors = FALSE) ->> df
   # Maybe delete the temporary backup_Komp.txt
   
   #Store all counted days in vector
@@ -462,10 +462,10 @@ tidyTXT_E <- function(path){
   
   # Unfinished Code, requires more testing
   readLines(path) %>% 
-  gsub(pattern='', replace = '\n') %>% 
-  gsub(pattern = "II", replace = ";") %>% 
-  paste0('"";',.) %>% 
-  read.table(text=., sep = ";", header=TRUE,stringsAsFactors = FALSE) ->> df
+    gsub(pattern='', replace = '\n') %>% 
+    gsub(pattern = "II", replace = ";") %>% 
+    paste0('"";',.) %>% 
+    read.table(text=., sep = ";", header=TRUE,stringsAsFactors = FALSE) ->> df
   
   # combine .x .y into one
   df <<- unite(df, "prod_date", contains("Produktionsdatum"), sep="_")
@@ -570,7 +570,7 @@ link_comp_df_list <- function() {
     comp_df <<- bind_rows(comp_df, comp_df_list[[i]])
     print(paste0("df added:",i,"/16"))
   }
-  # Remove ID vol, row names, rename cols to comp_*
+  # Remove ID col, row names, rename cols to comp_*
   # comp_df <<- subset(comp_df, select=c(2,5))
   # rownames(comp_df) <<- c()
   # names(comp_df) <<- c("comp_global_id", "comp_prod_date")
@@ -607,6 +607,11 @@ vehicleToComp_merger <- function() {
   
 }
 
+vehicleCompPart_merger <- function() {
+  print("Joining merged_vehicleToComp_df with part_df, this may take 1 min...")
+  merged_All_df <<- inner_join(merged_vehicleToComp_df, part_df, by = "part_global_id")
+}
+
 # Testing alternate merge sequence
 master_merger1 <- function() {
   print("Joining merged_vehicleBE_df with comp_df, this may take 1 min...")
@@ -623,7 +628,7 @@ master_merger2 <- function() {
 # Arrange the final result for clarity
 arrange_df <- function() {
   print("Rearranging columns, this might take 5 mins...")
-  master_df <<- arrange(merged_vehicleToComp_df,vehicle_global_id, comp_global_id, part_global_id)
+  master_df <<- arrange(merged_All_df, vehicle_global_id, comp_global_id, part_global_id)
   #master_df <<- subset(master_df, select=c(2,3,4,1,5,6)) 
 }
 
@@ -635,13 +640,15 @@ dup_checker_BE_list()
 link_BE_list()
 link_comp_df_list()
 na_checker()
-# comp_BE_merger()
-# vehicle_BE_merger()
-# vehicleToComp_merger()
-# 
-# arrange_df()
-# print("master_df successfully created!")
-# View(master_df)
+
+comp_BE_merger()
+vehicle_BE_merger()
+vehicleToComp_merger()
+vehicleCompPart_merger()
+
+arrange_df()
+print("master_df successfully created!")
+View(master_df)
 
 # # SPLIT global_id: Delete cols with possible wrong entries-------------------------------
 # dfff <- dfff[-c(1,3,4)]
