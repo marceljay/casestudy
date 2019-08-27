@@ -4,7 +4,7 @@
 
 
 # Create column for production time
-master_df$prod_time <- master_df$vehicle_prod_date - master_df$comp_prod_date
+master_df$prod_time <- master_df$vehicle_prod_date - master_df$part_prod_date
 
 
 #Put max production time for each vehicle global id in a list

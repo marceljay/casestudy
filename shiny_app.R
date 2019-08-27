@@ -1,5 +1,15 @@
 # shiny app
+if( !require(shiny)){
+  install.packages("shiny")
+}
 
+if( !require(plotly)){
+  install.packages("plotly")
+}
+
+if( !require(colourpicker)){
+  install.packages("colourpicker")
+}
 
 library(shiny)
 library(plotly)
