@@ -2,31 +2,164 @@
 title: "Case Study Documentatation"
 author: "IDA Group 7"
 date: "July 2019"
+output:
+  html_document:
+    df_print: paged
 ---
 
+### Introduction
+
+This document provides all major steps and important informations regarding the execution of a Case Study for the IDA Course.
+
+For this Case Study the following libraries were used.
+
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-
-# Installation of dependencies
-if( !require(readr)){
-  install.packages("readr")
-}
-
-if( !require(shiny)){
-  install.packages("shiny")
-}
-
-# Loading libraries
-#library(readr)
-#library(shiny)
+library(readr)
+library(dplyr)
+library(tidyr)
+library(data.table)
+library(lubridate) 
+library(stringr)
 
 ```
 
 
 ### 1. Approach
 
+
+
 ### 2. Import
+
+The first step for the project was importing all the necessary files in a R dataframe structure. The .csv files were simplier to import and required only a pattern definition through visualization and the import command of read_csv
+
+```{r}
+tidyCSV_b <- function(path, delim = ";") {
+  print("---- called tidyCSV_b ----")
+  
+  #Import CSV depending on delimiter
+  if (delim == ",") {
+    df <- read.csv(path, stringsAsFactors = FALSE)
+  } else {
+    df <- read.csv2(path, stringsAsFactors = FALSE)
+  }
+}
+```
+
+The .txt files in the Parts and Components files were more challenging, requiring a deeper pattern analysis, specially because of the lack of end of lines characters, that were added with the command gsub. The goal was to replace a pattern represented by a regular expression into a line breaker. 
+
+```{r}
+gsub(pattern = '(?<=")\\s+"(?=[0-9][^-])', replace = '\n"', ., perl = TRUE)
+```
+
+After identifying all line breakers for particular .txt files, those files were imported using read_table. As an example is the code for the file of Parts_07
+
+```{r}
+  x <- readLines(path) %>%
+    gsub(pattern = '""', replace = '"\n"', .) 
+  
+  for (i in 2:length(x) ) {
+    df <- read.table(textConnection(x[i]), header=TRUE)
+}
+```
+
 
 ### 3. Tidy
 
-### 4. Analysis
+When all files were successfully imported, it was necessary to tidy the dataframes following the basic rules for Tidy Data. Some problems found were the different time formats, more than one column per information and other strange formats.
+
+For the different date formats:
+
+```{r}
+tidyDate <- function(df) {
+  print("tidyDate called!")
+  
+  daycount <- df$Produktionsdatum_Origin_01011970
+  
+  if (length(unique(df$origin))==1) {
+    # Reformat date from data frame to fit as.Date
+    betterDates <- as.Date(daycount, origin = "1970-01-01")
+  } else {
+    betterDates <- as.Date(daycount, origin = "1970-01-01")
+    print("WARNING! Multiple values found!")
+  }
+  
+  # Add date column with correctly formatted dates
+  df$prod_date <- betterDates
+  
+  # Deleting rows that shall be disregarded because of date range
+  df <- subset(df, !prod_date<"2015-01-01")
+  df <- subset(df, !prod_date>"2016-12-31")
+
+  return(df)
+}
+```
+
+For the different column names: 
+
+```{r}
+tidyLong <- function(df) {
+  print("tidyLong called!")
+  
+  # Unite related columns, since after some row number, values appear in different columns
+  df <- unite(df, "prod_date", contains("Produktionsdatum"), sep="_")
+  df <- unite(df, "global_id", contains("ID_T"), sep="_") 
+  
+  # Clean newly united col names from NA
+  df$prod_date <- gsub(pattern="_NA|NA_", replace="", x=df$prod_date)
+  df$global_id <- gsub(pattern="_NA|NA_", replace="", x=df$global_id)
+  
+  # Deleting rows that shall be disregarded because of date range
+  df <- subset(df, !prod_date<"2015-01-01")
+  df <- subset(df, !prod_date>"2016-12-31")
+  
+  return(df)
+}
+```
+
+Dropping columns and renaming:
+
+```{r}
+dropAndRename <- function(df) {
+  
+  #  Drop columns (prod_date was appended as 11th column)
+  df <- df[c(2, 10)]
+  
+  # Renaming cols
+  names(df)[1] <- "global_id"
+  
+  # Check for NA values
+  importAnalysis(df)
+  
+  return(df)
+}
+```
+
+
+For the main analysis of the group only the ID columns and the Production Dates are necessary. In that way all the other columns were discharged. It is possible to verify how the functions were used for an example.
+
+```{r}
+tidyTXT_7 <- function(path){
+  x <- readLines(path) %>%
+    gsub(pattern = '""', replace = '"\n"', .) 
+  
+  for (i in 2:length(x) ) {
+    df <- read.table(textConnection(x[i]), header=TRUE)
+  }
+  
+  df <- tidyDate(df)
+  
+  # Drop columns and rename 
+  df <- dropAndRename(df)
+  
+  return(df)
+}
+
+```
+
+### 4. Merge
+
+Add information for the merged data
+
+### 5. Analysis
+
+Insert analysis data and information
