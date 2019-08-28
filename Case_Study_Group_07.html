@@ -1656,6 +1656,9 @@ summary {
 <div id="parts" class="section level4">
 <h4>Parts</h4>
 <p>The 38 part files in the <code>Einzelteile</code> directory had well over ten different patterns that needed to be identified for a correct import and tidying. Some files had more columns than others, some had differerent date formats, missing line breaks or varios delimiters.</p>
+<p>In this chunk, all the files from the specific <code>Einzelteile</code> directory are written into a vector:</p>
+<pre class="r"><code>partFileNames &lt;- list.files(&quot;Data/Einzelteil&quot;)
+pathVector &lt;- paste(&quot;Data/Einzelteil/&quot;, partFileNames, sep=&quot;&quot;)</code></pre>
 <p>The .csv files were simplier to import: there were two delimiters and and a few different patterns regarding the amount of variables (columns) and the format of the dates.</p>
 <p>At first, after inspecting the files manually with shell commands, four lists to classify the .csv files depending on their number were created:</p>
 <pre class="r"><code># CSV with pattern A (clean)
@@ -1665,9 +1668,54 @@ list_A2 &lt;- c(&quot;T06&quot;, &quot;T08&quot;, &quot;T19&quot;, &quot;T25&quo
 # CSV with pattern B (extra cols)
 list_B &lt;- c(&quot;T12&quot;, &quot;T15&quot;, &quot;T17&quot;, &quot;T23&quot;, &quot;T32&quot;) # semicolon
 list_B2 &lt;- c(&quot;T05&quot;,&quot;T30&quot;, &quot;T38&quot;) # comma</code></pre>
-<p>In this chunk, all the files from the specific <code>Einzelteile</code> directory are written into a vector:</p>
-<pre class="r"><code>partFileNames &lt;- list.files(&quot;Data/Einzelteil&quot;)
-pathVector &lt;- paste(&quot;Data/Einzelteil/&quot;, partFileNames, sep=&quot;&quot;)</code></pre>
+<p>Another function, that helps applying the correct import and tidying function was created. Here .csv files are assigned to the functions via the formerly created lists. Since the .txt files needed various import functions, another helper function <code>importTXT()</code> is called, that then determines the final function to import and tidy the file.</p>
+<pre class="r"><code># Function determines, based on predefined lists, which tidy function shall be applied
+determineTidyFunction &lt;- function(filePath) {
+  
+  if (length(which(str_detect(filePath, list_A))) == 1){
+    print(paste(&quot;found match in list_A:&quot;, filePath)) # console logging
+    tidyCSV_a(filePath)
+  } else if (length(which(str_detect(filePath, list_A2))) == 1){
+    print(paste(&quot;found match in list_A2:&quot;, filePath)) # console logging
+    tidyCSV_a(filePath, &quot;,&quot;)
+  } else if (length(which(str_detect(filePath, list_B))) == 1){
+    print(paste(&quot;found match in list_B:&quot;, filePath)) # console logging
+    tidyCSV_b(filePath)
+  } else if (length(which(str_detect(filePath, list_B2))) == 1){
+    print(paste(&quot;found match in list_B2:&quot;, filePath)) # console logging
+    tidyCSV_b(filePath, &quot;,&quot;)
+  }  else {
+    print(paste(&quot;found TXT file:&quot;, filePath)) # console logging
+    importTXT(filePath)
+  }
+}</code></pre>
+<p>The function <code>tidyCSV_a</code> which gets called by<code>determineTidyFunction()</code> imports the .csv with format A and A2 and returns a data frame. here varios helper functions are called, but are elaborated later one…</p>
+<pre class="r"><code>tidyCSV_a &lt;- function(path, delim = &quot;;&quot;) {
+  # Console log
+  print(paste0(&quot;tidyCSV_a called with path: &quot;, path))
+  
+  #Import CSV depending on delimiter
+  if (delim == &quot;,&quot;) {
+    df &lt;- read_csv(path)
+  } else {
+    df &lt;- read_csv2(path)
+  }
+  
+  # Tidy dates in short table
+  df &lt;- tidyDate(df)
+  
+  # Drop columns (prod_date was appended as 11th column)
+  df &lt;- df[c(3, 11)]
+  
+  # Renaming cols
+  names(df)[1] &lt;- &quot;global_id&quot;
+
+  # Check for NA values
+  importAnalysis(df)
+  
+  return(df)
+}</code></pre>
+<p>The function <code>tidyCSV_b</code> which gets called by<code>determineTidyFunction()</code> imports the .csv with format B and B2 and returns a data frame. here varios helper functions are called too. It is different from the previous function in terms of not needing to reformat the date and different columns that can be dropped.</p>
 <pre class="r"><code>tidyCSV_b &lt;- function(path, delim = &quot;;&quot;) {
   print(&quot;---- called tidyCSV_b ----&quot;)
   
@@ -1677,6 +1725,17 @@ pathVector &lt;- paste(&quot;Data/Einzelteil/&quot;, partFileNames, sep=&quot;&q
   } else {
     df &lt;- read.csv2(path, stringsAsFactors = FALSE)
   }
+  
+  # Unite, rename, filter dates
+  df &lt;- tidyLong(df)
+  
+  # Drop columns except the 4 necessary ones
+  df &lt;- df[3:4]
+  
+  # Check for NA values
+  importAnalysis(df)
+  
+  return(df)
 }</code></pre>
 <p>The .txt files in the Parts and Components files were more challenging, requiring a deeper pattern analysis, specially because of the lack of end of lines characters, that were added with the command gsub. The goal was to replace a pattern represented by a regular expression into a line breaker.</p>
 <pre class="r"><code>#gsub(pattern = '(?&lt;=&quot;)\\s+&quot;(?=[0-9][^-])', replace = '\n&quot;', ., perl = TRUE)</code></pre>
@@ -1688,7 +1747,7 @@ pathVector &lt;- paste(&quot;Data/Einzelteil/&quot;, partFileNames, sep=&quot;&q
 #     df &lt;- read.table(textConnection(x[i]), header=TRUE)
 # }</code></pre>
 <p>When all files were successfully imported, it was necessary to tidy the dataframes following the basic rules for Tidy Data. Some problems found were the different time formats, more than one column per information and other strange formats.</p>
-<p>For the different date formats:</p>
+<p>The <code>tidydate</code>function is called for all the files storing the data in two separate files. After reappending the readable date to the data frame, any row outside the date specicified 2015-2016 is disregarded. The helper function is utilized by some of both .csv and .txt import functions.</p>
 <pre class="r"><code>tidyDate &lt;- function(df) {
   print(&quot;tidyDate called!&quot;)
   
@@ -1699,6 +1758,7 @@ pathVector &lt;- paste(&quot;Data/Einzelteil/&quot;, partFileNames, sep=&quot;&q
     betterDates &lt;- as.Date(daycount, origin = &quot;1970-01-01&quot;)
   } else {
     betterDates &lt;- as.Date(daycount, origin = &quot;1970-01-01&quot;)
+    # Warn if multiple values are found, yet assume this was not intentional
     print(&quot;WARNING! Multiple values found!&quot;)
   }
   
@@ -1711,7 +1771,7 @@ pathVector &lt;- paste(&quot;Data/Einzelteil/&quot;, partFileNames, sep=&quot;&q
 
   return(df)
 }</code></pre>
-<p>For the different column names:</p>
+<p>The <code>tidydate</code>function is used for uniting columns in the data frame, as some files show have the actual data written in different columns after a certain point. At the same time, the specified time range is selected and columns are renamed.</p>
 <pre class="r"><code>tidyLong &lt;- function(df) {
   print(&quot;tidyLong called!&quot;)
   
@@ -1729,7 +1789,7 @@ pathVector &lt;- paste(&quot;Data/Einzelteil/&quot;, partFileNames, sep=&quot;&q
   
   return(df)
 }</code></pre>
-<p>Dropping columns and renaming:</p>
+<p>The <code>dropAndRename</code> function is utilized by some .txt import functions to unnecessary columns and rename the id. Furthermore, an import analysis is conducted, to scan the data frame for missing values (NA)</p>
 <pre class="r"><code>dropAndRename &lt;- function(df) {
   
   #  Drop columns (prod_date was appended as 11th column)
@@ -1742,6 +1802,76 @@ pathVector &lt;- paste(&quot;Data/Einzelteil/&quot;, partFileNames, sep=&quot;&q
   importAnalysis(df)
   
   return(df)
+}</code></pre>
+<p>The following <code>importTXT</code> function assigns each plain text file based on their file name to a tidy function:</p>
+<pre class="r"><code># Function to assign the correct import and tidy function to a .txt file
+importTXT &lt;- function(path) {
+  print(path)
+  
+  if (str_detect(path, &quot;T01.txt&quot;)) {
+    print(&quot;tidyTXT_1 called&quot;)
+    return(tidyTXT_1(path))
+    
+  } else if(str_detect(path, &quot;T02.txt&quot;)) {
+    print(&quot;tidyTXT_2 called&quot;)
+    return(tidyTXT_2(path))
+    
+  } else if(str_detect(path, &quot;T03.txt&quot;)) {
+    print(&quot;tidyTXT_3 called&quot;)
+    return(tidyTXT_3(path))
+    
+  } else if(str_detect(path, &quot;T07.txt&quot;)) {
+    print(&quot;tidyTXT_7 called&quot;)
+    return(tidyTXT_7(path))
+    
+  } else if(str_detect(path, &quot;T09.txt&quot;)) {
+    print(&quot;tidyTXT_9 called&quot;)
+    return(tidyTXT_9(path))
+    
+  } else if(str_detect(path, &quot;T11.txt&quot;)) {
+    print(&quot;tidyTXT_11 called&quot;)
+    return(tidyTXT_11(path))
+    
+  } else if(str_detect(path, &quot;T16.txt&quot;)) {
+    print(&quot;tidyTXT_16 called&quot;)
+    return(tidyTXT_16(path))
+    
+  } else if(str_detect(path, &quot;T20.txt&quot;)) {
+    print(&quot;tidyTXT_20 called&quot;)
+    return(tidyTXT_20(path))
+    
+  } else if(str_detect(path, &quot;T22.txt&quot;)) {
+    print(&quot;tidyTXT_22 called&quot;)
+    return(tidyTXT_22(path))
+    
+  } else if(str_detect(path, &quot;T24.txt&quot;)) {
+    print(&quot;tidyTXT_24 called&quot;)
+    return(tidyTXT_24(path))
+    
+  } else if(str_detect(path, &quot;T27.txt&quot;)) {
+    print(&quot;tidyTXT_27 called&quot;)
+    return(tidyTXT_27(path))
+    
+  } else if(str_detect(path, &quot;T31.txt&quot;)) {
+    print(&quot;tidyTXT_31 called&quot;)
+    return(tidyTXT_31(path))
+    
+  } else if(str_detect(path, &quot;T34.txt&quot;)) {
+    print(&quot;tidyTXT_34 called&quot;)
+    return(tidyTXT_34(path))
+    
+  } else if(str_detect(path, &quot;T35.txt&quot;)) {
+    print(&quot;tidyTXT_35 called&quot;)
+    return(tidyTXT_35(path))
+    
+  } else if(str_detect(path, &quot;T36.txt&quot;)) {
+    print(&quot;tidyTXT_36 called&quot;)
+    return(tidyTXT_36(path))
+    
+  } else if(str_detect(path, &quot;T39.txt&quot;)) {
+    print(&quot;tidyTXT_39 called&quot;)
+    return(tidyTXT_39(path))
+  }  
 }</code></pre>
 <p>For the main analysis of the group only the ID columns and the Production Dates are necessary. In that way all the other columns were discharged. It is possible to verify how the functions were used for an example.</p>
 <pre class="r"><code>tidyTXT_7 &lt;- function(path){
