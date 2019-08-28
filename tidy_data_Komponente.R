@@ -126,10 +126,10 @@ Ktxt_list_E <- c("K2LE1.txt")
 #### Importing the data frames
 
 # Get a char vector with all the paths
-partFileNames <- list.files("Data/Komponente")
-fullPath <- paste("Data/Komponente/", partFileNames, sep="")
+compFileNames <- list.files("Data/Komponente")
+fullPath <- paste("Data/Komponente/", compFileNames, sep="")
 BEVector <- fullPath[1:16]
-pathVector <- fullPath[17:32]
+compPathVector <- fullPath[17:32]
 
 
 # Function determines, based on predefined lists, which tidy function shall be applied
@@ -537,8 +537,8 @@ startImportComp <- function() {
   }
   print("starting importing Komponenten")
   comp_df_list <<- list()
-  for (i in seq_along(pathVector)) {
-    comp_df_list[[i]] <<- determineTidyFunction(pathVector[i])
+  for (i in seq_along(compPathVector)) {
+    comp_df_list[[i]] <<- determineTidyFunction(compPathVector[i])
     
     # # Renaming items in data frame list, implement when txt imports are done
     # names(comp_df_list) <- gsub("\\Einzelteil+", "", partFileNames)
