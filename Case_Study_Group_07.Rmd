@@ -25,7 +25,6 @@ library(stringr)
 
 ```
 
-
 ### 1. Approach
 
 The decision of most critical vehicle type will be based on the vehicle type with the highest amount and occurrences of "production duration".
@@ -45,9 +44,91 @@ The Shiny App then provides input methods to display box plot diagrams of the ve
 
 ### 2. Import & Tidy of all segments
 
+Since there are 79 files to be considered for our analysis, many being untidy, we split up the importing and tidying to separate modules, that were sourced for joining and data analysis. 
+
 #### Parts
 
-The first step for the project was importing all the necessary files in a R dataframe structure. The .csv files were simplier to import and required only a pattern definition through visualization and the import command of read_csv
+The 38 part files in the `Einzelteile` directory had well over ten different patterns that needed to be identified for a correct import and tidying. Some files had more columns than others, some had differerent date formats, missing line breaks or varios delimiters. 
+  
+In this chunk, all the files from the specific `Einzelteile` directory are written into a vector:
+```{r}
+partFileNames <- list.files("Data/Einzelteil")
+pathVector <- paste("Data/Einzelteil/", partFileNames, sep="")
+```  
+  
+The .csv files were simplier to import: there were two delimiters and and a few different patterns regarding the amount of variables (columns) and the format of the dates. 
+
+At first, after inspecting the files manually with shell commands, four lists to classify the .csv files depending on their number were created:
+
+
+```{r}
+# CSV with pattern A (clean)
+list_A <- c("T04", "T10", "T13", "T14", "T18", "T21", "T26", "T40") # semicolon
+list_A2 <- c("T06", "T08", "T19", "T25", "T33", "T37") # comma
+
+# CSV with pattern B (extra cols)
+list_B <- c("T12", "T15", "T17", "T23", "T32") # semicolon
+list_B2 <- c("T05","T30", "T38") # comma
+```
+
+Another function, that helps applying the correct import and tidying function was created. Here .csv files are assigned to the functions via the formerly created lists. Since the .txt files needed various import functions, another helper function `importTXT()` is called, that then determines the final function to import and tidy the file.
+
+```{r}
+# Function determines, based on predefined lists, which tidy function shall be applied
+determineTidyFunction <- function(filePath) {
+  
+  if (length(which(str_detect(filePath, list_A))) == 1){
+    print(paste("found match in list_A:", filePath)) # console logging
+    tidyCSV_a(filePath)
+  } else if (length(which(str_detect(filePath, list_A2))) == 1){
+    print(paste("found match in list_A2:", filePath)) # console logging
+    tidyCSV_a(filePath, ",")
+  } else if (length(which(str_detect(filePath, list_B))) == 1){
+    print(paste("found match in list_B:", filePath)) # console logging
+    tidyCSV_b(filePath)
+  } else if (length(which(str_detect(filePath, list_B2))) == 1){
+    print(paste("found match in list_B2:", filePath)) # console logging
+    tidyCSV_b(filePath, ",")
+  }  else {
+    print(paste("found TXT file:", filePath)) # console logging
+    importTXT(filePath)
+  }
+}
+```
+
+The function `tidyCSV_a` which gets called by`determineTidyFunction()` imports the .csv with format A and A2
+and returns a data frame. here varios helper functions are called, but are elaborated later one...
+
+```{r}
+tidyCSV_a <- function(path, delim = ";") {
+  # Console log
+  print(paste0("tidyCSV_a called with path: ", path))
+  
+  #Import CSV depending on delimiter
+  if (delim == ",") {
+    df <- read_csv(path)
+  } else {
+    df <- read_csv2(path)
+  }
+  
+  # Tidy dates in short table
+  df <- tidyDate(df)
+  
+  # Drop columns (prod_date was appended as 11th column)
+  df <- df[c(3, 11)]
+  
+  # Renaming cols
+  names(df)[1] <- "global_id"
+
+  # Check for NA values
+  importAnalysis(df)
+  
+  return(df)
+}
+```
+
+The function `tidyCSV_b` which gets called by`determineTidyFunction()` imports the .csv with format B and B2
+and returns a data frame. here varios helper functions are called too. It is different from the previous function in terms of not needing to reformat the date and different columns that can be dropped.
 
 ```{r}
 tidyCSV_b <- function(path, delim = ";") {
@@ -59,30 +140,41 @@ tidyCSV_b <- function(path, delim = ";") {
   } else {
     df <- read.csv2(path, stringsAsFactors = FALSE)
   }
+  
+  # Unite, rename, filter dates
+  df <- tidyLong(df)
+  
+  # Drop columns except the 4 necessary ones
+  df <- df[3:4]
+  
+  # Check for NA values
+  importAnalysis(df)
+  
+  return(df)
 }
 ```
 
 The .txt files in the Parts and Components files were more challenging, requiring a deeper pattern analysis, specially because of the lack of end of lines characters, that were added with the command gsub. The goal was to replace a pattern represented by a regular expression into a line breaker. 
 
 ```{r}
-gsub(pattern = '(?<=")\\s+"(?=[0-9][^-])', replace = '\n"', ., perl = TRUE)
+#gsub(pattern = '(?<=")\\s+"(?=[0-9][^-])', replace = '\n"', ., perl = TRUE)
 ```
 
 After identifying all line breakers for particular .txt files, those files were imported using read_table. As an example is the code for the file of Parts_07
 
 ```{r}
-  x <- readLines(path) %>%
-    gsub(pattern = '""', replace = '"\n"', .) 
-  
-  for (i in 2:length(x) ) {
-    df <- read.table(textConnection(x[i]), header=TRUE)
-}
+#   x <- readLines(path) %>%
+#     gsub(pattern = '""', replace = '"\n"', .) 
+#   
+#   for (i in 2:length(x) ) {
+#     df <- read.table(textConnection(x[i]), header=TRUE)
+# }
 ```
 
 
 When all files were successfully imported, it was necessary to tidy the dataframes following the basic rules for Tidy Data. Some problems found were the different time formats, more than one column per information and other strange formats.
 
-For the different date formats:
+The `tidydate`function is called for all the files storing the data in two separate files. After reappending the readable date to the data frame, any row outside the date specicified 2015-2016 is disregarded. The helper function is utilized by some of both .csv and .txt import functions.
 
 ```{r}
 tidyDate <- function(df) {
@@ -95,6 +187,7 @@ tidyDate <- function(df) {
     betterDates <- as.Date(daycount, origin = "1970-01-01")
   } else {
     betterDates <- as.Date(daycount, origin = "1970-01-01")
+    # Warn if multiple values are found, yet assume this was not intentional
     print("WARNING! Multiple values found!")
   }
   
@@ -109,7 +202,7 @@ tidyDate <- function(df) {
 }
 ```
 
-For the different column names: 
+The `tidydate`function is used for uniting columns in the data frame, as some files show have the actual data written in different columns after a certain point. At the same time, the specified time range is selected and columns are renamed.
 
 ```{r}
 tidyLong <- function(df) {
@@ -131,7 +224,7 @@ tidyLong <- function(df) {
 }
 ```
 
-Dropping columns and renaming:
+The `dropAndRename` function is utilized by some .txt import functions to unnecessary columns and rename the id. Furthermore, an import analysis is conducted, to scan the data frame for missing values (NA)
 
 ```{r}
 dropAndRename <- function(df) {
@@ -148,6 +241,81 @@ dropAndRename <- function(df) {
   return(df)
 }
 ```
+
+The following `importTXT` function assigns each plain text file based on their file name to a tidy function: 
+
+```{r}
+# Function to assign the correct import and tidy function to a .txt file
+importTXT <- function(path) {
+  print(path)
+  
+  if (str_detect(path, "T01.txt")) {
+    print("tidyTXT_1 called")
+    return(tidyTXT_1(path))
+    
+  } else if(str_detect(path, "T02.txt")) {
+    print("tidyTXT_2 called")
+    return(tidyTXT_2(path))
+    
+  } else if(str_detect(path, "T03.txt")) {
+    print("tidyTXT_3 called")
+    return(tidyTXT_3(path))
+    
+  } else if(str_detect(path, "T07.txt")) {
+    print("tidyTXT_7 called")
+    return(tidyTXT_7(path))
+    
+  } else if(str_detect(path, "T09.txt")) {
+    print("tidyTXT_9 called")
+    return(tidyTXT_9(path))
+    
+  } else if(str_detect(path, "T11.txt")) {
+    print("tidyTXT_11 called")
+    return(tidyTXT_11(path))
+    
+  } else if(str_detect(path, "T16.txt")) {
+    print("tidyTXT_16 called")
+    return(tidyTXT_16(path))
+    
+  } else if(str_detect(path, "T20.txt")) {
+    print("tidyTXT_20 called")
+    return(tidyTXT_20(path))
+    
+  } else if(str_detect(path, "T22.txt")) {
+    print("tidyTXT_22 called")
+    return(tidyTXT_22(path))
+    
+  } else if(str_detect(path, "T24.txt")) {
+    print("tidyTXT_24 called")
+    return(tidyTXT_24(path))
+    
+  } else if(str_detect(path, "T27.txt")) {
+    print("tidyTXT_27 called")
+    return(tidyTXT_27(path))
+    
+  } else if(str_detect(path, "T31.txt")) {
+    print("tidyTXT_31 called")
+    return(tidyTXT_31(path))
+    
+  } else if(str_detect(path, "T34.txt")) {
+    print("tidyTXT_34 called")
+    return(tidyTXT_34(path))
+    
+  } else if(str_detect(path, "T35.txt")) {
+    print("tidyTXT_35 called")
+    return(tidyTXT_35(path))
+    
+  } else if(str_detect(path, "T36.txt")) {
+    print("tidyTXT_36 called")
+    return(tidyTXT_36(path))
+    
+  } else if(str_detect(path, "T39.txt")) {
+    print("tidyTXT_39 called")
+    return(tidyTXT_39(path))
+  }  
+}
+```
+
 
 
 For the main analysis of the group only the ID columns and the Production Dates are necessary. In that way all the other columns were discharged. It is possible to verify how the functions were used for an example.
@@ -170,6 +338,29 @@ tidyTXT_7 <- function(path){
 }
 
 ```
+
+
+#### Components
+
+add import scripts
+
+#### Vehicles
+
+add import scripts
+
+
+
+### 3. Transform
+
+Add information for the merged data
+
+### 4. Shiny App & Visualization
+
+Add Shiny, Boxplit info
+
+### 5. Analysis
+
+Insert analysis data and information
 
 
 #### Components

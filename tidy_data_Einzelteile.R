@@ -26,6 +26,10 @@ library(lubridate) # For date functions
 library(stringr) # For analyzing strings
 
 
+# Create a char vector with all the paths of the files in the folder
+partFileNames <- list.files("Data/Einzelteil")
+pathVector <- paste("Data/Einzelteil/", partFileNames, sep="")
+
 
 # CSV with pattern A (clean)
 list_A <- c("T04", "T10", "T13", "T14", "T18", "T21", "T26", "T40") # semicolon
@@ -34,13 +38,6 @@ list_A2 <- c("T06", "T08", "T19", "T25", "T33", "T37") # comma
 # CSV with pattern B (extra cols)
 list_B <- c("T12", "T15", "T17", "T23", "T32") # semicolon
 list_B2 <- c("T05","T30", "T38") # comma
-
-
-#### Importing the data frames
-
-# Get a char vector with all the paths
-partFileNames <- list.files("Data/Einzelteil")
-pathVector <- paste("Data/Einzelteil/", partFileNames, sep="")
 
 
 # Function determines, based on predefined lists, which tidy function shall be applied
