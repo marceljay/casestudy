@@ -9,7 +9,9 @@ output:
 
 ### Introduction
 
-This document provides all major steps and important informations regarding the execution of a Case Study for the IDA Course.
+This document provides all major steps and important information regarding the execution of the Case Study for Group 7 of the IDA Course. The output will be a complete data frame with essential data needed for the Shiny App.
+
+The objective is to identify vehicle types that take a lot of time between the Start of production of parts to the finished vehicle. For this, the production times of parts, and vehicles need to be considered and visualized appropriately. Since the subsequent analysis will be used to initiate process improvements for critical vehicle types, the most critical vehicle type needs to be selected in the end.
 
 For this Case Study the following libraries were used.
 
@@ -28,7 +30,9 @@ library(stringr)
 
 
 
-### 2. Import
+### 2. Import & Tidy of all segments
+
+#### Parts
 
 The first step for the project was importing all the necessary files in a R dataframe structure. The .csv files were simplier to import and required only a pattern definition through visualization and the import command of read_csv
 
@@ -62,8 +66,6 @@ After identifying all line breakers for particular .txt files, those files were 
 }
 ```
 
-
-### 3. Tidy
 
 When all files were successfully imported, it was necessary to tidy the dataframes following the basic rules for Tidy Data. Some problems found were the different time formats, more than one column per information and other strange formats.
 
@@ -156,9 +158,24 @@ tidyTXT_7 <- function(path){
 
 ```
 
-### 4. Merge
+
+#### Components
+
+add import scripts
+
+#### Vehicles
+
+add import scripts
+
+
+
+### 3. Transform
 
 Add information for the merged data
+
+### 4. Shiny App & Visualization
+
+Add Shiny, Boxplit info
 
 ### 5. Analysis
 
