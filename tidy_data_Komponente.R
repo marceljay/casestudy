@@ -262,6 +262,7 @@ tidyCSV_Kcsv_AB <- function(path, delim = ";") {
   names(df)[3] <<- "oem"
   names(df)[4] <<- "factory"
   
+  # filter for 2015-2016 and only ID and prod_date cols
   dateFilter()
   reformatCols()
   
@@ -295,11 +296,13 @@ tidyCSV_Kcsv_Cxyz <- function(path, delim = ";") {
   # Delete unnecessary cols, reorder
   df <<- subset(df, select=c(1,3,5,6,4)) 
   
+  # filter for 2015-2016
   dateFilter()
   
   # Reformat date col from chr to date
   df$prod_date <<- as.Date(df$prod_date)
   
+  # only ID and prod_date cols
   reformatCols()
   
   # print(df)
@@ -338,8 +341,8 @@ tidyTXT_A <- function(path){
   names(df)[3] <<- "oem"
   names(df)[4] <<- "factory"
   
+  # filter for 2015-2016 and only ID and prod_date cols
   dateFilter()
-  
   reformatCols()
   
   # print(df)
@@ -375,8 +378,8 @@ tidyTXT_B <- function(path){
   names(df)[3] <<- "oem"
   names(df)[4] <<- "factory"
   
+  # filter for 2015-2016 and only ID and prod_date cols
   dateFilter()
-  
   reformatCols()
   
   # print(df)
@@ -399,11 +402,13 @@ tidyTXT_C <- function(path){
   # Delete unnecessary cols, reorder
   df <<- subset(df, select=c(1,2,4,5,3)) 
   
+  # filter for 2015-2016
   dateFilter()
   
   # Reformat date col from chr to date
   df$prod_date <<- as.Date(df$prod_date)
   
+  # only ID and prod_date cols
   reformatCols()
   
   # print(df)
@@ -413,13 +418,12 @@ tidyTXT_C <- function(path){
 tidyTXT_D <- function(path){
   print(paste0("tidyTXT_D called with path: ", path))
   
-  
+  # import .txt file by lines and add line endings and remove interfering chars
   readLines(path) %>% 
     gsub(pattern='"\t"', replace = '"\n"') %>% 
     gsub(pattern='\t', replace = "") %>% 
     paste0('""\\',.) %>% 
     read.table(text=., sep = "\\", header=TRUE, stringsAsFactors = FALSE) ->> df
-  # Maybe delete the temporary backup_Komp.txt
   
   #Store all counted days in vector
   daycount <<-df$Produktionsdatum_Origin_01011970
@@ -453,8 +457,8 @@ tidyTXT_D <- function(path){
   names(df)[3] <<- "oem"
   names(df)[4] <<- "factory"
   
+  # filter for 2015-2016 and only ID and prod_date cols
   dateFilter()
-  
   reformatCols()
   
   # print(df)
@@ -487,11 +491,13 @@ tidyTXT_E <- function(path){
   # Delete unncessary cols, reorder
   df <<- subset(df, select=c(1,3,5,6,4))
   
+  # filter for 2015-2016
   dateFilter()
   
   # Reformat date col from chr to date
   df$prod_date <<- as.Date(df$prod_date)
   
+  # only ID and prod_date cols
   reformatCols()
   
   # print(df)
@@ -550,16 +556,15 @@ startImportComp <- function() {
 #################################
 # Combine comp_df_list into one & Tidy
 #################################
-# comp_df <- 1
-# BE_comp_df <- 1
-# bind all dfs together
 
+# check for component id duplicates in comp_df_list
 dup_checker_comp_df_list <- function() {
   for (i in 1:16) {
     print(paste0("Number of duplicates in comp_df_list ", i, "/16: ", sum(duplicated(comp_df_list[[i]]$comp_global_id))))
   }
 }
 
+# check for part id duplicates in BE_df_list
 dup_checker_BE_list <- function() {
   for (i in 1:16) {
     print(paste0("Number of duplicates in comp_df_list ", i, "/16: ", sum(duplicated(BE_list[[i]]$part_global_id))))
@@ -574,10 +579,6 @@ link_comp_df_list <- function() {
     comp_df <<- bind_rows(comp_df, comp_df_list[[i]])
     print(paste0("df added:",i,"/16"))
   }
-  # Remove ID col, row names, rename cols to comp_*
-  # comp_df <<- subset(comp_df, select=c(2,5))
-  # rownames(comp_df) <<- c()
-  # names(comp_df) <<- c("comp_global_id", "comp_prod_date")
   print("comp_df created successfully!")
 }
 
