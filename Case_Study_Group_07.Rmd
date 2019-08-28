@@ -116,6 +116,8 @@ tidyCSV_a <- function(path, delim = ";") {
 }
 ```
 
+The function `tidyCSV_b` which gets called by`determineTidyFunction()` imports the .csv with format B and B2
+and returns a data frame. here varios helper functions are called too. It is different from the previous function in terms of not needing to reformat the date and different columns that can be dropped.
 
 ```{r}
 tidyCSV_b <- function(path, delim = ";") {
@@ -127,6 +129,17 @@ tidyCSV_b <- function(path, delim = ";") {
   } else {
     df <- read.csv2(path, stringsAsFactors = FALSE)
   }
+  
+  # Unite, rename, filter dates
+  df <- tidyLong(df)
+  
+  # Drop columns except the 4 necessary ones
+  df <- df[3:4]
+  
+  # Check for NA values
+  importAnalysis(df)
+  
+  return(df)
 }
 ```
 
@@ -150,7 +163,7 @@ After identifying all line breakers for particular .txt files, those files were 
 
 When all files were successfully imported, it was necessary to tidy the dataframes following the basic rules for Tidy Data. Some problems found were the different time formats, more than one column per information and other strange formats.
 
-For the different date formats:
+The `tidydate`function is called for all the files storing the data in two separate files. After reappending the readable date to the data frame, any row outside the date specicified 2015-2016 is disregarded. The helper function is utilized by some of both .csv and .txt import functions.
 
 ```{r}
 tidyDate <- function(df) {
@@ -163,6 +176,7 @@ tidyDate <- function(df) {
     betterDates <- as.Date(daycount, origin = "1970-01-01")
   } else {
     betterDates <- as.Date(daycount, origin = "1970-01-01")
+    # Warn if multiple values are found, yet assume this was not intentional
     print("WARNING! Multiple values found!")
   }
   
@@ -177,7 +191,7 @@ tidyDate <- function(df) {
 }
 ```
 
-For the different column names: 
+The `tidydate`function is used for uniting columns in the data frame, as some files show have the actual data written in different columns after a certain point. At the same time, the specified time range is selected and columns are renamed.
 
 ```{r}
 tidyLong <- function(df) {
@@ -199,7 +213,7 @@ tidyLong <- function(df) {
 }
 ```
 
-Dropping columns and renaming:
+The `dropAndRename` function is utilized by some .txt import functions to unnecessary columns and rename the id. Furthermore, an import analysis is conducted, to scan the data frame for missing values (NA)
 
 ```{r}
 dropAndRename <- function(df) {
@@ -216,6 +230,81 @@ dropAndRename <- function(df) {
   return(df)
 }
 ```
+
+The following `importTXT` function assigns each plain text file based on their file name to a tidy function: 
+
+```{r}
+# Function to assign the correct import and tidy function to a .txt file
+importTXT <- function(path) {
+  print(path)
+  
+  if (str_detect(path, "T01.txt")) {
+    print("tidyTXT_1 called")
+    return(tidyTXT_1(path))
+    
+  } else if(str_detect(path, "T02.txt")) {
+    print("tidyTXT_2 called")
+    return(tidyTXT_2(path))
+    
+  } else if(str_detect(path, "T03.txt")) {
+    print("tidyTXT_3 called")
+    return(tidyTXT_3(path))
+    
+  } else if(str_detect(path, "T07.txt")) {
+    print("tidyTXT_7 called")
+    return(tidyTXT_7(path))
+    
+  } else if(str_detect(path, "T09.txt")) {
+    print("tidyTXT_9 called")
+    return(tidyTXT_9(path))
+    
+  } else if(str_detect(path, "T11.txt")) {
+    print("tidyTXT_11 called")
+    return(tidyTXT_11(path))
+    
+  } else if(str_detect(path, "T16.txt")) {
+    print("tidyTXT_16 called")
+    return(tidyTXT_16(path))
+    
+  } else if(str_detect(path, "T20.txt")) {
+    print("tidyTXT_20 called")
+    return(tidyTXT_20(path))
+    
+  } else if(str_detect(path, "T22.txt")) {
+    print("tidyTXT_22 called")
+    return(tidyTXT_22(path))
+    
+  } else if(str_detect(path, "T24.txt")) {
+    print("tidyTXT_24 called")
+    return(tidyTXT_24(path))
+    
+  } else if(str_detect(path, "T27.txt")) {
+    print("tidyTXT_27 called")
+    return(tidyTXT_27(path))
+    
+  } else if(str_detect(path, "T31.txt")) {
+    print("tidyTXT_31 called")
+    return(tidyTXT_31(path))
+    
+  } else if(str_detect(path, "T34.txt")) {
+    print("tidyTXT_34 called")
+    return(tidyTXT_34(path))
+    
+  } else if(str_detect(path, "T35.txt")) {
+    print("tidyTXT_35 called")
+    return(tidyTXT_35(path))
+    
+  } else if(str_detect(path, "T36.txt")) {
+    print("tidyTXT_36 called")
+    return(tidyTXT_36(path))
+    
+  } else if(str_detect(path, "T39.txt")) {
+    print("tidyTXT_39 called")
+    return(tidyTXT_39(path))
+  }  
+}
+```
+
 
 
 For the main analysis of the group only the ID columns and the Production Dates are necessary. In that way all the other columns were discharged. It is possible to verify how the functions were used for an example.
