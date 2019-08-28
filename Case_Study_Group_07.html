@@ -7,6 +7,7 @@
 <meta charset="utf-8" />
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 
 <meta name="author" content="IDA Group 7" />
@@ -1614,18 +1615,6 @@ summary {
 }
 </style>
 
-<script>
-$(document).ready(function () {
-  window.buildTabsets("TOC");
-});
-
-$(document).ready(function () {
-  $('.tabset-dropdown > .nav-tabs > li').click(function () {
-    $(this).parent().toggleClass('nav-tabs-open')
-  });
-});
-</script>
-
 <!-- code folding -->
 
 
@@ -1654,15 +1643,31 @@ $(document).ready(function () {
 
 <div id="introduction" class="section level3">
 <h3>Introduction</h3>
-<p>This document provides all major steps and important informations regarding the execution of a Case Study for the IDA Course.</p>
+<p>This document provides all major steps and important information regarding the execution of the Case Study for Group 7 of the IDA Course. The output will be a complete data frame with essential data needed for the Shiny App.</p>
+<p>The objective is to identify vehicle types that take a lot of time between the Start of production of parts to the finished vehicle. For this, the production times of parts, and vehicles need to be considered and visualized appropriately. Since the subsequent analysis will be used to initiate process improvements for critical vehicle types, the most critical vehicle type needs to be selected in the end.</p>
+<p>For this Case Study the following libraries were used.</p>
 </div>
 <div id="approach" class="section level3">
 <h3>1. Approach</h3>
-<p>In order to</p>
 </div>
-<div id="import" class="section level3">
-<h3>2. Import</h3>
-<p>The first step for the project was importing all the necessary files in a R dataframe structure. The .csv files were simplier to import and required only a pattern definition through visualization and the import command of read_csv</p>
+<div id="import-tidy-of-all-segments" class="section level3">
+<h3>2. Import &amp; Tidy of all segments</h3>
+<p>Since there are 79 files to be considered for our analysis, many being untidy, we split up the importing and tidying to separate modules, that were sourced for joining and data analysis.</p>
+<div id="parts" class="section level4">
+<h4>Parts</h4>
+<p>The 38 part files in the <code>Einzelteile</code> directory had well over ten different patterns that needed to be identified for a correct import and tidying. Some files had more columns than others, some had differerent date formats, missing line breaks or varios delimiters.</p>
+<p>The .csv files were simplier to import: there were two delimiters and and a few different patterns regarding the amount of variables (columns) and the format of the dates.</p>
+<p>At first, after inspecting the files manually with shell commands, four lists to classify the .csv files depending on their number were created:</p>
+<pre class="r"><code># CSV with pattern A (clean)
+list_A &lt;- c(&quot;T04&quot;, &quot;T10&quot;, &quot;T13&quot;, &quot;T14&quot;, &quot;T18&quot;, &quot;T21&quot;, &quot;T26&quot;, &quot;T40&quot;) # semicolon
+list_A2 &lt;- c(&quot;T06&quot;, &quot;T08&quot;, &quot;T19&quot;, &quot;T25&quot;, &quot;T33&quot;, &quot;T37&quot;) # comma
+
+# CSV with pattern B (extra cols)
+list_B &lt;- c(&quot;T12&quot;, &quot;T15&quot;, &quot;T17&quot;, &quot;T23&quot;, &quot;T32&quot;) # semicolon
+list_B2 &lt;- c(&quot;T05&quot;,&quot;T30&quot;, &quot;T38&quot;) # comma</code></pre>
+<p>In this chunk, all the files from the specific <code>Einzelteile</code> directory are written into a vector:</p>
+<pre class="r"><code>partFileNames &lt;- list.files(&quot;Data/Einzelteil&quot;)
+pathVector &lt;- paste(&quot;Data/Einzelteil/&quot;, partFileNames, sep=&quot;&quot;)</code></pre>
 <pre class="r"><code>tidyCSV_b &lt;- function(path, delim = &quot;;&quot;) {
   print(&quot;---- called tidyCSV_b ----&quot;)
   
@@ -1673,14 +1678,108 @@ $(document).ready(function () {
     df &lt;- read.csv2(path, stringsAsFactors = FALSE)
   }
 }</code></pre>
-<p>The .txt files in the Parts and Components files were more challenging, requiring a deeper pattern analysis, specially because of the lack of end of lines characters, that were added with the command gsub.</p>
-<p>Add code lines for txt import</p>
+<p>The .txt files in the Parts and Components files were more challenging, requiring a deeper pattern analysis, specially because of the lack of end of lines characters, that were added with the command gsub. The goal was to replace a pattern represented by a regular expression into a line breaker.</p>
+<pre class="r"><code>#gsub(pattern = '(?&lt;=&quot;)\\s+&quot;(?=[0-9][^-])', replace = '\n&quot;', ., perl = TRUE)</code></pre>
+<p>After identifying all line breakers for particular .txt files, those files were imported using read_table. As an example is the code for the file of Parts_07</p>
+<pre class="r"><code>#   x &lt;- readLines(path) %&gt;%
+#     gsub(pattern = '&quot;&quot;', replace = '&quot;\n&quot;', .) 
+#   
+#   for (i in 2:length(x) ) {
+#     df &lt;- read.table(textConnection(x[i]), header=TRUE)
+# }</code></pre>
+<p>When all files were successfully imported, it was necessary to tidy the dataframes following the basic rules for Tidy Data. Some problems found were the different time formats, more than one column per information and other strange formats.</p>
+<p>For the different date formats:</p>
+<pre class="r"><code>tidyDate &lt;- function(df) {
+  print(&quot;tidyDate called!&quot;)
+  
+  daycount &lt;- df$Produktionsdatum_Origin_01011970
+  
+  if (length(unique(df$origin))==1) {
+    # Reformat date from data frame to fit as.Date
+    betterDates &lt;- as.Date(daycount, origin = &quot;1970-01-01&quot;)
+  } else {
+    betterDates &lt;- as.Date(daycount, origin = &quot;1970-01-01&quot;)
+    print(&quot;WARNING! Multiple values found!&quot;)
+  }
+  
+  # Add date column with correctly formatted dates
+  df$prod_date &lt;- betterDates
+  
+  # Deleting rows that shall be disregarded because of date range
+  df &lt;- subset(df, !prod_date&lt;&quot;2015-01-01&quot;)
+  df &lt;- subset(df, !prod_date&gt;&quot;2016-12-31&quot;)
+
+  return(df)
+}</code></pre>
+<p>For the different column names:</p>
+<pre class="r"><code>tidyLong &lt;- function(df) {
+  print(&quot;tidyLong called!&quot;)
+  
+  # Unite related columns, since after some row number, values appear in different columns
+  df &lt;- unite(df, &quot;prod_date&quot;, contains(&quot;Produktionsdatum&quot;), sep=&quot;_&quot;)
+  df &lt;- unite(df, &quot;global_id&quot;, contains(&quot;ID_T&quot;), sep=&quot;_&quot;) 
+  
+  # Clean newly united col names from NA
+  df$prod_date &lt;- gsub(pattern=&quot;_NA|NA_&quot;, replace=&quot;&quot;, x=df$prod_date)
+  df$global_id &lt;- gsub(pattern=&quot;_NA|NA_&quot;, replace=&quot;&quot;, x=df$global_id)
+  
+  # Deleting rows that shall be disregarded because of date range
+  df &lt;- subset(df, !prod_date&lt;&quot;2015-01-01&quot;)
+  df &lt;- subset(df, !prod_date&gt;&quot;2016-12-31&quot;)
+  
+  return(df)
+}</code></pre>
+<p>Dropping columns and renaming:</p>
+<pre class="r"><code>dropAndRename &lt;- function(df) {
+  
+  #  Drop columns (prod_date was appended as 11th column)
+  df &lt;- df[c(2, 10)]
+  
+  # Renaming cols
+  names(df)[1] &lt;- &quot;global_id&quot;
+  
+  # Check for NA values
+  importAnalysis(df)
+  
+  return(df)
+}</code></pre>
+<p>For the main analysis of the group only the ID columns and the Production Dates are necessary. In that way all the other columns were discharged. It is possible to verify how the functions were used for an example.</p>
+<pre class="r"><code>tidyTXT_7 &lt;- function(path){
+  x &lt;- readLines(path) %&gt;%
+    gsub(pattern = '&quot;&quot;', replace = '&quot;\n&quot;', .) 
+  
+  for (i in 2:length(x) ) {
+    df &lt;- read.table(textConnection(x[i]), header=TRUE)
+  }
+  
+  df &lt;- tidyDate(df)
+  
+  # Drop columns and rename 
+  df &lt;- dropAndRename(df)
+  
+  return(df)
+}</code></pre>
 </div>
-<div id="tidy" class="section level3">
-<h3>3. Tidy</h3>
+<div id="components" class="section level4">
+<h4>Components</h4>
+<p>add import scripts</p>
+</div>
+<div id="vehicles" class="section level4">
+<h4>Vehicles</h4>
+<p>add import scripts</p>
+</div>
+</div>
+<div id="transform" class="section level3">
+<h3>3. Transform</h3>
+<p>Add information for the merged data</p>
+</div>
+<div id="shiny-app-visualization" class="section level3">
+<h3>4. Shiny App &amp; Visualization</h3>
+<p>Add Shiny, Boxplit info</p>
 </div>
 <div id="analysis" class="section level3">
-<h3>4. Analysis</h3>
+<h3>5. Analysis</h3>
+<p>Insert analysis data and information</p>
 </div>
 
 
@@ -1700,6 +1799,23 @@ $(document).ready(function () {
 
 
 </script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
 
 <!-- dynamically load mathjax for compatibility with self-contained -->
 <script>
