@@ -11,7 +11,7 @@ output:
 
 This document provides all major steps and important information regarding the execution of the Case Study for Group 7 of the IDA Course. The output will be a complete data frame with essential data needed for the Shiny App.
 
-The objective is to identify vehicle types that take a lot of time between the Start of production of parts to the finished vehicle. For this, the production times of parts, and vehicles need to be considered and visualized appropriately. Since the subsequent analysis will be used to initiate process improvements for critical vehicle types, the most critical vehicle type needs to be selected in the end.
+The objective is to identify vehicle types that take a lot of time between the Start of production of parts to the finished vehicle for the duration of Jan-1-2015 to Dez-31-2016. For this, the production times of parts, and vehicles need to be considered and visualized appropriately. Since the subsequent analysis will be used to initiate process improvements for critical vehicle types, the most critical vehicle type needs to be selected in the end.
 
 For this Case Study the following libraries were used.
 
@@ -25,15 +25,26 @@ library(stringr)
 
 ```
 
-
 ### 1. Approach
+
+The decision of most critical vehicle type will be based on the vehicle type with the highest amount and occurrences of "production duration".
+In order to create informative box plot diagrams visualizing this attribute, a tidied data frame with relevant data needs to be created from the given raw data. Thus all files containing raw data need to be examined to choose a selection of relevant files for import. For the given objective, the data in files containing attributes related to the production date of parts (Einzelteile), components (Komponente) and vehicles (Fahrzeuge) are necessary to produce the attribute "production duration".
+
+While skimming through the files in the directories "Einzelteil", "Komponente" and "Fahrzeug" using external text editors, MS excel and in command line with head() and tail(), it became clear that the often sequentially named .csv and .txt files within contain columns with date-like values such as "origin", while files in the component and vehicle directories containing "Bestandteile_" in their names serve as keys to match columns in parts, components and vehicles together.
+
+After the import, the resulting data frames are tidied according to the principles of tidy data depending on the given situation. Most often, the values are scanned for NA entries and duplicates, irrelevant columns are removed and a filter is set for the required time period. In select cases, further steps are involved to prepare data frames for transformation.
+
+During transformation, all part, component and vehicle data frames are linked together to create one data frame for each segment via bind_rows(). With the "Bestandteile_" data frames serving as keys, the columns of the three data frames containing the production dates of each segments are merged into one final data frame. While the production date of components are not essential for the objective, the component data frame still serves its purpose as it provides the only means to connect parts to vehicles.
+
+The final data frame contains observations for indivitual vehicles within their respective types with the attributes of the vehicle's production date and the production dates of all parts built into that vehicle. By selecting the highest difference in production date between a vehicle and the built in parts, the production time for that vehicle can be determined and visualized for the Shiny App.
+
+The Shiny App then provides input methods to display box plot diagrams of the vehicle production times based on vehicle types and OEM factories. 
 
 
 
 ### 2. Import & Tidy of all segments
 
 Since there are 79 files to be considered for our analysis, many being untidy, we split up the importing and tidying to separate modules, that were sourced for joining and data analysis. 
-
 
 #### Parts
 
@@ -332,6 +343,29 @@ tidyTXT_7 <- function(path){
 #### Components
 
 add import scripts
+
+#### Vehicles
+
+add import scripts
+
+
+
+### 3. Transform
+
+Add information for the merged data
+
+### 4. Shiny App & Visualization
+
+Add Shiny, Boxplit info
+
+### 5. Analysis
+
+Insert analysis data and information
+
+
+#### Components
+
+Before attempting to import the files under the "Komponente" directory, 
 
 #### Vehicles
 
