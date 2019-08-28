@@ -33,7 +33,7 @@ In order to create informative box plot diagrams visualizing this attribute, a t
 
 While skimming through the files in the directories "Einzelteil", "Komponente" and "Fahrzeug" using external text editors, MS excel and in command line with head() and tail(), it became clear that the often sequentially named .csv and .txt files within contain columns with date-like values such as "origin", while files in the component and vehicle directories containing "Bestandteile_" in their names serve as keys to match columns in parts, components and vehicles together.
 
-After the import, the resulting data frames are tidied according to the principles of tidy data depending on the given situation. Most often, the values are scanned for NA entries and duplicates, irrelevant columns are removed and a filter is set for the required time period. In select cases, further steps are involved to prepare data frames for transformation.
+After the import, the resulting data frames are tidied according to the principles of tidy data depending on the given situation. Most often, the values are scanned for NA entries and duplicates, irrelevant columns are removed and a filter is set for the required time period. For the "Bestandteile" files, gather() needs to be applied to multiple column occurrences for parts or components. In select cases, further steps are involved to prepare data frames for transformation.
 
 During transformation, all part, component and vehicle data frames are linked together to create one data frame for each segment via bind_rows(). With the "Bestandteile_" data frames serving as keys, the columns of the three data frames containing the production dates of each segments are merged into one final data frame. While the production date of components are not essential for the objective, the component data frame still serves its purpose as it provides the only means to connect parts to vehicles.
 
@@ -174,7 +174,195 @@ tidyTXT_7 <- function(path){
 
 #### Components
 
-Before attempting to import the files under the "Komponente" directory, 
+Before attempting to import the files under the "Komponente" directory, every file needs to be checked for separators and patterns to work out the specifics of the import function and the required options. Some have working production date values, some contain an "origin" column and therefore include the date in POSIXct format. Distinctions must also be made for .txt files. Files with same patterns are put into the same list for future reference.
+
+```{r component lists}
+# Bestandteile files
+# # CSV with pattern A (clean, 5 main cols)
+BE_list_A <- c("Bestandteile_Komponente_K1BE1", "Bestandteile_Komponente_K1BE2", "Bestandteile_Komponente_K1DI1", 
+               "Bestandteile_Komponente_K1DI2", "Bestandteile_Komponente_K6")
+
+# #CSV with pattern B (clean, but only 4 main cols)
+BE_list_B <- c("Bestandteile_Komponente_K2LE1", "Bestandteile_Komponente_K2LE2", "Bestandteile_Komponente_K2ST2", 
+               "Bestandteile_Komponente_K3AG1", "Bestandteile_Komponente_K3AG2", "Bestandteile_Komponente_K3SG1", 
+               "Bestandteile_Komponente_K3SG2", "Bestandteile_Komponente_K4", "Bestandteile_Komponente_K5")
+
+# CSV with pattern B2 (clean, 4 main cols + extra cols)
+BE_list_B2 <- c("Bestandteile_Komponente_K2ST1")
+
+# #CSV with pattern C (clean, 6 main cols)
+BE_list_C <- c("Bestandteile_Komponente_K7")
+
+#####################################################
+
+# Produktionsdatum files
+# CSV with pattern A (clean, sep = ; 10 total cols, needs date cleaning)
+Kcsv_list_A <- c("Komponente_K1BE2", "Komponente_K2ST2", "Komponente_K6")
+
+# CSV with pattern B (fairly clean, sep = , 10 total cols, needs date cleaning)
+Kcsv_list_B <- c("Komponente_K1BE1", "Komponente_K3SG2")
+
+# CSV with pattern Cxyz1 (very dirty, sep = , 23 total cols with .x .y normal, ascending second col X1_1 skipping numbers,
+# cols have different arrangement: x1,x1_1,ID_Motor.x,Proddatum.x,Herstllnr.x,Werknr.x,Fehlr.x,Fehlrdatum.x,FehlrFahr.x...
+# from first col x1 = 1 values are in the first cols ID_Motor.x...
+# from first col x1 = 477053 values are in the mid cols ID_Motor.y... 
+# from first col x1 = 715579 values are in the Last cols ID_Motor...)
+Kcsv_list_Cxyz1 <- c("Komponente_K1DI1")
+
+# CSV with pattern Cxyz2 (very dirty, sep = , 23 total cols with .x .y normal, ascending second col X1_1 skipping numbers,
+# cols have different arrangement: x1,x1_1,ID_Schaltung.x,Proddatum.x,Herstllnr.x,Werknr.x,Fehlr.x,Fehlrdatum.x,FehlrFahr.x...
+# from first col x1 = 1 values are in the first cols ID_Schaltung.x...
+# from first col x1 = 143116 values are in the mid cols ID_Schaltung.y... 
+# from first col x1 = 381642 values are in the Last cols ID_Schaltung...)
+Kcsv_list_Cxyz2 <- c("Komponente_K3AG1")
+
+# CSV with pattern Cxy1 (very dirty, sep = , 16 total cols with .x .y, ascending second col X1_1 skipping numbers,
+# cols have different arrangement: x1,x1_1,ID_Schaltung.x,Proddatum.x,Herstllnr.x,Werknr.x,Fehlr.x,Fehlrdatum.x,FehlrFahr.x...
+# from first col x1 = 1 values are in the first cols ID_Schaltung.x...
+# from first col x1 = 763284 values are in the mid cols ID_Schaltung.y...)
+Kcsv_list_Cxy1 <- c("Komponente_K3SG1")
+
+# CSV with pattern Cxy2 (very dirty, sep = , 16 total cols with .x .y, ascending second col X1_1 skipping numbers,
+# cols have different arrangement: x1,x1_1,ID_Karosserie.x,Proddatum.x,Herstllnr.x,Werknr.x,Fehlr.x,Fehlrdatum.x,FehlrFahr.x...
+# from first col x1 = 1 values are in the first cols ID_Karosserie.x...
+# from first col x1 = 326477 values are in the mid cols ID_Karosserie.y...)
+Kcsv_list_Cxy2 <- c("Komponente_K5")
+
+# CSV with pattern Cxy3 (very dirty, sep = ; 16 total cols with .x .y, ascending second col X1_1 skipping numbers,
+# cols have different arrangement: x1,x1_1,ID_Karosserie.x,Proddatum.x,Herstllnr.x,Werknr.x,Fehlr.x,Fehlrdatum.x,FehlrFahr.x...
+# from first col x1 = 1 values are in the first cols ID_Karosserie.x...
+# from first col x1 = 790866 values are in the mid cols ID_Karosserie.y...)
+Kcsv_list_Cxy3 <- c("Komponente_K4")
+
+######################################################
+
+# TXT with pattern A (simple formatted txt sep = \t)
+Ktxt_list_A <- c("K7.txt")
+
+# TXT with pattern B (sep = "\")
+Ktxt_list_B <- c("K2LE2.txt", "K3AG2.txt")
+
+# TXT with pattern C (sep = "|"), date already clean
+Ktxt_list_C <- c("K2ST1.txt")
+
+# TXT with pattern D (sep = "\" zeilenende \t) SEE VICTORS CODE
+Ktxt_list_D <- c("K1DI2.txt")
+
+# TXT with pattern E (sep = "II", zeilenende "") SEE VICTORS CODE
+Ktxt_list_E <- c("K2LE1.txt")
+
+
+```
+
+Next, the file paths need to be specified. For automation purposes, all paths are put in a list for looping. To differentiate between "Bestandteile" and data with production dates, the file path list with 32 entries is split into two vectors for each, with the former 16 files belonging to "Bestandteile".
+
+```{r paths}
+# Get a char vector with all the paths
+compFileNames <- list.files("Data/Komponente")
+fullPath <- paste("Data/Komponente/", compFileNames, sep="")
+BEVector <- fullPath[1:16]
+compPathVector <- fullPath[17:32]
+```
+
+Now a function is needed to differentiate between the input file for import and select the appropriate function for that specific pattern. In order to follow the process, logging messages are created for each step of the import process. The following function systematically checks if the input path belongs to any of the predefined lists and selects the appropriate function when a Match is found. The order of patterns checked is intentionally set according to the sequence of entries within the patterns list to ensure no files are incorrectly matched to wrong import functions. The selected functions for import are yet to be defined. Note that some patterns are similar and the same import function can be applied for efficiency. For files with different separators, an option for separators is used.
+
+```{r}
+# Function determines, based on predefined lists, which tidy function shall be applied
+determineTidyFunction <- function(filePath) {
+  
+  if (length(which(str_detect(filePath, BE_list_A))) == 1){
+    print(paste("found match in BE_list_A:", filePath)) # console logging
+    tidyCSV_BE(filePath)
+  } else if (length(which(str_detect(filePath, BE_list_B))) == 1){
+    print(paste("found match in BE_list_B:", filePath)) # console logging
+    tidyCSV_BE(filePath)
+  } else if (length(which(str_detect(filePath, BE_list_B2))) == 1){
+    print(paste("found match in BE_list_B2:", filePath)) # console logging
+    tidyCSV_BE(filePath)
+  } else if (length(which(str_detect(filePath, BE_list_C))) == 1){
+    print(paste("found match in BE_list_C:", filePath)) # console logging
+    tidyCSV_BE(filePath)
+    
+  } else if (length(which(str_detect(filePath, Kcsv_list_A))) == 1){
+    print(paste("found match in Kcsv_list_A:", filePath)) # console logging
+    tidyCSV_Kcsv_AB(filePath)
+  } else if (length(which(str_detect(filePath, Kcsv_list_B))) == 1){
+    print(paste("found match in Kcsv_list_B:", filePath)) # console logging
+    tidyCSV_Kcsv_AB(filePath,",")
+  } else if (length(which(str_detect(filePath, Kcsv_list_Cxyz1))) == 1){
+    print(paste("found match in Kcsv_list_Cxyz1:", filePath)) # console logging
+    tidyCSV_Kcsv_Cxyz(filePath,",")
+  } else if (length(which(str_detect(filePath, Kcsv_list_Cxyz2))) == 1){
+    print(paste("found match in Kcsv_list_Cxyz2:", filePath)) # console logging
+    tidyCSV_Kcsv_Cxyz(filePath,",")
+  } else if (length(which(str_detect(filePath, Kcsv_list_Cxy1))) == 1){
+    print(paste("found match in Kcsv_list_Cxy1:", filePath)) # console logging
+    tidyCSV_Kcsv_Cxyz(filePath,",")
+  } else if (length(which(str_detect(filePath, Kcsv_list_Cxy2))) == 1){
+    print(paste("found match in Kcsv_list_Cxy2:", filePath)) # console logging
+    tidyCSV_Kcsv_Cxyz(filePath,",")
+  } else if (length(which(str_detect(filePath, Kcsv_list_Cxy3))) == 1){
+    print(paste("found match in Kcsv_list_Cxy3:", filePath)) # console logging
+    tidyCSV_Kcsv_Cxyz(filePath)
+    
+  } else if (length(which(str_detect(filePath, Ktxt_list_A))) == 1){
+    print(paste("found match in Ktxt_list_A:", filePath)) # console logging
+    tidyTXT_A(filePath)
+  } else if (length(which(str_detect(filePath, Ktxt_list_B))) == 1){
+    print(paste("found match in Ktxt_list_B:", filePath)) # console logging
+    tidyTXT_B(filePath)
+  } else if (length(which(str_detect(filePath, Ktxt_list_C))) == 1){
+    print(paste("found match in Ktxt_list_C:", filePath)) # console logging
+    tidyTXT_C(filePath)
+  } else if (length(which(str_detect(filePath, Ktxt_list_D))) == 1){
+    print(paste("found match in Ktxt_list_D:", filePath)) # console logging
+    tidyTXT_D(filePath)
+  } else if (length(which(str_detect(filePath, Ktxt_list_E))) == 1){
+    print(paste("found match in Ktxt_list_E:", filePath)) # console logging
+    tidyTXT_E(filePath)
+  } else {
+    print("No Files in List")
+  }
+  
+}
+```
+
+In addition, the global data frame variable "df" is defined to prepare for import.
+
+```{r}
+# define data frame variable, necessary for returning data frame from function
+df <- 1
+```
+
+Now the import function for "Bestandteile" files is defined. Logging messages are applied to follow the progress. Since ";" is used as separator, as is common practice in Germany, read.csv2() can be used to import all "Bestandteile" files. Functions for tidying are also used immediately after import, as different patterns require different approaches to both import and tidying. The gather() function takes all attributes related to a part ID and joins them into one single attribute. Irrelevant colums such as the first two X and X1 are removed. A standardized column name is assigned to the component column. Every step as well as the result is assigned to the global variable df.
+
+```{r}
+# Function to tidy CSV with format "BE"-------------------------------------------
+# returns data frame
+
+
+tidyCSV_BE <- function(path) {
+  print(paste0("tidyCSV_BE called with path: ", path))
+  
+  # Read CSV and store in temporary data frame (df)
+  df <<- read.csv2(path, stringsAsFactors = FALSE)
+  
+  # Gather all ID_T* in one column
+  df <<- gather(df, part, part_global_id, -contains("X"), -contains("K"))
+  
+  # Delete redundant X1
+  df$X1 <<- NULL
+  df$X <<- NULL
+  df$part <<- NULL
+  names(df)[1] <<- "comp_global_id"
+  
+  # print(df)
+  return(df)
+}
+
+```
+
+Next, import functions for the remaining files with production date entries are defined. As files from both "Kcsv_list_A" and "Kcsv_list_B" can be imported and tidied with one function, an if else statement can help to select the appropriate import function within this function. The option "stringsAsFactors = FALSE" is necessary as R is likely to interpret string values as factors and result in errors during import when the first values in a column remain identical.
 
 #### Vehicles
 
