@@ -88,7 +88,7 @@ _d. Visualize the distribution in an appropriate way._
 # Question 2
 _Why does it make sense to store the available data in separate files instead of saving everything in a huge table? How do you call the underlying data base concept?_
 
-It makes sense to sotore available data in seperate files instead of saving everything in a huge table for several reasons. Seperate data sets connected by a primary key will only contain specific information ensuring data dependencies make sense. Thus extraction from specific data will be easier. Furthermore duplicate data throughout can be easier identified and eliminated, enhancing the efficiency of the code and saving memory space/cache.Furthermore the different tables will be more flexible for adaptations and newly introduced data. 
+It makes sense to store available data in seperate files instead of saving everything in a huge table for several reasons. Seperate data sets connected by a primary key will only contain specific information ensuring data dependencies make sense. Thus extraction from specific data will be easier. Furthermore duplicate data throughout can be easier identified and eliminated, enhancing the efficiency of the code and saving memory space/cache. Furthermore the different tables will be more flexible for adaptations and newly introduced data. 
 The underlying concept is called *Database Normalization*.
 
 # Question 3
@@ -131,7 +131,7 @@ components_vehicles <- bind_rows(type11, type12, type21, type22)
 Merging registrations with components_vehicles by ID and filtering for component K7 and registration in city of Dortmund
 
 ```{r}
-Vehicles_Dortmund_K7 <- left_join(components_vehicles, registrations, by = c("ID_Fahrzeug" = "IDNummer")) %>%
+Vehicles_Dortmund_K7 <- inner_join(components_vehicles, registrations, by = c("ID_Fahrzeug" = "IDNummer")) %>%
   filter(Gemeinden == "DORTMUND" & str_detect(ID_Karosserie, "K7"))
 ```
 
@@ -167,7 +167,7 @@ We will use the table containing all OEM vehicle types and components from quest
 
 ```{r}
 Vehicle_Accident <-  filter(components_vehicles, ID_Motor == "K1BE2-104-1041-32049") %>%
-left_join(registrations, by = c("ID_Fahrzeug" = "IDNummer")) 
+inner_join(registrations, by = c("ID_Fahrzeug" = "IDNummer")) 
 Vehicle_Accident
  
 ```
