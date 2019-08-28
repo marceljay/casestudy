@@ -8,8 +8,8 @@
 #   install.packages("tidyverse")
 # }
 
-if( !require(shiny)){
-  install.packages("shiny")
+if( !require(readr)){
+  install.packages("readr")
 }
 
 if( !require(dplyr)){
@@ -22,6 +22,10 @@ if( !require(data.table)){
 
 if( !require(lubridate)){
   install.packages("lubridate")
+}
+
+if( !require(stringr)){
+  install.packages("stringr")
 }
 
 if( !require(tidyr)){
