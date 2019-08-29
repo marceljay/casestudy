@@ -963,11 +963,12 @@ link_BE_list <- function() {
   print("BE_comp_df created successfully!")
 }
 ```
-=======
+
+## Vehicles
+
 The different components of vehicles were listed in four csv files. The files were seperated by OEM and vehicle type. All of the columns were seperated by semicolons, therefore we used read_csv2() function to import them. In the same step we assigned them to data frames.
 
 
-## Vehicles
 ```{r}
 # Importing data and assigning to data frames
 df_B11 <- read_csv2("Data/Fahrzeug/Bestandteile_Fahrzeuge_OEM1_Typ11.csv")
@@ -1050,10 +1051,9 @@ View(BE_vehicle_df)
 
 ```
 
->>>>>>> Doku,Fahrzeuge_tidy_Bestandteile_tidy,shiny_app
 
 
-#### Vehicles
+## Vehicles
 
 
 The different types of vehicles were listed in four csv files. Two of the files used semicolons to seperate the columns, while the other two had commas as separator. The two files containing semicolons were imported with the read_csv2() function, while the two containing commas were imported with the read_csv() function. All of the imported files were assigned to data frames.
