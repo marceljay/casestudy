@@ -19,7 +19,7 @@ The objective is to identify vehicle types that take a lot of time between the S
 
 ```{r setup, include=FALSE}
 # Prevents code, but not the results from appearing in the finished file.
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE)
 knitr::opts_chunk$set(warning = FALSE)
 
 # Dependencies
@@ -45,6 +45,18 @@ if( !require(stringr)){
 
 if( !require(tidyr)){
   install.packages("tidyr")
+}
+
+if( !require(plotly)){
+  install.packages("plotly")
+}
+
+if( !require(shiny)){
+  install.packages("shiny")
+}
+
+if( !require(colourpicker)){
+  install.packages("colourpicker")
 }
 
 library(readr)
@@ -84,10 +96,10 @@ Since there are 79 files to be considered for our analysis, many being untidy, w
 
 ## Parts
 
-The 38 part files in the `Einzelteil` directory had well over ten different patterns that needed to be identified for a correct import and tidying. Some files had more columns than others, some had differerent date formats, missing line breaks or varios delimiters. 
+The 38 part files in the `Einzelteil/` directory had well over ten different patterns that needed to be identified for a correct import and tidying. Some files had more columns than others, some had differerent date formats, missing line breaks or varios delimiters. 
   
-In this chunk, all the files from the specific `Einzelteil` directory are written into a vector:
-```{r}
+In this chunk, all the files from the specific `Einzelteil/` directory are written into a vector:
+```{r part vector}
 partFileNames <- list.files("Data/Einzelteil")
 pathVector <- paste("Data/Einzelteil/", partFileNames, sep="")
 ```  
@@ -97,7 +109,7 @@ The .csv files were simplier to import: there were two delimiters and and a few 
 At first, after inspecting the files manually with shell commands, four lists to classify the .csv files depending on their number were created:
 
 
-```{r}
+```{r part pattern lists}
 # CSV with pattern A (clean)
 list_A <- c("T04", "T10", "T13", "T14", "T18", "T21", "T26", "T40") # semicolon
 list_A2 <- c("T06", "T08", "T19", "T25", "T33", "T37") # comma
@@ -109,7 +121,7 @@ list_B2 <- c("T05","T30", "T38") # comma
 
 Another function, that helps applying the correct import and tidying function was created. Here .csv files are assigned to the functions via the formerly created lists. Since the .txt files needed various import functions, another helper function `importTXT()` is called, that then determines the final function to import and tidy the file.
 
-```{r}
+```{r part determineTidyFunction}
 # Function determines, based on predefined lists, which tidy function shall be applied
 determineTidyFunction <- function(filePath) {
   
@@ -132,10 +144,10 @@ determineTidyFunction <- function(filePath) {
 }
 ```
 
-The function `tidyCSV_a` which gets called by`determineTidyFunction()` imports the .csv with format A and A2
-and returns a data frame. here varios helper functions are called, but are elaborated later one...
+The function `tidyCSV_a()` which gets called by`determineTidyFunction()` imports the .csv with format A and A2
+and returns a data frame. here varios helper functions are called, such as `tidyDate()`, which will be explained later on.
 
-```{r}
+```{r tidyCSV_a}
 tidyCSV_a <- function(path, delim = ";") {
   # Console log
   print(paste0("tidyCSV_a called with path: ", path))
@@ -163,10 +175,10 @@ tidyCSV_a <- function(path, delim = ";") {
 }
 ```
 
-The function `tidyCSV_b` which gets called by`determineTidyFunction()` imports the .csv with format B and B2
-and returns a data frame. here varios helper functions are called too. It is different from the previous function in terms of not needing to reformat the date and different columns that can be dropped.
+The function `tidyCSV_b()` which gets called by`determineTidyFunction()` imports the .csv with format B and B2
+and returns a data frame. here helper functions such as `tidyLong()` are called too. It is different from the previous function in terms of not needing to reformat the date and different columns that can be dropped.
 
-```{r}
+```{r tidyCSV_b}
 tidyCSV_b <- function(path, delim = ";") {
   print("---- called tidyCSV_b ----")
   
@@ -190,98 +202,10 @@ tidyCSV_b <- function(path, delim = ";") {
 }
 ```
 
-The .txt files in the Parts and Components files were more challenging, requiring a deeper pattern analysis, specially because of the lack of end of lines characters, that were added with the command gsub. The goal was to replace a pattern represented by a regular expression into a line breaker. 
+The .txt files in the Parts and Components files were more challenging, requiring a deeper pattern analysis, specially because of the lack of end of lines characters. The goal was to replace a pattern represented by a regular expression into a line breaker. By the fact that almost every .txt file had a different pattern, a particular tidy function had to be created for every .txt file.
+The function `importTXT()` is called when no .csv format is found and is responsible for calling the specific `tidyTXT_*()` function for the respective part file.
 
-```{r}
-#gsub(pattern = '(?<=")\\s+"(?=[0-9][^-])', replace = '\n"', ., perl = TRUE)
-```
-
-After identifying all line breakers for particular .txt files, those files were imported using read_table. As an example is the code for the file of Parts_07
-
-```{r}
-#   x <- readLines(path) %>%
-#     gsub(pattern = '""', replace = '"\n"', .) 
-#   
-#   for (i in 2:length(x) ) {
-#     df <- read.table(textConnection(x[i]), header=TRUE)
-# }
-```
-
-
-When all files were successfully imported, it was necessary to tidy the dataframes following the basic rules for Tidy Data. Some problems found were the different time formats, more than one column per information and other strange formats.
-
-The `tidydate`function is called for all the files storing the data in two separate files. After reappending the readable date to the data frame, any row outside the date specicified 2015-2016 is disregarded. The helper function is utilized by some of both .csv and .txt import functions.
-
-```{r}
-tidyDate <- function(df) {
-  print("tidyDate called!")
-  
-  daycount <- df$Produktionsdatum_Origin_01011970
-  
-  if (length(unique(df$origin))==1) {
-    # Reformat date from data frame to fit as.Date
-    betterDates <- as.Date(daycount, origin = "1970-01-01")
-  } else {
-    betterDates <- as.Date(daycount, origin = "1970-01-01")
-    # Warn if multiple values are found, yet assume this was not intentional
-    print("WARNING! Multiple values found!")
-  }
-  
-  # Add date column with correctly formatted dates
-  df$prod_date <- betterDates
-  
-  # Deleting rows that shall be disregarded because of date range
-  df <- subset(df, !prod_date<"2015-01-01")
-  df <- subset(df, !prod_date>"2016-12-31")
-
-  return(df)
-}
-```
-
-The `tidydate`function is used for uniting columns in the data frame, as some files show have the actual data written in different columns after a certain point. At the same time, the specified time range is selected and columns are renamed.
-
-```{r}
-tidyLong <- function(df) {
-  print("tidyLong called!")
-  
-  # Unite related columns, since after some row number, values appear in different columns
-  df <- unite(df, "prod_date", contains("Produktionsdatum"), sep="_")
-  df <- unite(df, "global_id", contains("ID_T"), sep="_") 
-  
-  # Clean newly united col names from NA
-  df$prod_date <- gsub(pattern="_NA|NA_", replace="", x=df$prod_date)
-  df$global_id <- gsub(pattern="_NA|NA_", replace="", x=df$global_id)
-  
-  # Deleting rows that shall be disregarded because of date range
-  df <- subset(df, !prod_date<"2015-01-01")
-  df <- subset(df, !prod_date>"2016-12-31")
-  
-  return(df)
-}
-```
-
-The `dropAndRename` function is utilized by some .txt import functions to unnecessary columns and rename the id. Furthermore, an import analysis is conducted, to scan the data frame for missing values (NA)
-
-```{r}
-dropAndRename <- function(df) {
-  
-  #  Drop columns (prod_date was appended as 11th column)
-  df <- df[c(2, 10)]
-  
-  # Renaming cols
-  names(df)[1] <- "global_id"
-  
-  # Check for NA values
-  importAnalysis(df)
-  
-  return(df)
-}
-```
-
-The following `importTXT` function assigns each plain text file based on their file name to a tidy function: 
-
-```{r}
-# Function to assign the correct import and tidy function to a .txt file
+```{r importTXT}
 importTXT <- function(path) {
   print(path)
   
@@ -349,14 +273,78 @@ importTXT <- function(path) {
     print("tidyTXT_39 called")
     return(tidyTXT_39(path))
   }  
+  
 }
 ```
 
+Every TidyTXT function has to insert line breakers following a predetermined row pattern. After defining the line breakers the function imports each file using the read.table function. The specifically written `gsub()` functions use regular expressions to substitute the various delimiting characters to make imports simple. After that we could see two main versions of the tables, a wide one and a slim one, which resemble the pattern in the .csv files. Here the same helper functions for tidying are called, yet columns are a bit different, which is why dropping columns was not implemented in the tidy functions. Also, some files such as T39, deviated strongly from the other .txt files. The resulting data frame is then transformed into a tidy data frame. Each function is shown below: 
 
+```{r tidyTXT}
+# Structure: wide (dirty)
+tidyTXT_1 <- function(path) {
+  x <- readLines(path) %>%
+    gsub(pattern = "\\| \\|", replace = "\\|",.) %>%
+    gsub(pattern = '(?<=[^\\|]) "', replace = '\n"',., perl = TRUE) %>%
+    gsub(pattern = " ", replace = "",.) # Corrects the Whitespace problem
+  
+  for (i in 2:length(x) ) {
+    df <- read.table(textConnection(x[i]), sep="|", header=TRUE)
+  }
+  
+  df  <- tidyLong(df)
+  
+  # Drop columns except the 2 necessary ones
+  df <- df[2:3]
+  
+  # Check for NA values
+  importAnalysis(df)
+  
+  return(df)
+}
 
-For the main analysis of the group only the ID columns and the Production Dates are necessary. In that way all the other columns were discharged. It is possible to verify how the functions were used for an example.
+# Structure: wide (dirty)
+tidyTXT_2 <- function(path){
+  
+  x <- readLines(path) %>%
+    gsub(pattern = '(?<=")\\s+"(?=[0-9][^-])', replace = '\n"', ., perl = TRUE)  %>%
+    gsub(pattern = '(?<=A)\\s+"(?=[0-9][^-])', replace = '\n"', ., perl = TRUE)  %>%
+    gsub(pattern = '(?<=[^-]\\d0)\\s+"(?=[0-9][^-])', replace = '\n"', ., perl = TRUE)  %>%
+    gsub(pattern = '(?<=[^-][\\d|\\.][0-9])\\s+"(?=[0-9][^-])', replace = '\n"', ., perl = TRUE)
+  
+  for (i in 2:length(x) ) {
+    df <- read.table(textConnection(x[i]), header=TRUE)
+  }
+  
+  df  <- tidyLong(df)
+  
+  # Drop columns except the 2 necessary ones
+  df <- df[2:3]
+  
+  # Check for NA values
+  importAnalysis(df)
+  
+  return(df)
+}
 
-```{r}
+# Structure: slim
+tidyTXT_3 <- function(path){
+  x <- readLines(path) %>%
+    gsub(pattern = '', replace = '\n', .) %>%
+    gsub(pattern = '\\|', replace = ',', .)
+  
+  for (i in 2:length(x) ) {
+    df <- read.table(textConnection(x[i]), sep=",", header=TRUE)
+  }
+  
+  df <- tidyDate(df)
+  
+  # Drop columns and rename
+  df <- dropAndRename(df)
+  
+  return(df)
+}
+
+# Structure: slim
 tidyTXT_7 <- function(path){
   x <- readLines(path) %>%
     gsub(pattern = '""', replace = '"\n"', .) 
@@ -373,8 +361,406 @@ tidyTXT_7 <- function(path){
   return(df)
 }
 
+# Structure: wide (dirty)
+tidyTXT_9 <- function(path) {
+  x <- readLines(path) %>%
+    gsub(pattern = '', replace = '\n', .) %>%
+    gsub(pattern = '\\\\', replace = ',', .)
+  
+  
+  for (i in 2:length(x) ) {
+    df <- read.table(textConnection(x[i]), sep=",", header=TRUE)
+  }
+  
+  df  <- tidyLong(df)
+  
+  # Drop columns except the 2 necessary ones
+  df <- df[2:3]
+  # 
+  # # Check for NA values
+  importAnalysis(df)
+  
+  return(df)
+}
+
+# Structure: slim
+tidyTXT_11 <- function(path){
+  x <- readLines(path) %>%
+    gsub(pattern = '', replace = '\n', .) 
+  
+  for (i in 2:length(x) ) {
+    df <- read.table(textConnection(x[i]),                      header=TRUE)
+  }
+  
+  df <- tidyDate(df)
+  
+  # Drop columns and rename 
+  df <- dropAndRename(df)  
+  
+  return(df)
+}
+
+# Structure: wide (dirty)
+tidyTXT_16 <- function(path){
+  x <- readLines(path) %>%
+    gsub(pattern = '(?<!\\|)\\s+"(?! \\|)', replace = '\n"', ., perl = TRUE) %>%
+    gsub(pattern = 'A[^|]"', replace = 'A\n"', .) %>%
+    gsub(pattern = '0[^|0-9]"', replace = '0\n"', .) %>%
+    gsub(pattern = '""', replace = '"\n"', .) %>%
+    gsub(pattern = "\\| \\|", replace = " ", .) 
+  
+  for (i in 2:length(x) ) {
+    df <- read.table(textConnection(x[i]), header=TRUE)
+  }
+  
+  df  <- tidyLong(df)
+  
+  # Drop columns except the 2 necessary ones
+  df <- df[2:3]
+  
+  # Check for NA values
+  importAnalysis(df)
+  
+  return(df)
+}
+
+# Structure: slim 
+tidyTXT_20 <- function(path){
+  x <- readLines(path) %>%
+    gsub(pattern = '" "', replace = '"\n"', .) %>%
+    gsub(pattern = '[^\\|] "', replace = '\n"', .) %>%
+    gsub(pattern = "\\| \\|", replace = "\\|", .)
+  
+  for (i in 2:length(x) ) {
+    df <- read.table(textConnection(x[i]), sep = "|", header=TRUE)
+  }
+  
+  df["origin"] <- "01-01-1970"
+  
+  df <- tidyDate(df)
+  
+  # # Drop columns and rename 
+  df <- dropAndRename(df)
+  
+  return(df)
+}
+
+# Structure: wide (dirty)
+tidyTXT_22 <- function(path){
+  x <- readLines(path) %>%
+    gsub(pattern = '(?<!\\s)"(?!\\s)', replace = '\n"', ., perl = TRUE) 
+  
+  for (i in 2:length(x) ) {
+    df <- read.table(textConnection(x[i]), header=TRUE)
+  }
+  
+  df <- tidyLong(df) 
+  
+  # Drop columns except the 2 necessary ones
+  df <- df[2:3]
+  
+  # Check for NA values
+  importAnalysis(df)
+  
+  return(df)
+}
+
+# Structure: wide (dirty)
+tidyTXT_24 <- function(path){
+  x <- readLines(path) %>%
+    gsub(pattern = '', replace = '\n', .)
+  
+  for (i in 2:length(x) ) {
+    df <- read.table(textConnection(x[i]), header=TRUE)
+  }
+  
+  df <- tidyLong(df) 
+  
+  # Drop columns except the 2 necessary ones
+  df <- df[2:3]
+  
+  # Check for NA values
+  importAnalysis(df)
+  
+  return(df)
+}
+
+# Structure: slim
+tidyTXT_27 <- function(path){
+  x <- readLines(path) %>%
+    gsub(pattern = '(?<=origin)\\W+(?=[0-9])', replace = '"\n"', ., perl = TRUE) %>%
+    gsub(pattern = '(?<=01-1970)\\W+(?=[0-9])', replace = '"\n"', ., perl = TRUE) %>%
+    gsub(pattern = "\\| \\|", replace = "\\|", .) 
+  
+  for (i in 2:length(x) ) {
+    df <- read.table(textConnection(x[i]), sep = "|", header=TRUE)
+  }
+  
+  df["origin"] <- "01-01-1970" #Change all Origin Values to 01-01-1970
+  
+  df <- tidyDate(df)
+  
+  # Drop columns and rename 
+  df <- dropAndRename(df)
+  
+  return(df)
+}
+
+# Structure: slim
+tidyTXT_31 <- function(path) {
+  x <- readLines(path) %>%
+    gsub(pattern = '(?<!\\s)"(?=[0-9])', replace = '"\n"', ., perl = TRUE) 
+  
+  for (i in 2:length(x) ) {
+    df <- read.table(textConnection(x[i]), header=TRUE)
+  }
+  
+  # Remove last errorous column
+  df <- df[-c(10)]
+  
+  df <- tidyDate(df)
+  
+  #  Drop columns and rename 
+  df <- dropAndRename(df)
+  
+  return(df)
+}
+
+# Structure: Slim
+tidyTXT_34 <- function(path) {
+  x <- readLines(path) %>%
+    gsub(pattern = '""', replace = '"\n"', .) %>%
+    gsub(pattern = "\\| \\|", replace = " ",.) 
+  
+  for (i in 2:length(x) ) {
+    df <- read.table(textConnection(x[i]), header=TRUE)
+  }
+  
+  df <- tidyDate(df)
+  
+  # Drop columns and rename 
+  df <- dropAndRename(df)
+  
+  return(df)
+}
+
+# Structure: wide (dirty)
+tidyTXT_35 <- function(path){
+  x <- readLines(path) %>%
+    gsub(pattern = '""', replace = '"\n"', .) %>%
+    gsub(pattern = '(?<!\\\\)"(?!\\\\|")', replace = '\n"', ., perl = TRUE) %>%
+    gsub(pattern = '\\\\', replace = ' ', .)
+  
+  for (i in 2:length(x) ) {
+    df <- read.table(textConnection(x[i]), header=TRUE)
+  }
+  
+  df <- tidyLong(df) 
+  
+  # Drop columns except the 2 necessary ones
+  df <- df[2:3]
+  
+  # Check for NA values
+  importAnalysis(df)
+  
+  return(df)
+}
+
+# Structure: slim
+tidyTXT_36 <- function(path){
+  x <- readLines(path) %>%
+    gsub(pattern = '" "', replace = '"\n"', .) 
+  
+  for (i in 2:length(x) ) {
+    df <- read.table(textConnection(x[i]), header=TRUE)
+  }
+  
+  df <- tidyDate(df)
+  
+  #  Drop columns and rename 
+  df <- dropAndRename(df)
+  
+  return(df)
+}
+
+# Structure: wide (totally messed up, SPECIAL CASE)
+tidyTXT_39 <- function(path){
+  x <- readLines(path)  %>%
+    gsub(pattern = '""', replace = '"\n"', .)  %>%
+    gsub(pattern = '(?<!\\\\)"(?!\\\\|")', replace = '\n"', ., perl = TRUE)  %>%
+    gsub(pattern = '\\\\', replace = ' ', .)
+  
+  for (i in 2:length(x) ) {
+    df <- read.table(textConnection(x[i]), header=TRUE)
+  }
+  
+  # combine .x .y cols into one 
+  df <- unite(df, "global_id", "Produktionsdatum.x", "Produktionsdatum.y", sep="_")
+  df <- unite(df, "prod_date", "Herstellernummer.x", "Herstellernummer.y",sep="_")
+  
+  # Clean newly united col names from NA
+  df$prod_date <- gsub(pattern="_NA|NA_",replace="",x=df$prod_date)
+  df$global_id <- gsub(pattern="_NA|NA_",replace="",x=df$global_id)
+  
+  
+  # Deleting rows that shall be disregarded because of date range
+  df <- subset(df, !prod_date<"2015-01-01")
+  df <- subset(df, !prod_date>"2016-12-31")
+  
+  # Drop columns except the 4 necessary ones
+  df <- df[3:4]
+  
+  
+  return(df)
+}
 ```
 
+### Helper functions 
+
+When all files were first successfully imported, it was necessary to tidy the dataframes following the basic rules for tidy data. Some problems found were the different time formats, more than one column per information and other strange formats.
+
+The `tidyDate()`function is called for all the files storing the data in two separate files. After reappending the readable date to the data frame, any row outside the date specicified 2015-2016 is disregarded. The helper function is utilized by some of both .csv and .txt import functions.
+
+```{r tidyDate}
+tidyDate <- function(df) {
+  print("tidyDate called!")
+  
+  daycount <- df$Produktionsdatum_Origin_01011970
+  
+  if (length(unique(df$origin))==1) {
+    # Reformat date from data frame to fit as.Date
+    betterDates <- as.Date(daycount, origin = "1970-01-01")
+  } else {
+    betterDates <- as.Date(daycount, origin = "1970-01-01")
+    # Warn if multiple values are found, yet assume this was not intentional
+    print("WARNING! Multiple values found!")
+  }
+  
+  # Add date column with correctly formatted dates
+  df$prod_date <- betterDates
+  
+  # Deleting rows that shall be disregarded because of date range
+  df <- subset(df, !prod_date<"2015-01-01")
+  df <- subset(df, !prod_date>"2016-12-31")
+
+  return(df)
+}
+```
+
+The `tidyLong()`function is used for uniting columns in the data frame, as some files show have the actual data written in different columns after a certain point. At the same time, the specified time range is selected and columns are renamed.
+
+```{r tidyLong}
+tidyLong <- function(df) {
+  print("tidyLong called!")
+  
+  # Unite related columns, since after some row number, values appear in different columns
+  df <- unite(df, "prod_date", contains("Produktionsdatum"), sep="_")
+  df <- unite(df, "global_id", contains("ID_T"), sep="_") 
+  
+  # Clean newly united col names from NA
+  df$prod_date <- gsub(pattern="_NA|NA_", replace="", x=df$prod_date)
+  df$global_id <- gsub(pattern="_NA|NA_", replace="", x=df$global_id)
+  
+  # Deleting rows that shall be disregarded because of date range
+  df <- subset(df, !prod_date<"2015-01-01")
+  df <- subset(df, !prod_date>"2016-12-31")
+  
+  return(df)
+}
+```
+
+The `dropAndRename()` function is utilized by some .txt import functions to unnecessary columns and rename the id. Furthermore, an import analysis is conducted, to scan the data frame for missing values (NA)
+
+```{r dropAndRename}
+dropAndRename <- function(df) {
+  
+  #  Drop columns (prod_date was appended as 11th column)
+  df <- df[c(2, 10)]
+  
+  # Renaming cols
+  names(df)[1] <- "global_id"
+  
+  # Check for NA values
+  importAnalysis(df)
+  
+  return(df)
+}
+```
+
+Another helper function, that was called from the tidy and import functions was `importAnalysis()`. The function searches for missing values (NA) for each column, which could cause errors later on. The potential NA values are then stored in a list of data frames.
+
+```{r importStats}
+# Define empty list for data frames reporting
+# NA values found in imported data frames
+importStats <- list()
+
+importAnalysis <- function(df) {
+  
+  if(length(which(is.na(df)))>0) {
+    print("Found NA values")
+    i = length(importStats)
+    
+    # Analyze for NAs and append to list importStats
+    importStats[[i+1]] <<- sapply(df, function(x) sum(is.na(x))); 
+  } else {
+    print("Good, no NA values found")
+  }
+}
+
+```
+
+To make sure all dates are of the same format, the following helper function gets called after importing the data frames. 
+```{r DateAsDate}
+# Reformat date col from chr to date
+DateAsDate <- function() {
+  for (i in 1:length(df_list)) {
+    df_list[[i]]$prod_date <<- as.Date(df_list[[i]]$prod_date)
+  }
+}
+```
+
+Another helper function, `reformatPartCols()` serves to rename columns for differentiation in the global data frame.
+```{r reformacPartCols}
+# Drop rownames, rename cols
+reformatPartCols <- function() {
+  
+  rownames(part_df) <<- c()
+  names(part_df) <<- c("part_global_id", "part_prod_date")
+}
+
+```
+
+
+All the imported data frames get called by `startImport()` and then stored in a list of data frame to keep the environment clean and well-aranged. 
+```{r startImport Part}
+# Call this function to start importing all data from ./Einzelteile/
+df_list <<- list()
+
+startImport <- function() {
+  print("starting importing")
+  for (i in seq_along(pathVector)) {
+    df_list[[i]] <<- determineTidyFunction(pathVector[i])
+  }
+}
+```
+
+All the data frames from the list are then joined into one single data frame for all the parts. 
+```{r link_part_df_list}
+
+# Link df_list into one df
+link_part_df_list <- function() {
+  print("Linking df_list dfs into one df")
+  part_df <<- df_list[[1]]
+  print(paste0("df added:","1/38"))
+  for (i in 2:length(df_list)) {
+    part_df <<- bind_rows(part_df, df_list[[i]])
+    print(paste0("df added:",i,"/38"))
+  }
+  
+  print("part_df created successfully!")
+}
+
+```
 
 ## Components
 
@@ -771,7 +1157,7 @@ tidyTXT_C <- function(path){
 }
 ```
 
-Some files require more complicated preparations before import. For .txt files missing line endings, `readLines()` has to be applied and the result cleaned with `gsub()` before conventional `read.table()` functions work. Additional steps as explained previously for tidying might also be applied when required.
+Some files require more complicated preparations before import. For .txt files missing line breaks, `readLines()` has to be applied and the result cleaned with `gsub()` using regEx before conventional `read.table()` functions work. Additional steps as explained previously for tidying might also be applied when required.
 
 ```{r tidyTXT_D & E}
 tidyTXT_D <- function(path){
@@ -864,7 +1250,7 @@ tidyTXT_E <- function(path){
 }
 ```
 
-Some previously used functions such as `dateFilter()`, `reformatCols()` are then defined. Also `na_checker()` will be used later on to guarantee there are no NA entries present.
+Some previously used functions such as `dateFilter()`, `reformatCols()` are then defined. They make sure only necessary data is stored to increase resource efficiency and processing speed.
 
 ```{r Support Functions}
 #################################
@@ -886,11 +1272,7 @@ reformatCols <- function() {
   names(df) <<- c("comp_global_id", "comp_prod_date")
 }
 
-# Check for NA
-na_checker <- function() {
-  print(paste0("comp_df has ", sum(is.na(comp_df))," NAs"))
-  print(paste0("BE_comp_df has ", sum(is.na(BE_comp_df))," NAs"))
-}
+
 
 ```
 
@@ -917,9 +1299,9 @@ startImportComp <- function() {
 }
 ```
 
-Once the lists containing data frames are created, the following functions are defined which will provide further tidying by checking for duplicate `comp_global_id` and `part_global_id` entries, as these need to be unique. As long as the output is `0`, there are no duplicates.
+Once the lists containing data frames are created, the following functions are defined which will provide further tidying by checking for duplicate `comp_global_id` and `part_global_id` entries, as these need to be unique. As long as the output is `0`, there are no duplicates. Also `na_checker()` will be used later on to guarantee there are no NA entries present.
 
-```{r dup checkers}
+```{r dup & na checkers}
 
 # check for component id duplicates in comp_df_list
 dup_checker_comp_df_list <- function() {
@@ -933,6 +1315,12 @@ dup_checker_BE_list <- function() {
   for (i in 1:16) {
     print(paste0("Number of duplicates in comp_df_list ", i, "/16: ", sum(duplicated(BE_list[[i]]$part_global_id))))
   }
+}
+
+# Check for NA
+na_checker <- function() {
+  print(paste0("comp_df has ", sum(is.na(comp_df))," NAs"))
+  print(paste0("BE_comp_df has ", sum(is.na(BE_comp_df))," NAs"))
 }
 ```
 
@@ -963,324 +1351,397 @@ link_BE_list <- function() {
   print("BE_comp_df created successfully!")
 }
 ```
-### Vehicles
-The different components of vehicles were listed in four csv files. The files were seperated by OEM and vehicle type. All of the columns were seperated by semicolons, therefore we used read_csv2() function to import them. In the same step we assigned them to data frames.
 
 
-```{r}
+## Vehicles
+
+### Vehicle components
+
+The different components of individual vehicles were listed in four csv files. The files were seperated by OEM and vehicle type. All of the columns were seperated by semicolons, therefore we used `read_csv2()` function to import them. In the same step we assigned them to data frames.
+
+
+```{r import_BE_vehicle_files}
 # Importing data and assigning to data frames
-df_B11 <- read_csv2("Data/Fahrzeug/Bestandteile_Fahrzeuge_OEM1_Typ11.csv")
-df_B12 <- read_csv2("Data/Fahrzeug/Bestandteile_Fahrzeuge_OEM1_Typ12.csv")
-df_B21 <- read_csv2("Data/Fahrzeug/Bestandteile_Fahrzeuge_OEM2_Typ21.csv")
-df_B22 <- read_csv2("Data/Fahrzeug/Bestandteile_Fahrzeuge_OEM2_Typ22.csv")
+import_BE_vehicle_files <- function() {
+  df_B11 <- read_csv2("Data/Fahrzeug/Bestandteile_Fahrzeuge_OEM1_Typ11.csv")
+  df_B12 <- read_csv2("Data/Fahrzeug/Bestandteile_Fahrzeuge_OEM1_Typ12.csv")
+  df_B21 <- read_csv2("Data/Fahrzeug/Bestandteile_Fahrzeuge_OEM2_Typ21.csv")
+  df_B22 <- read_csv2("Data/Fahrzeug/Bestandteile_Fahrzeuge_OEM2_Typ22.csv")
+
+}
 
 ```
 
 The files lacked a column for the OEM factory, where the components were produced.
 
-```{r}
-#Add column Produktionsstandort to Bestandteile_Fahrzeuge_OEM1_Typ11 
-df_B11$Produktionsstandort <- df_B11$ID_Fahrzeug
+```{r create_BE_vehicle_OEM_columns}
+create_BE_vehicle_OEM_columns <- function() {
+  #Add column Produktionsstandort to Bestandteile_Fahrzeuge_OEM1_Typ11 
+  df_B11$Produktionsstandort <- df_B11$ID_Fahrzeug
 
-df_B11$Produktionsstandort <- gsub(pattern = ".*-11-.*" , replacement = "Nuernberg" , df_B11$Produktionsstandort)
-df_B11$Produktionsstandort <- gsub(pattern = ".*-12-.*" , replacement = "Bonn" , df_B11$Produktionsstandort)
+  df_B11$Produktionsstandort <- gsub(pattern = ".*-11-.*" , replacement = "Nuernberg" , df_B11$Produktionsstandort)
+  df_B11$Produktionsstandort <- gsub(pattern = ".*-12-.*" , replacement = "Bonn" , df_B11$Produktionsstandort)
 
-#Add column Produktionsstandort to Bestandteile_Fahrzeuge_OEM1_Typ12 
-df_B12$Produktionsstandort <- df_B12$ID_Fahrzeug
+  #Add column Produktionsstandort to Bestandteile_Fahrzeuge_OEM1_Typ12 
+  df_B12$Produktionsstandort <- df_B12$ID_Fahrzeug
 
-df_B12$Produktionsstandort <- gsub(pattern = ".*-12-.*" , replacement = "Bonn" , df_B12$Produktionsstandort)
+  df_B12$Produktionsstandort <- gsub(pattern = ".*-12-.*" , replacement = "Bonn" , df_B12$Produktionsstandort)
 
-#Add column Produktionsstandort to Bestandteile_Fahrzeuge_OEM1_Typ21 
-df_B21$Produktionsstandort <- df_B21$ID_Fahrzeug
+  #Add column Produktionsstandort to Bestandteile_Fahrzeuge_OEM1_Typ21 
+  df_B21$Produktionsstandort <- df_B21$ID_Fahrzeug
 
-df_B21$Produktionsstandort <- gsub(pattern = ".*-21-.*" , replacement = "Goettingen" , df_B21$Produktionsstandort)
+  df_B21$Produktionsstandort <- gsub(pattern = ".*-21-.*" , replacement = "Goettingen" , df_B21$Produktionsstandort)
 
 
-#Add column Produktionsstandort to Bestandteile_Fahrzeuge_OEM1_Typ22
-df_B22$Produktionsstandort <- df_B22$ID_Fahrzeug
+  #Add column Produktionsstandort to Bestandteile_Fahrzeuge_OEM1_Typ22
+  df_B22$Produktionsstandort <- df_B22$ID_Fahrzeug
 
-df_B22$Produktionsstandort <- gsub(pattern = ".*-21-.*" , replacement = "Goettingen" , df_B22$Produktionsstandort)
+  df_B22$Produktionsstandort <- gsub(pattern = ".*-21-.*" , replacement = "Goettingen" , df_B22$Produktionsstandort)
+}
+
+
 
 ```
 
 We merged all of the component data frames to minimize the amount of action, necessary to adjust the data. Furthermore we minimized the amount of data for further analysis by deleting the unnecessary column X1, which contained only index information.
 
-````{r}
-# Merge data frames Bestandteile_Fahrzeuge_OEM_Typxx
-BE_vehicle_df <- rbind(df_B11, df_B12, df_B21,df_B22)
+```{r link_BE_vehicles}
+link_BE_vehicles <- function() {
+  # Merge data frames Bestandteile_Fahrzeuge_OEM_Typxx
+  BE_vehicle_df <- rbind(df_B11, df_B12, df_B21,df_B22)
 
-# Delete unnecessary column Bestandteile_Fahrzeuge_OEM_Typxx
-BE_vehicle_df$X1 <- NULL
+  # Delete unnecessary column Bestandteile_Fahrzeuge_OEM_Typxx
+  BE_vehicle_df$X1 <- NULL
+}
+
 
 ```
 
-We noticed, that values of rows were column header, so we gathered the data frame and deleted the unnecessary column Bestandteile. Afterwards we renamed the columns and reorderd them. We also removed the column vehicle_prod_factory for the later merging process, because it would be redundant.
+We noticed, that values of rows were column header, so we gathered the data frame and deleted the unnecessary column `Bestandteile`. Afterwards we renamed the columns and reorderd them. We also removed the column `vehicle_prod_factory` for the later merging process, because it would be redundant.
 
-````{r}
-# Gather Bestandteile columns
-BE_vehicle_df <- gather(BE_vehicle_df, Bestandteile, ID_Bestandteile, -ID_Fahrzeug, -Produktionsstandort)
+```{r tidy_BE_vehicle}
+tidy_BE_vehicle <- function() {
+  # Gather Bestandteile columns
+  BE_vehicle_df <- gather(BE_vehicle_df, Bestandteile, ID_Bestandteile, -ID_Fahrzeug, -Produktionsstandort)
 
-# Delete unnecessary column Bestandteile from Bestandteile_Fahrzeuge_OEM_Typxx
-BE_vehicle_df$Bestandteile <- NULL
+  # Delete unnecessary column Bestandteile from Bestandteile_Fahrzeuge_OEM_Typxx
+  BE_vehicle_df$Bestandteile <- NULL
 
-# Rename columns of BE_vehicle_df
-names(BE_vehicle_df)[1] <- "vehicle_global_id"
-names(BE_vehicle_df)[2] <- "vehicle_prod_factory"
-names(BE_vehicle_df)[3] <- "comp_global_id"
+  # Rename columns of BE_vehicle_df
+  names(BE_vehicle_df)[1] <- "vehicle_global_id"
+  names(BE_vehicle_df)[2] <- "vehicle_prod_factory"
+  names(BE_vehicle_df)[3] <- "comp_global_id"
 
-# reorder by column name
-BE_vehicle_df <- BE_vehicle_df[c("vehicle_global_id", "comp_global_id", "vehicle_prod_factory")]
+  # reorder by column name
+  BE_vehicle_df <- BE_vehicle_df[c("vehicle_global_id", "comp_global_id", "vehicle_prod_factory")]
 
-# Remove redundant column vehicle_prod_factory
-BE_vehicle_df$vehicle_prod_factory <- NULL
+  # Remove redundant column vehicle_prod_factory
+  BE_vehicle_df$vehicle_prod_factory <- NULL
+}
+
 
 ```
 
 At last we checked the data frame for duplicates and NAs. 
 
-````{r}
+```{r vehicle_NA_checker}
+vehicle_NA_checker <- function() {
+  # Check for duplicates & NAs
+  print(paste0("Number of duplicates in BE_vehicle_df: ", sum(duplicated(BE_vehicle_df$comp_global_id))))
+  print(paste0("BE_vehicle_df has ", sum(is.na(BE_vehicle_df))," NAs"))
 
-# Check for duplicates & NAs
-print(paste0("Number of duplicates in BE_vehicle_df: ", sum(duplicated(BE_vehicle_df$comp_global_id))))
-print(paste0("BE_vehicle_df has ", sum(is.na(BE_vehicle_df))," NAs"))
+  # View tidy data frames
+  View(BE_vehicle_df)
+}
 
-# View tidy data frames
-View(BE_vehicle_df)
 
 ```
 
+### Vehicle product dates
 
+The different types of vehicles were listed in four csv files. Two of the files used semicolons to seperate the columns, while the other two had commas as separator. The two files containing semicolons were imported with the `read_csv2()` function, while the two containing commas were imported with the `read_csv()` function. All of the imported files were assigned to data frames.
 
-## Vehicles
+```{r import_vehicle_files}
 
-
-The different types of vehicles were listed in four csv files. Two of the files used semicolons to seperate the columns, while the other two had commas as separator. The two files containing semicolons were imported with the read_csv2() function, while the two containing commas were imported with the read_csv() function. All of the imported files were assigned to data frames.
-
-```{r}
-# Importing data
-df_F11 <- read_csv("Data/Fahrzeug/Fahrzeuge_OEM1_Typ11.csv")
-df_F12 <- read_csv2("Data/Fahrzeug/Fahrzeuge_OEM1_Typ12.csv")
-df_F21 <- read_csv("Data/Fahrzeug/Fahrzeuge_OEM2_Typ21.csv")
-df_F22 <- read_csv2("Data/Fahrzeug/Fahrzeuge_OEM2_Typ22.csv")
-
-# Transform
-```
-
-None of the data frames was tidy. The data frames df_F11 and df_F12 had two unnecessary columns namely X1_1, which contained the same index information as X1 and Fehlerhaft, which contained information available in the columns Fehlerhaft_Datum and Fehlerhaft_Fahrleistung.
-
-```{r}
-#Check if X1 == X1_1
-if (sum(!df_F11$X1 == df_F11$X1_1) == 0) {
-  # Delete X1_1
-  df_F11$X1_1 <- NULL
+import_vehicle_files <- function() {
+  # Importing data
+  df_F11 <- read_csv("Data/Fahrzeug/Fahrzeuge_OEM1_Typ11.csv")
+  df_F12 <- read_csv2("Data/Fahrzeug/Fahrzeuge_OEM1_Typ12.csv")
+  df_F21 <- read_csv("Data/Fahrzeug/Fahrzeuge_OEM2_Typ21.csv")
+  df_F22 <- read_csv2("Data/Fahrzeug/Fahrzeuge_OEM2_Typ22.csv")
 }
-
-# Drop unnecessary column  "Fehlerhaft"
-df_F11$Fehlerhaft <- NULL
-
-
-#Check if X1 == X1_1
-if (sum(!df_F12$X1 == df_F12$X1_1) == 0) {
-  # Delete X1_1
-  df_F12$X1_1 <- NULL
-}
-
-# Drop unnecessary column  "Fehlerhaft"
-df_F12$Fehlerhaft <- NULL
 
 ```
 
-The data frames df_F21 and df_F22 had the same unnecessary columns Fehlerhaft and X1_1 as df_F11 and df_F12. Furthermore they had a column called Produktionsdatum, which contained dates in an unsuitable format and a column named origin, which contained an useless date information. The unneeded columns had to be deleted and the dates had to be converted in a useful format.
+None of the data frames were tidy. The data frames df_F11 and df_F12 had two unnecessary columns namely `X1_1`, which contained the same index information as `X1` and `Fehlerhaft`, which contained information available in the columns `Fehlerhaft_Datum` and `Fehlerhaft_Fahrleistung`.
 
-```{r}
-#Store all counted days in vector
-daycount_F21 <- df_F21$Produktionsdatum_Origin_01011970
+```{r drop_vehicle_cols}
 
-# Reformat date from data frame to fit as.Date
-betterDates <- as.Date(daycount_F21, origin = "1970-01-01")
-
-# Add date column with correctly formatted dates
-df_F21$Produktionsdatum <- betterDates
-
-# Delete Column Produktionsdatum_Origin_01011970 
-df_F21$Produktionsdatum_Origin_01011970 <- NULL
-
-# Delete unnecessary column eight "origin"
-df_F21$origin <- NULL
-
-#Check if X1 == X1_1
-if (sum(!df_F21$X1 == df_F21$X1_1) == 0) {
-  # Delete X1_1
-  df_F21$X1_1 <- NULL
+drop_vehicle_cols <- function() {
+  #Check if X1 == X1_1
+  if (sum(!df_F11$X1 == df_F11$X1_1) == 0) {
+    # Delete X1_1
+    df_F11$X1_1 <- NULL
+  }
+  
+  # Drop unnecessary column  "Fehlerhaft"
+  df_F11$Fehlerhaft <- NULL
+  
+  
+  #Check if X1 == X1_1
+  if (sum(!df_F12$X1 == df_F12$X1_1) == 0) {
+    # Delete X1_1
+    df_F12$X1_1 <- NULL
+  }
+  
+  # Drop unnecessary column  "Fehlerhaft"
+  df_F12$Fehlerhaft <- NULL
 }
 
-# Drop unnecessary column  "Fehlerhaft"
-df_F21$Fehlerhaft <- NULL
-
-########
-
-#Store all counted days in vector
-daycount_F22 <- df_F22$Produktionsdatum_Origin_01011970
-
-# Reformat date from data frame to fit as.Date
-betterDates <- as.Date(daycount_F22, origin = "1970-01-01")
-
-# Add date column with correctly formatted dates
-df_F22$Produktionsdatum <- betterDates
-
-# Delete Column Produktionsdatum_Origin_01011970 
-df_F22$Produktionsdatum_Origin_01011970 <- NULL
-
-# Delete unnecessary column eight "origin"
-df_F22$origin <- NULL
-
-#Check if X1 == X1_1
-if (sum(!df_F22$X1 == df_F22$X1_1) == 0) {
-  # Delete X1_1
-  df_F22$X1_1 <- NULL
-}
-
-# Drop unnecessary column  "Fehlerhaft"
-df_F22$Fehlerhaft <- NULL
 
 ```
 
-Because of our task, we were interested in the location of the OEM factory of each vehicle. We used the information available in the vehilce id. As described in the task, the third number of the vehicle id gave us the information in which OEM factory the vehicle was produced. We created a new column called Produktionsstandort, which assigned every vehicle id a factory location. 
+The data frames `df_F21` and `df_F22` had the same unnecessary columns `Fehlerhaft` and `X1_1` as `df_F11` and `df_F12`. Furthermore they had a column called `Produktionsdatum`, which contained dates in the POSIXct format with a column named `origin`, which by itself contained user unfriendly date information. The unneeded columns had to be deleted and the dates had to be converted in a useful format.
 
-```{r}
+```{r fix_vehicle_dates}
 
-#Add column Produktionsstandort to Fahrzeuge_OEM1_Typ11
-df_F11$Produktionsstandort <- df_F11$ID_Fahrzeug
+fix_vehicle_dates <- function() {
+  #Store all counted days in vector
+  daycount_F21 <- df_F21$Produktionsdatum_Origin_01011970
+  
+  # Reformat date from data frame to fit as.Date
+  betterDates <- as.Date(daycount_F21, origin = "1970-01-01")
+  
+  # Add date column with correctly formatted dates
+  df_F21$Produktionsdatum <- betterDates
+  
+  # Delete Column Produktionsdatum_Origin_01011970 
+  df_F21$Produktionsdatum_Origin_01011970 <- NULL
+  
+  # Delete unnecessary column eight "origin"
+  df_F21$origin <- NULL
+  
+  #Check if X1 == X1_1
+  if (sum(!df_F21$X1 == df_F21$X1_1) == 0) {
+    # Delete X1_1
+    df_F21$X1_1 <- NULL
+  }
+  
+  # Drop unnecessary column  "Fehlerhaft"
+  df_F21$Fehlerhaft <- NULL
+  
+  ########
+  
+  #Store all counted days in vector
+  daycount_F22 <- df_F22$Produktionsdatum_Origin_01011970
+  
+  # Reformat date from data frame to fit as.Date
+  betterDates <- as.Date(daycount_F22, origin = "1970-01-01")
+  
+  # Add date column with correctly formatted dates
+  df_F22$Produktionsdatum <- betterDates
+  
+  # Delete Column Produktionsdatum_Origin_01011970 
+  df_F22$Produktionsdatum_Origin_01011970 <- NULL
+  
+  # Delete unnecessary column eight "origin"
+  df_F22$origin <- NULL
+  
+  #Check if X1 == X1_1
+  if (sum(!df_F22$X1 == df_F22$X1_1) == 0) {
+    # Delete X1_1
+    df_F22$X1_1 <- NULL
+  }
+  
+  # Drop unnecessary column  "Fehlerhaft"
+  df_F22$Fehlerhaft <- NULL
+}
 
-df_F11$Produktionsstandort <- gsub(pattern = ".*-11-.*" , replacement = "Nuernberg" , df_F11$Produktionsstandort)
-df_F11$Produktionsstandort <- gsub(pattern = ".*-12-.*" , replacement = "Bonn" , df_F11$Produktionsstandort)
 
-#Add column Produktionsstandort to Fahrzeuge_OEM1_Typ12
-df_F12$Produktionsstandort <- df_F12$ID_Fahrzeug
+```
 
-df_F12$Produktionsstandort <- gsub(pattern = ".*-12-.*" , replacement = "Bonn" , df_F12$Produktionsstandort)
+Because of our task, we were interested in the location of the OEM factory of each vehicle. We used the information available in the vehilce id. As described in the task, the third number of the vehicle id gave us the information in which OEM factory the vehicle was produced. We created a new column called `Produktionsstandort`, which assigned every vehicle id a factory location. 
 
-#Add column Produktionsstandort to Fahrzeuge_OEM1_Typ21
-df_F21$Produktionsstandort <- df_F21$ID_Fahrzeug
+```{r create_vehicle_OEM_columns}
 
-df_F21$Produktionsstandort <- gsub(pattern = ".*-21-.*" , replacement = "Goettingen" , df_F21$Produktionsstandort)
+create_vehicle_OEM_columns <- function() {
+  #Add column Produktionsstandort to Fahrzeuge_OEM1_Typ11
+  df_F11$Produktionsstandort <- df_F11$ID_Fahrzeug
+  
+  df_F11$Produktionsstandort <- gsub(pattern = ".*-11-.*" , replacement = "Nuernberg" , df_F11$Produktionsstandort)
+  df_F11$Produktionsstandort <- gsub(pattern = ".*-12-.*" , replacement = "Bonn" , df_F11$Produktionsstandort)
+  
+  #Add column Produktionsstandort to Fahrzeuge_OEM1_Typ12
+  df_F12$Produktionsstandort <- df_F12$ID_Fahrzeug
+  
+  df_F12$Produktionsstandort <- gsub(pattern = ".*-12-.*" , replacement = "Bonn" , df_F12$Produktionsstandort)
+  
+  #Add column Produktionsstandort to Fahrzeuge_OEM1_Typ21
+  df_F21$Produktionsstandort <- df_F21$ID_Fahrzeug
+  
+  df_F21$Produktionsstandort <- gsub(pattern = ".*-21-.*" , replacement = "Goettingen" , df_F21$Produktionsstandort)
+  
+  #Add column Produktionsstandort to Fahrzeuge_OEM1_Typ22
+  df_F22$Produktionsstandort <- df_F22$ID_Fahrzeug
+  
+  df_F22$Produktionsstandort <- gsub(pattern = ".*-21-.*" , replacement = "Goettingen" , df_F22$Produktionsstandort)
+  df_F22$Produktionsstandort <- gsub(pattern = ".*-22-.*" , replacement = "Regensburg" , df_F22$Produktionsstandort)
+}
 
-#Add column Produktionsstandort to Fahrzeuge_OEM1_Typ22
-df_F22$Produktionsstandort <- df_F22$ID_Fahrzeug
-
-df_F22$Produktionsstandort <- gsub(pattern = ".*-21-.*" , replacement = "Goettingen" , df_F22$Produktionsstandort)
-df_F22$Produktionsstandort <- gsub(pattern = ".*-22-.*" , replacement = "Regensburg" , df_F22$Produktionsstandort)
 
 ```
 
 We merged all of the vehicle data frames to minimize the amount of action, necessary to adjust the data. Furthermore we minimized the amount of data for further analysis by deleting columns containing irrelevant information for solving our task. Afterwards we renamed the remaining columns and filtered the relevant dates. In the last step we checked the data for duplicates and NAs. 
 
-```{r}
-# Merge data frames Fahrzeuge_OEM1
-vehicle_df <- rbind(df_F11, df_F12, df_F21, df_F22)
+```{r link_tidy_checkDupNA_vehicle}
 
-# Delete unnecessary columns Fahrzeuge_OEM2
-vehicle_df$Herstellernummer <- NULL
-vehicle_df$Werksnummer <- NULL
-vehicle_df$Fehlerhaft_Datum <- NULL
-vehicle_df$Fehlerhaft_Fahrleistung <- NULL
-vehicle_df$X1 <- NULL
+link_tidy_checkDupNA_vehicle <- function() {
+  # Merge data frames Fahrzeuge_OEM1
+  vehicle_df <- rbind(df_F11, df_F12, df_F21, df_F22)
+  
+  # Delete unnecessary columns Fahrzeuge_OEM2
+  vehicle_df$Herstellernummer <- NULL
+  vehicle_df$Werksnummer <- NULL
+  vehicle_df$Fehlerhaft_Datum <- NULL
+  vehicle_df$Fehlerhaft_Fahrleistung <- NULL
+  vehicle_df$X1 <- NULL
+  
+  # Rename columns in Fahrzeuge_OEM2
+  names(vehicle_df)[1] <- "vehicle_global_id"
+  names(vehicle_df)[2] <- "vehicle_prod_date"
+  names(vehicle_df)[3] <- "vehicle_prod_factory"
+  
+  # Filter for relevant dates
+  vehicle_df <- subset(vehicle_df, !vehicle_prod_date < "2015-01-01")
+  vehicle_df <- subset(vehicle_df, !vehicle_prod_date > "2016-12-31")
+  
+  # Check for duplicates & NAs
+  print(paste0("Number of duplicates in vehicle_df: ", sum(duplicated(vehicle_df$vehicle_global_id))))
+  print(paste0("vehicle_df has ", sum(is.na(vehicle_df))," NAs"))
+  
+  # View tidy data frames
+  View(vehicle_df)
+}
 
-# Rename columns in Fahrzeuge_OEM2
-names(vehicle_df)[1] <- "vehicle_global_id"
-names(vehicle_df)[2] <- "vehicle_prod_date"
-names(vehicle_df)[3] <- "vehicle_prod_factory"
-
-# Filter for relevant dates
-vehicle_df <- subset(vehicle_df, !vehicle_prod_date < "2015-01-01")
-vehicle_df <- subset(vehicle_df, !vehicle_prod_date > "2016-12-31")
-
-# Check for duplicates & NAs
-print(paste0("Number of duplicates in vehicle_df: ", sum(duplicated(vehicle_df$vehicle_global_id))))
-print(paste0("vehicle_df has ", sum(is.na(vehicle_df))," NAs"))
-
-# View tidy data frames
-View(vehicle_df)
 
 ```
 
-### 3. Transform
+Lastly, the function which executes all vehicle data wrangle related functions is defined:
 
-### 3.1 Transform for shiny app
+```{r vehicle startImport}
+# execute all the previously explained functions for importing vehicle data
+startImportVehicle <- function() {
+  import_BE_vehicle_files()
+  create_BE_vehicle_OEM_columns()
+  link_BE_vehicles()
+  tidy_BE_vehicle()
+  vehicle_NA_checker()
+  import_vehicle_files()
+  drop_vehicle_cols()
+  fix_vehicle_dates()
+  create_vehicle_OEM_columns()
+  link_tidy_checkDupNA_vehicle()
 
-For our shiny app we needed a new column in our master data frame, which contained the maximum time between production of a part and production  of  the  entire  vehicle. Therefore we created a column which listed this time difference for every part. In the next step we created a list containg just the maximum time difference for every single vehicle. 
+}
+```
 
-```{r}
-# Create column for production time
-master_df$prod_time <- master_df$vehicle_prod_date - master_df$part_prod_date
 
-#Put max production time for each vehicle global id in a list
-master_list_shiny <- with(master_df, tapply(prod_time, vehicle_global_id, max))
+# Transform
+
+## Transform for shiny app
+
+For our shiny app we needed a new column in our master data frame, which contains the maximum time between production of a part and production of the entire vehicle. Therefore we created a column which listed this time difference for every part. In the next step we created a list containg just the maximum time difference for every single vehicle. 
+
+```{r prepare_masterdf_1}
+prepare_masterdf_1 <- function() {
+  # Create column for production time
+  master_df$prod_time <- master_df$vehicle_prod_date - master_df$part_prod_date
+  
+  #Put max production time for each vehicle global id in a list
+  master_list_shiny <- with(master_df, tapply(prod_time, vehicle_global_id, max))
+}
+
 
 ```
 
 Afterwards we converted the list to a dataframe and ajusted and renamed the columns
 
-```{r}
-#Convert list to a data frame
-master_df_shiny <- as.data.frame(master_list_shiny)
+```{r prepare_masterdf_2}
 
-# Change index rownames and use vehicle_global id as normal column
-master_df_shiny <- cbind(vehicle_global_id = rownames(master_df_shiny), master_df_shiny)
-rownames(master_df_shiny) <- 1:nrow(master_df_shiny)
+prepare_masterdf_2 <- function() {
+  #Convert list to a data frame
+  master_df_shiny <- as.data.frame(master_list_shiny)
+  
+  # Change index rownames and use vehicle_global id as normal column
+  master_df_shiny <- cbind(vehicle_global_id = rownames(master_df_shiny), master_df_shiny)
+  rownames(master_df_shiny) <- 1:nrow(master_df_shiny)
+  
+  # Rename columns in master_df_shiny data
+  names(master_df_shiny)[names(master_df_shiny) == "master_list_shiny"] <- "prod_time"
+}
 
-# Rename columns in master_df_shiny data
-names(master_df_shiny)[names(master_df_shiny) == "master_list_shiny"] <- "prod_time"
 
 ```
 
 Eventually we added the column for OEM factory location, which was lost in the previous steps. After that we added a column containing just the vehicle type. To display our data correctly in a boxplot, it was necessary to convert the vehicle column to factors
 
-```{r}
-#Add column vehicle_prod_factory to master_df_shiny
-master_df_shiny$vehicle_prod_factory <- master_df_shiny$vehicle_global_id
+```{r prepare_masterdf_3}
 
-master_df_shiny$vehicle_prod_factory <- gsub(pattern = ".*-11-.*" , replacement = "Nuernberg" , master_df_shiny$vehicle_prod_factory)
-master_df_shiny$vehicle_prod_factory <- gsub(pattern = ".*-12-.*" , replacement = "Bonn" ,master_df_shiny$vehicle_prod_factory)
-master_df_shiny$vehicle_prod_factory <- gsub(pattern = ".*-21-.*" , replacement = "Goettingen" , master_df_shiny$vehicle_prod_factory)
-master_df_shiny$vehicle_prod_factory <- gsub(pattern = ".*-22-.*" , replacement = "Regensburg" , master_df_shiny$vehicle_prod_factory)
+prepare_masterdf_3 <- function() {
+  #Add column vehicle_prod_factory to master_df_shiny
+  master_df_shiny$vehicle_prod_factory <- master_df_shiny$vehicle_global_id
+  
+  master_df_shiny$vehicle_prod_factory <- gsub(pattern = ".*-11-.*" , replacement = "Nuernberg" , master_df_shiny$vehicle_prod_factory)
+  master_df_shiny$vehicle_prod_factory <- gsub(pattern = ".*-12-.*" , replacement = "Bonn" ,master_df_shiny$vehicle_prod_factory)
+  master_df_shiny$vehicle_prod_factory <- gsub(pattern = ".*-21-.*" , replacement = "Goettingen" , master_df_shiny$vehicle_prod_factory)
+  master_df_shiny$vehicle_prod_factory <- gsub(pattern = ".*-22-.*" , replacement = "Regensburg" , master_df_shiny$vehicle_prod_factory)
+  
+  # Add column vehicle type to master_df_shiny
+  master_df_shiny$vehicle_type <- master_df_shiny$vehicle_global_id
+  
+  master_df_shiny$vehicle_type <- gsub(pattern = "^11-.*" , replacement = "11" , master_df_shiny$vehicle_type)
+  master_df_shiny$vehicle_type <- gsub(pattern = "^12-.*" , replacement = "12" ,master_df_shiny$vehicle_type)
+  master_df_shiny$vehicle_type <- gsub(pattern = "^21-.*" , replacement = "21" , master_df_shiny$vehicle_type)
+  master_df_shiny$vehicle_type <- gsub(pattern = "^22-.*" , replacement = "22" , master_df_shiny$vehicle_type)
+  
+  
+  # Convert column vehicle_type to factor
+  master_df_shiny$vehicle_type <- as.factor(master_df_shiny$vehicle_type)
+}
 
-# Add column vehicle type to master_df_shiny
-master_df_shiny$vehicle_type <- master_df_shiny$vehicle_global_id
 
-master_df_shiny$vehicle_type <- gsub(pattern = "^11-.*" , replacement = "11" , master_df_shiny$vehicle_type)
-master_df_shiny$vehicle_type <- gsub(pattern = "^12-.*" , replacement = "12" ,master_df_shiny$vehicle_type)
-master_df_shiny$vehicle_type <- gsub(pattern = "^21-.*" , replacement = "21" , master_df_shiny$vehicle_type)
-master_df_shiny$vehicle_type <- gsub(pattern = "^22-.*" , replacement = "22" , master_df_shiny$vehicle_type)
+```
 
+The calls to execute the Code above:
 
-# Convert column vehicle_type to factor
-master_df_shiny$vehicle_type <- as.factor(master_df_shiny$vehicle_type)
+```{r prepare_masterdf}
+# prepare_masterdf_1()
+# prepare_masterdf_2()
+# prepare_masterdf_3()
 
 ```
 
 
-
-Add information for the merged data
 
 # Shiny App & Visualization
 
 At first we loaded the shiny package. We created a web page using the fluidpage() function. We created the user interface, which is responsible for the appearence of the app. We wrote a short heading at the top of our page.  
 
-```{r}
+Afterwards we used tabsetPanel() for our overall layout. This was necessary to give room to our different functionalities. In the first tab we placed our input options. We used a sidebar layout to differntiate basic inputs and additional ones. The basic inputs are essential for the use, while the additional ones offer further benefits.
+
+The basic inputs contain a group of checkboxes, which allows the user to select single vehicle types. We choose this input type, because it is easy to handle for the user and it allows every selection possible. Furthermore we added another checkbox, to give the user the opportunity to choose between a single and a separate boxplots display. In addition we created a radio button, which switches the boxplot display from separation by vehicle types to OEM factories. Thus production times of the vehicles at every single Oem factory can be shown. 
+
+We created a main panel which offers distinct color selection and a slider input. The slider input gives the user the opportunity to select the production time range, which is used for the boxplots and the table. This gives the user many opportunities for further analysis. For example, it is possible to display a boxplot, which does not include the strongest outliers. Furthermore the slider input can be used to show just the strongest outliers in the reactive table. In this way they can be determined very easily.
+
+The next two tabs were created to display the boxplot and the reactive table. 
+
+
+```{r shiny ui}
 # Create user interface
 ui <- fluidPage(
   # Create a heading
   h1(strong("Introduction to Engineering Data Analytics with R")),
   h2("shiny app Group 7"),
-
-```
-
-Afterwards we used tabsetPanel() for our overall layout. This was necessary to give room to our different functionalities. In the first tab we placed our input options. We used a sidebar layout to differntiate basic inputs and additional ones. The basic inputs are essential for the use, while the additional ones offer further benefits.
-
-The basic inputs contain a group of checkboxes, which allows the user to select single vehicle types. We choose this input type, because it is easy to handle for the user and it allows every selection possible. Furthermore we added another checkbox, to give the user the opportunity to choose between a single and a separate boxplots display. In addition we created a radio button, which switches the boxplot display from separation by vehicle types to OEM factories. Thus production times of the vehicles at every single Oem factory can be shown. 
-
-```{r}
   # Create tabs
   tabsetPanel(
     
@@ -1309,12 +1770,6 @@ The basic inputs contain a group of checkboxes, which allows the user to select 
           
           
         ),
-        
-```         
-
-We created a main panel which offers distinct color selection and a slider input. The slider input gives the user the opportunity to select the production time range, which is used for the boxplots and the table. This gives the user many opportunities for further analysis. For example, it is possible to display a boxplot, which does not include the strongest outliers. Furthermore the slider input can be used to show just the strongest outliers in the reactive table. In this way they can be determined very easily.
-
-```{r}
         # Create a main panel
         mainPanel(
           # Create a heading
@@ -1331,13 +1786,6 @@ We created a main panel which offers distinct color selection and a slider input
         )
       )
     ),
-    
-    
-```    
-    
-The next two tabs were created to display the boxplot and the reactive table.     
-    
-```{r}    
     # Create tab for boxplot
     tabPanel(
       title = "boxplot",
@@ -1354,9 +1802,15 @@ The next two tabs were created to display the boxplot and the reactive table.
 
 ```
 
+
+
 In the next step we defined the server logic. We used the reactive function, so our data gets reevaluated if any of its dependencies are modified. Hence the render functions of the boxplot and table will react to any change of our input controls. We called the reactive variable for our data filtered_data(). We used the subset() function twice to determine, which data is used depending on the input controls.
 
-```{r}
+For creating our boxplot we used ggplot with geom_boxplot. We specified the inputs, designs and labeling. Furthermore we used if() functions to determine how the boxplot or boxplots should be displayed, when the checkboxes for separation or merge and OEM factory view or vehicle type view are selected.
+
+In the last section we placed the table, which is displayed in the third tab of our shiny app. The data we created is a reactive variable and the render function is a reactive context, therefore the table will display the most up to date values, if the input changes. We renamed the columns of the table. The last line combines the user interface and the server into a shiny app and runs it.
+
+```{r server}
 # Define the server logic
 server <- function(input, output) {
   
@@ -1378,13 +1832,6 @@ server <- function(input, output) {
     data
     
   })
-  
-```
-  
-For creating our boxplot we used ggplot with geom_boxplot. We specified the inputs, designs and labeling. Furthermore we used if() functions to determine how the boxplot or boxplots should be displayed, when the checkboxes for separation or merge and OEM factory view or vehicle type view are selected.
-  
-  
-```{r} 
   output$plot <- renderPlotly({
     
     data <- filtered_data()
@@ -1429,13 +1876,6 @@ For creating our boxplot we used ggplot with geom_boxplot. We specified the inpu
       p 
     })
   })
-
-```
-
-In the last section we placed the table, which is displayed in the third tab of our shiny app. The data we created is a reactive variable and the render function is a reactive context, therefore the table will display the most up to date values, if the input changes. We renamed the columns of the table. The last line combines the user interface and the server into a shiny app and runs it.
-
-```{r}
-
   output$table <- renderDataTable({
     
     data <- filtered_data()
@@ -1459,15 +1899,12 @@ In the last section we placed the table, which is displayed in the third tab of 
 
 # Combine ui and server into a shiny app and run it
 shinyApp(ui = ui, server = server)
-
-
+  
 ```
+  
 
 
 
-
-
-Add Shiny, Boxplit info
 
 # Analysis
 
