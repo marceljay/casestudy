@@ -20,6 +20,13 @@ comp_df_list.Rdata
 # Output files from R CMD build
 /*.tar.gz
 
+# Output files from knittr
+.html
+.tex
+.pdf
+.doc
+.docx
+
 # Output files from R CMD check
 /*.Rcheck/
 
