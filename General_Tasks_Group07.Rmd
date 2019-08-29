@@ -36,7 +36,7 @@ _a. How is the logistics delay distributed? Justify your selection and briefly d
 
 Importing necessary data and checking structure
 ```{r import, message=FALSE, cache=FALSE}
-component_K7 <- read_delim("./Data/Logistikverzug/Logistikverzug_K7.csv", delim = ";")
+component_K7 <- read_delim("./Data/Logistikverzug/Komponente_K7.csv", delim = ";")
 logistic_delay_K7 <- read_delim("./Data/Logistikverzug/Logistikverzug_K7.csv", delim = ";")
 
 str(component_K7)
@@ -50,22 +50,21 @@ component_K7$X1 <- NULL
 logistic_delay_K7$X1 <- NULL
 
 logistic_delay_K7$Wareneingang <- as.Date(logistic_delay_K7$Wareneingang, format = "%d.%m.%Y")
-component_K7$Wareneingang <- as.Date(component_K7$Wareneingang, format = "%d.%m.%Y")
+component_K7$Wareneingang <- as.Date(component_K7$Produktionsdatum, format = "%d.%m.%Y")
 ```
 
 Creating Data Set "Logistics Delay"
 ```{r}
-#Logistics_Delay$delay <- logistic_delay_K7$Wareneingang - component_K7$Wareneingang
 Logistics_Delay <- data.frame(delay = logistic_delay_K7$Wareneingang - component_K7$Wareneingang)
 
 ```
 
 Distribution of Logistics Delay
 ```{r}
-hist(as.numeric(Logistics_Delay$delay))
+
+hist(as.numeric(Logistics_Delay$delay), main = "Delay of Days", xlab = "Number of days")
 ```
-Normal distribution????
-...
+The Distribution of the Logistics Delay is a normal distribution as shown in the histogram. 
 
 _b. What is the minimum/maximum time between delivering and receiving goods?_
 
