@@ -5,17 +5,48 @@ date: "July 2019"
 output:
   html_document:
     df_print: paged
+    toc: true
+    toc_float: true
+    number_sections: true
 ---
 
-### Introduction
+# Introduction
 
 This document provides all major steps and important information regarding the execution of the Case Study for Group 7 of the IDA Course. The output will be a complete data frame with essential data needed for the Shiny App.
 
-The objective is to identify vehicle types that take a lot of time between the Start of production of parts to the finished vehicle for the duration of Jan-1-2015 to Dez-31-2016. For this, the production times of parts, and vehicles need to be considered and visualized appropriately. Since the subsequent analysis will be used to initiate process improvements for critical vehicle types, the most critical vehicle type needs to be selected in the end.
+The objective is to identify vehicle types that take a lot of time between the Start of production of parts to the finished vehicle for the duration of Jan-1-2015 to Dec-31-2016. For this, the production times of parts, and vehicles need to be considered and visualized appropriately. Since the subsequent analysis will be used to initiate process improvements for critical vehicle types, the most critical vehicle type needs to be selected in the end.
 
-For this Case Study the following libraries were used.
 
 ```{r setup, include=FALSE}
+# Prevents code, but not the results from appearing in the finished file.
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(warning = FALSE)
+
+# Dependencies
+if( !require(readr)){
+  install.packages("readr")
+}
+
+if( !require(dplyr)){
+  install.packages("dplyr")
+}
+
+if( !require(data.table)){
+  install.packages("data.table")
+}
+
+if( !require(lubridate)){
+  install.packages("lubridate")
+}
+
+if( !require(stringr)){
+  install.packages("stringr")
+}
+
+if( !require(tidyr)){
+  install.packages("tidyr")
+}
+
 library(readr)
 library(dplyr)
 library(tidyr)
@@ -25,16 +56,18 @@ library(stringr)
 
 ```
 
-### 1. Approach
+# Approach
+
+The workflow is strongly based on the Data Analysis Process introduced in the IDA lecture, consisting of the major areas of programming, understanding and reporting.
 
 The decision of most critical vehicle type will be based on the vehicle type with the highest amount and occurrences of "production duration".
 In order to create informative box plot diagrams visualizing this attribute, a tidied data frame with relevant data needs to be created from the given raw data. Thus all files containing raw data need to be examined to choose a selection of relevant files for import. For the given objective, the data in files containing attributes related to the production date of parts (Einzelteile), components (Komponente) and vehicles (Fahrzeuge) are necessary to produce the attribute "production duration".
 
-While skimming through the files in the directories "Einzelteil", "Komponente" and "Fahrzeug" using external text editors, MS excel and in command line with head() and tail(), it became clear that the often sequentially named .csv and .txt files within contain columns with date-like values such as "origin", while files in the component and vehicle directories containing "Bestandteile_" in their names serve as keys to match columns in parts, components and vehicles together.
+While skimming through the files in the directories `Einzelteil`, `Komponente` and `Fahrzeug` using external text editors, MS excel and in command line with head() and tail(), it became clear that the often sequentially named .csv and .txt files within contain columns with date-like values such as `origin`, while files in the component and vehicle directories containing `Bestandteile` in their names serve as keys to match columns in parts, components and vehicles together.
 
-After the import, the resulting data frames are tidied according to the principles of tidy data depending on the given situation. Most often, the values are scanned for NA entries and duplicates, irrelevant columns are removed and a filter is set for the required time period. For the "Bestandteile" files, gather() needs to be applied to multiple column occurrences for parts or components. In select cases, further steps are involved to prepare data frames for transformation.
+After the import, the resulting data frames are tidied according to the principles of tidy data depending on the given situation. Most often, the values are scanned for NA entries and duplicates, irrelevant columns are removed and a filter is set for the required time period. For the `Bestandteile` files, gather() needs to be applied to multiple column occurrences for parts or components. In select cases, further steps are involved to prepare data frames for transformation.
 
-During transformation, all part, component and vehicle data frames are linked together to create one data frame for each segment via bind_rows(). With the "Bestandteile_" data frames serving as keys, the columns of the three data frames containing the production dates of each segments are merged into one final data frame. While the production date of components are not essential for the objective, the component data frame still serves its purpose as it provides the only means to connect parts to vehicles.
+During transformation, all part, component and vehicle data frames are linked together to create one data frame for each segment via bind_rows(). With the `Bestandteile` data frames serving as keys, the columns of the three data frames containing the production dates of each segments are merged into one final data frame. While the production date of components are not essential for the objective, the component data frame still serves its purpose as it provides the only means to connect parts to vehicles.
 
 The final data frame contains observations for indivitual vehicles within their respective types with the attributes of the vehicle's production date and the production dates of all parts built into that vehicle. By selecting the highest difference in production date between a vehicle and the built in parts, the production time for that vehicle can be determined and visualized for the Shiny App.
 
@@ -42,15 +75,15 @@ The Shiny App then provides input methods to display box plot diagrams of the ve
 
 
 
-### 2. Import & Tidy of all segments
+# Import & Tidy of all segments (Wrangle) {.tabset}
 
 Since there are 79 files to be considered for our analysis, many being untidy, we split up the importing and tidying to separate modules, that were sourced for joining and data analysis. 
 
-#### Parts
+## Parts
 
-The 38 part files in the `Einzelteile` directory had well over ten different patterns that needed to be identified for a correct import and tidying. Some files had more columns than others, some had differerent date formats, missing line breaks or varios delimiters. 
+The 38 part files in the `Einzelteil` directory had well over ten different patterns that needed to be identified for a correct import and tidying. Some files had more columns than others, some had differerent date formats, missing line breaks or varios delimiters. 
   
-In this chunk, all the files from the specific `Einzelteile` directory are written into a vector:
+In this chunk, all the files from the specific `Einzelteil` directory are written into a vector:
 ```{r}
 partFileNames <- list.files("Data/Einzelteil")
 pathVector <- paste("Data/Einzelteil/", partFileNames, sep="")
@@ -340,9 +373,9 @@ tidyTXT_7 <- function(path){
 ```
 
 
-#### Components
+## Components
 
-Before attempting to import the files under the "Komponente" directory, every file needs to be checked for separators and patterns to work out the specifics of the import function and the required options. Some have working production date values, some contain an "origin" column and therefore include the date in POSIXct format. Distinctions must also be made for .txt files. Files with same patterns are put into the same list for future reference.
+Before attempting to import the files under the `Komponente` directory, every file needs to be checked for separators and patterns to work out the specifics of the import function and the required options. Some have working production date values, some contain an `origin` column and therefore include the date in POSIXct format. Distinctions must also be made for .txt files. Files with same patterns are put into the same list for future reference.
 
 ```{r component lists}
 # Bestandteile files
@@ -422,7 +455,7 @@ Ktxt_list_E <- c("K2LE1.txt")
 
 ```
 
-Next, the file paths need to be specified. For automation purposes, all paths are put in a list for looping. To differentiate between "Bestandteile" and data with production dates, the file path list with 32 entries is split into two vectors for each, with the former 16 files belonging to "Bestandteile".
+Next, the file paths need to be specified. For automation purposes, all paths are put in a list for looping. To differentiate between `Bestandteile` and data with production dates, the file path list with 32 entries is split into two vectors for each, with the former 16 files belonging to `Bestandteile`.
 
 ```{r component paths}
 # Get a char vector with all the paths
@@ -495,14 +528,14 @@ determineTidyFunction <- function(filePath) {
 }
 ```
 
-In addition, the global data frame variable "df" is defined to prepare for import.
+In addition, the global data frame variable `df` is defined to prepare for import.
 
 ```{r define df}
 # define data frame variable, necessary for returning data frame from function
 df <- 1
 ```
 
-Now the import function for "Bestandteile" files is defined. Logging messages are applied to follow the progress. Since ";" is used as separator, as is common practice in Germany, read.csv2() can be used to import all "Bestandteile" files. The option "stringsAsFactors = FALSE" is necessary as R is likely to interpret string values as factors and result in errors during import when the first values in a column remain identical. Functions for tidying are also used immediately after import, as different patterns require different approaches to both import and tidying. The gather() function takes all attributes related to a part ID and joins them into one single attribute. Irrelevant colums such as the first two X and X1 are removed. A standardized column name is assigned to the component column. Every step as well as the result is assigned to the global variable df.
+Now the import function for `Bestandteile` files is defined. Logging messages are applied to follow the progress. Since `;` is used as separator, as is common practice in Germany, `read.csv2()` can be used to import all `Bestandteile` files. The option `stringsAsFactors = FALSE` is necessary as R is likely to interpret string values as factors and result in errors during import when the first values in a column remain identical. Functions for tidying are also used immediately after import, as different patterns require different approaches to both import and tidying. The `gather()` function takes all attributes related to a part ID and joins them into one single attribute. Irrelevant colums such as the first two `X` and `X1` are removed. A standardized column name is assigned to the component column. Every step as well as the result is assigned to the global variable df.
 
 ```{r tidyCSV_BE}
 # Function to tidy CSV with format "BE"-------------------------------------------
@@ -530,7 +563,7 @@ tidyCSV_BE <- function(path) {
 
 ```
 
-Next, import functions for the remaining files with production date entries are defined. As files from both "Kcsv_list_A" and "Kcsv_list_B" can be imported and tidied with one function, an if else statement can help to select the appropriate import function read.csv() or read.csv2() within this function. After the initial import, the production date is converted from POSIXct format to a regular date format, the result is saved in the standardized column "prod_date". Afterwards, the irrelevant X1 column is removed, other unwanted columns are dropped and the remaining columns remaned to standardized names. Lastly, the results are filtered for the required period 2015-2016 and the remaining redundant columns such as "factory" and "oem" which are included in the unique "global_id" are dropped.
+Next, import functions for the remaining files with production date entries are defined. As files from both `Kcsv_list_A` and `Kcsv_list_B` can be imported and tidied with one function, an if else statement can help to select the appropriate import function `read.csv()` or `read.csv2()` within this function. After the initial import, the production date is converted from POSIXct format to a regular date format, the result is saved in the standardized column `prod_date`. Afterwards, the irrelevant `X1` column is removed, other unwanted columns are dropped and the remaining columns remaned to standardized names. Lastly, the results are filtered for the required period 2015-2016 and the remaining redundant columns such as `factory` and `oem` which are included in the unique `global_id` are dropped.
 
 ```{r tidyCSV_Kcsv_AB}
 # Function to tidy CSV with format "Kcsv"----------------------------------------
@@ -585,7 +618,7 @@ tidyCSV_Kcsv_AB <- function(path, delim = ";") {
 }
 ```
 
-The import function for multiple patterns with column name suffixes ".x" and ".y" is shown below. Apart from the previously described steps, unite() is used to unite the required values located in different columns into one column. Since NA entries were included thorugh this method, gsub() takes care of their removal. Furthermore, as the resulting prod_date column has been edited with unite() and gsub(), its class is no longer date, but character. A simple as.Date() function solves this issue to prevent errors in future transformations.
+The import function for multiple patterns with column name suffixes ".x" and ".y" is shown below. Apart from the previously described steps, `unite()` is used to unite the required values located in different columns into one column. Since NA entries were included thorugh this method, `gsub()` takes care of their removal. Furthermore, as the resulting `prod_date` column has been edited with `unite()` and `gsub()`, its class is no longer date, but character. A simple `as.Date()` function solves this issue to prevent errors in future transformations.
 
 ```{r tidyCSV_Kcsv_Cxyz}
 tidyCSV_Kcsv_Cxyz <- function(path, delim = ";") {
@@ -628,7 +661,7 @@ tidyCSV_Kcsv_Cxyz <- function(path, delim = ";") {
 }
 ```
 
-As for the .txt files, the following functions use read.table() to import them. Here, the separator is the main difference. The rest of the functions has been explained previously.
+As for the .txt files, the following functions use `read.table()` to import them. Here, the separator is the main difference. The rest of the functions has been explained previously.
 
 ```{r tidyTXT_A & B & C}
 tidyTXT_A <- function(path){
@@ -735,7 +768,7 @@ tidyTXT_C <- function(path){
 }
 ```
 
-Some files require more complicated preparations before import. For .txt files missing line endings, readLines() has to be applied and the result cleaned with gsub() before conventional read.table() functions work. Additional steps as explained previously for tidying might also be applied when required.
+Some files require more complicated preparations before import. For .txt files missing line endings, `readLines()` has to be applied and the result cleaned with `gsub()` before conventional `read.table()` functions work. Additional steps as explained previously for tidying might also be applied when required.
 
 ```{r tidyTXT_D & E}
 tidyTXT_D <- function(path){
@@ -828,7 +861,7 @@ tidyTXT_E <- function(path){
 }
 ```
 
-Some previously used functions such as dateFilter(), reformatCols() are then defined. Also na_checker() will be used later on to guarantee there are no NA entries present.
+Some previously used functions such as `dateFilter()`, `reformatCols()` are then defined. Also `na_checker()` will be used later on to guarantee there are no NA entries present.
 
 ```{r Support Functions}
 #################################
@@ -858,7 +891,7 @@ na_checker <- function() {
 
 ```
 
-Now, a function for the execution of all the component import code is defined. By looping through the path vectors, BE_list and comp_df_list are filled with imported data frames as list entries.
+Now, a function for the execution of all the component import code is defined. By looping through the path vectors, `BE_list` and `comp_df_list` are filled with imported data frames as list entries.
 
 ```{r startImportComp}
 #################################
@@ -881,7 +914,7 @@ startImportComp <- function() {
 }
 ```
 
-Once the lists containing data frames are created, the following functions are defined which will provide further tidying by checking for duplicate comp_global_id and part_global_id entries, as these need to be unique. As long as the output is "0", there are no duplicates.
+Once the lists containing data frames are created, the following functions are defined which will provide further tidying by checking for duplicate `comp_global_id` and `part_global_id` entries, as these need to be unique. As long as the output is `0`, there are no duplicates.
 
 ```{r dup checkers}
 
@@ -900,7 +933,7 @@ dup_checker_BE_list <- function() {
 }
 ```
 
-Lastly, two functions are defined which use bind_rows() to combine all data frames in the lists into two large data frames respectively. The work is progress can be followed with log messages while for loops apply bind_rows() onto the list entries, resulting in the two large data frames comp_df with the columns "comp_global_id" and "comp_prod_date" and BE_comp_df with the columns "comp_global_id" and "part_global_id". These two data frames are ready to be merged with each other and with the vehicle and part data frames.
+Lastly, two functions are defined which use `bind_rows()` to combine all data frames in the lists into two large data frames respectively. The work in progress can be followed with log messages while for loops apply `bind_rows()` onto the list entries, resulting in the two large data frames `comp_df` with the columns `comp_global_id` and `comp_prod_date`, as well as `BE_comp_df` with the columns `comp_global_id` and `part_global_id`. These two data frames are ready to be merged with each other and with the vehicle and part data frames using `inner_join()`.
 
 ```{r comp df links}
 # combine comp_df_list entries into one data frame: comp_df
@@ -929,20 +962,20 @@ link_BE_list <- function() {
 ```
 
 
-#### Vehicles
+## Vehicles
 
 add import scripts
 
 
 
-### 3. Transform
+# Transform
 
 Add information for the merged data
 
-### 4. Shiny App & Visualization
+# Shiny App & Visualization
 
 Add Shiny, Boxplit info
 
-### 5. Analysis
+# Analysis
 
 Insert analysis data and information
