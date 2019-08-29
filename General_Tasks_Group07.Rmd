@@ -28,13 +28,15 @@ library(dplyr)
 library(readr)
 library(stringr)
 
+
+
 ```
 # Question 1
 _a. How is the logistics delay distributed? Justify your selection and briefly describe your approach._
 
 Importing necessary data and checking structure
 ```{r import, message=FALSE, cache=FALSE}
-component_K7 <- read_delim("./Data/Logistikverzug/Komponente_K7.csv", delim = ";")
+component_K7 <- read_delim("./Data/Logistikverzug/Logistikverzug_K7.csv", delim = ";")
 logistic_delay_K7 <- read_delim("./Data/Logistikverzug/Logistikverzug_K7.csv", delim = ";")
 
 str(component_K7)
@@ -48,11 +50,14 @@ component_K7$X1 <- NULL
 logistic_delay_K7$X1 <- NULL
 
 logistic_delay_K7$Wareneingang <- as.Date(logistic_delay_K7$Wareneingang, format = "%d.%m.%Y")
+component_K7$Wareneingang <- as.Date(component_K7$Wareneingang, format = "%d.%m.%Y")
 ```
 
 Creating Data Set "Logistics Delay"
 ```{r}
-Logistics_Delay <- data.frame(delay = logistic_delay_K7$Wareneingang - component_K7$Produktionsdatum)
+#Logistics_Delay$delay <- logistic_delay_K7$Wareneingang - component_K7$Wareneingang
+Logistics_Delay <- data.frame(delay = logistic_delay_K7$Wareneingang - component_K7$Wareneingang)
+
 ```
 
 Distribution of Logistics Delay
@@ -82,7 +87,10 @@ mean(Logistics_Delay$delay)
 The mean of the logistics delay is 5,08 days.
 
 _d. Visualize the distribution in an appropriate way._
-...
+```{r}
+hist(Logistics_Delay$delay)
+```
+
 
 
 # Question 2
