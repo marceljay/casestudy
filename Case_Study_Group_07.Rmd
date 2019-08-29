@@ -1,5 +1,5 @@
 ---
-title: "Case Study Documentatation"
+title: "Case Study Documentation"
 author: "IDA Group 7"
 date: "July 2019"
 output:
@@ -78,7 +78,7 @@ The workflow is strongly based on the Data Analysis Process introduced in the ID
 The decision of most critical vehicle type will be based on the vehicle type with the highest amount and occurrences of "production duration".
 In order to create informative box plot diagrams visualizing this attribute, a tidied data frame with relevant data needs to be created from the given raw data. Thus all files containing raw data need to be examined to choose a selection of relevant files for import. For the given objective, the data in files containing attributes related to the production date of parts (Einzelteile), components (Komponente) and vehicles (Fahrzeuge) are necessary to produce the attribute "production duration".
 
-While skimming through the files in the directories `Einzelteil`, `Komponente` and `Fahrzeug` using external text editors, MS excel and in command line with head() and tail(), it became clear that the often sequentially named .csv and .txt files within contain columns with date-like values such as `origin`, while files in the component and vehicle directories containing `Bestandteile` in their names serve as keys to match columns in parts, components and vehicles together.
+While skimming through the files in the directories `Einzelteil`, `Komponente` and `Fahrzeug` using external text editors, MS excel and in command line with head() and tail(), it became clear that the often sequentially named .csv and .txt files within contain columns such as `origin` with dates in POSIXct format, while files in the component and vehicle directories containing `Bestandteile` in their names serve as keys to match columns in parts, components and vehicles together.
 
 After the import, the resulting data frames are tidied according to the principles of tidy data depending on the given situation. Most often, the values are scanned for NA entries and duplicates, irrelevant columns are removed and a filter is set for the required time period. For the `Bestandteile` files, gather() needs to be applied to multiple column occurrences for parts or components. In select cases, further steps are involved to prepare data frames for transformation.
 
@@ -1738,67 +1738,67 @@ The next two tabs were created to display the boxplot and the reactive table.
 
 ```{r shiny ui}
 # Create user interface
-ui <- fluidPage(
-  # Create a heading
-  h1(strong("Introduction to Engineering Data Analytics with R")),
-  h2("shiny app Group 7"),
-  # Create tabs
-  tabsetPanel(
-    
-    # Create tab for input
-    tabPanel(
-      title = "input",
-      
-      # Create a sidebar layout
-      sidebarLayout(
-        
-         # Create a sidebar panel
-        sidebarPanel(
-          # Create a heading
-          h3("basic input options"),
-          
-          # Create a group of check boxes to select vehicle types
-          checkboxGroupInput(inputId = "vehicle_type", label = "vehicle type selection:",
-                             choiceNames = c("11","12","21","22"),
-                             choiceValues = levels(master_df_shiny$vehicle_type), selected = "11"),
-          
-          # Create a checkbox for switching between single and separate boxplot display
-          checkboxInput(inputId = "separation", label = "display selected vehicle types in a single boxplots", value = FALSE),
-          
-          # Create radio buttons for switching between vehicle type and OEM factory boxplot display
-          radioButtons(inputId = "select", label = "divide boxplot by:", choices = c("vehicle type", "OEM factory"), selected = "vehicle type")
-          
-          
-        ),
-        # Create a main panel
-        mainPanel(
-          # Create a heading
-          h3("additional input options"),
-          
-           # Create a color input for the boxplot
-          colourInput( inputId = "boxplot_color", label = "boxplot color:", value  = "black"),
-            # Create a color input for the boxplot background
-          colourInput( inputId = "background_color", label = "boxplot background color:", value  = "#e5e5e5"),
-          
-          # Create a slider input for the production time range
-          sliderInput(inputId = "prod_time_range", label = "select production time range:", 
-                      min = 0, max = max(master_df_shiny$prod_time), value = c(0, max(master_df_shiny$prod_time)))
-        )
-      )
-    ),
-    # Create tab for boxplot
-    tabPanel(
-      title = "boxplot",
-      plotlyOutput("plot", width = "600px", height = "600px")
-    ),
-    
-    # Create tab for reactive tabel
-    tabPanel(
-      title = "table",
-      dataTableOutput("table")
-    )
-  )
-)
+# ui <- fluidPage(
+#   # Create a heading
+#   h1(strong("Introduction to Engineering Data Analytics with R")),
+#   h2("shiny app Group 7"),
+#   # Create tabs
+#   tabsetPanel(
+#     
+#     # Create tab for input
+#     tabPanel(
+#       title = "input",
+#       
+#       # Create a sidebar layout
+#       sidebarLayout(
+#         
+#          # Create a sidebar panel
+#         sidebarPanel(
+#           # Create a heading
+#           h3("basic input options"),
+#           
+#           # Create a group of check boxes to select vehicle types
+#           checkboxGroupInput(inputId = "vehicle_type", label = "vehicle type selection:",
+#                              choiceNames = c("11","12","21","22"),
+#                              choiceValues = levels(master_df_shiny$vehicle_type), selected = "11"),
+#           
+#           # Create a checkbox for switching between single and separate boxplot display
+#           checkboxInput(inputId = "separation", label = "display selected vehicle types in a single boxplots", value = FALSE),
+#           
+#           # Create radio buttons for switching between vehicle type and OEM factory boxplot display
+#           radioButtons(inputId = "select", label = "divide boxplot by:", choices = c("vehicle type", "OEM factory"), selected = "vehicle type")
+#           
+#           
+#         ),
+#         # Create a main panel
+#         mainPanel(
+#           # Create a heading
+#           h3("additional input options"),
+#           
+#            # Create a color input for the boxplot
+#           colourInput( inputId = "boxplot_color", label = "boxplot color:", value  = "black"),
+#             # Create a color input for the boxplot background
+#           colourInput( inputId = "background_color", label = "boxplot background color:", value  = "#e5e5e5"),
+#           
+#           # Create a slider input for the production time range
+#           sliderInput(inputId = "prod_time_range", label = "select production time range:", 
+#                       min = 0, max = max(master_df_shiny$prod_time), value = c(0, max(master_df_shiny$prod_time)))
+#         )
+#       )
+#     ),
+#     # Create tab for boxplot
+#     tabPanel(
+#       title = "boxplot",
+#       plotlyOutput("plot", width = "600px", height = "600px")
+#     ),
+#     
+#     # Create tab for reactive tabel
+#     tabPanel(
+#       title = "table",
+#       dataTableOutput("table")
+#     )
+#   )
+# )
 
 ```
 
@@ -1810,95 +1810,95 @@ For creating our boxplot we used ggplot with geom_boxplot. We specified the inpu
 
 In the last section we placed the table, which is displayed in the third tab of our shiny app. The data we created is a reactive variable and the render function is a reactive context, therefore the table will display the most up to date values, if the input changes. We renamed the columns of the table. The last line combines the user interface and the server into a shiny app and runs it.
 
-```{r server}
+```{r shiny server}
 # Define the server logic
-server <- function(input, output) {
-  
-  
-  # Create a reactive variable called filtered_data()
-  filtered_data <- reactive({
-    
-    data <- master_df_shiny
-    
-    # Determine subset of data which is selected by production time range slider
-    data <- subset(data, prod_time >= input$prod_time_range[1] 
-                   & prod_time <= input$prod_time_range[2]
-    )
-    
-     # Determine subset of vehicle type which is selected by check boxes
-    data <- subset(data, vehicle_type == input$vehicle_type)
-    
-    
-    data
-    
-  })
-  output$plot <- renderPlotly({
-    
-    data <- filtered_data()
-    
-    
-    ggplotly({
-      
-      # Creating a boxplot for single boxplot display of vehicle types 
-      p <- ggplot(data, aes(vehicle_type, prod_time)) +
-        geom_boxplot(color = input$boxplot_color)
-      
-      # Add labeling and color option to the plot
-      p <- p + labs(title = "vehicle type & production time", x = "vehicle type", y = "production time [day]") +
-        theme(panel.background = element_rect(fill = input$background_color))
-      
-      
-      
-      # if command to select between seperated boxplots and single boxplot view 
-      if (input$separation == TRUE) {
-        
-        p <- ggplot(data, aes(y = prod_time)) +
-          geom_boxplot(color = input$boxplot_color)
-        
-        # Add labeling and color option to the plot
-        p <- p + labs(title = "vehicle type & production time", x = "vehicle type", y = "production time [day]") +
-          theme( axis.text.x = element_blank(), panel.background = element_rect(fill = input$background_color))
-        
-        
-      }
-      
-      # if command to select between vehicle type and OEM factory view 
-      if (input$select == "OEM factory" ) {
-        p <- ggplot(data, aes(vehicle_prod_factory, prod_time)) +
-          geom_boxplot(color = input$boxplot_color) +
-          theme(panel.background = element_rect(fill = input$background_color))
-        
-         # Add labeling and  to the plot
-        p <- p + labs(title = "divided by OEM factory", x = "OEM factory", y = "production time [day]")
-      }
-      
-      
-      p 
-    })
-  })
-  output$table <- renderDataTable({
-    
-    data <- filtered_data()
-    
-    
-    # Rename column names
-    names(data)[1] <- "vehicle global id"
-    names(data)[2] <- "production time"
-    names(data)[3] <- "vehicle production factory"
-    names(data)[4] <- "vehicle type"
-    
-    data
-    
-    
-    
-  })
-  
-  
-  
-}
-
-# Combine ui and server into a shiny app and run it
-shinyApp(ui = ui, server = server)
+# server <- function(input, output) {
+#   
+#   
+#   # Create a reactive variable called filtered_data()
+#   filtered_data <- reactive({
+#     
+#     data <- master_df_shiny
+#     
+#     # Determine subset of data which is selected by production time range slider
+#     data <- subset(data, prod_time >= input$prod_time_range[1] 
+#                    & prod_time <= input$prod_time_range[2]
+#     )
+#     
+#      # Determine subset of vehicle type which is selected by check boxes
+#     data <- subset(data, vehicle_type == input$vehicle_type)
+#     
+#     
+#     data
+#     
+#   })
+#   output$plot <- renderPlotly({
+#     
+#     data <- filtered_data()
+#     
+#     
+#     ggplotly({
+#       
+#       # Creating a boxplot for single boxplot display of vehicle types 
+#       p <- ggplot(data, aes(vehicle_type, prod_time)) +
+#         geom_boxplot(color = input$boxplot_color)
+#       
+#       # Add labeling and color option to the plot
+#       p <- p + labs(title = "vehicle type & production time", x = "vehicle type", y = "production time [day]") +
+#         theme(panel.background = element_rect(fill = input$background_color))
+#       
+#       
+#       
+#       # if command to select between seperated boxplots and single boxplot view 
+#       if (input$separation == TRUE) {
+#         
+#         p <- ggplot(data, aes(y = prod_time)) +
+#           geom_boxplot(color = input$boxplot_color)
+#         
+#         # Add labeling and color option to the plot
+#         p <- p + labs(title = "vehicle type & production time", x = "vehicle type", y = "production time [day]") +
+#           theme( axis.text.x = element_blank(), panel.background = element_rect(fill = input$background_color))
+#         
+#         
+#       }
+#       
+#       # if command to select between vehicle type and OEM factory view 
+#       if (input$select == "OEM factory" ) {
+#         p <- ggplot(data, aes(vehicle_prod_factory, prod_time)) +
+#           geom_boxplot(color = input$boxplot_color) +
+#           theme(panel.background = element_rect(fill = input$background_color))
+#         
+#          # Add labeling and  to the plot
+#         p <- p + labs(title = "divided by OEM factory", x = "OEM factory", y = "production time [day]")
+#       }
+#       
+#       
+#       p 
+#     })
+#   })
+#   output$table <- renderDataTable({
+#     
+#     data <- filtered_data()
+#     
+#     
+#     # Rename column names
+#     names(data)[1] <- "vehicle global id"
+#     names(data)[2] <- "production time"
+#     names(data)[3] <- "vehicle production factory"
+#     names(data)[4] <- "vehicle type"
+#     
+#     data
+#     
+#     
+#     
+#   })
+#   
+#   
+#   
+# }
+# 
+# # Combine ui and server into a shiny app and run it
+# shinyApp(ui = ui, server = server)
   
 ```
   
