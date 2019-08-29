@@ -54,7 +54,7 @@ library(data.table)
 library(lubridate) 
 library(stringr)
 library(shiny)
-library(colorpicker)
+library(colourpicker)
 library(plotly)
 
 ```
@@ -963,9 +963,7 @@ link_BE_list <- function() {
   print("BE_comp_df created successfully!")
 }
 ```
-
-## Vehicles
-
+### Vehicles
 The different components of vehicles were listed in four csv files. The files were seperated by OEM and vehicle type. All of the columns were seperated by semicolons, therefore we used read_csv2() function to import them. In the same step we assigned them to data frames.
 
 
