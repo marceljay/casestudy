@@ -2,18 +2,30 @@
 data/
 Data/
 
+# Remove .DS_Store
+.DS_Store
+
 # History files
 .Rhistory
 .Rapp.history
 
 # Session Data files
 .RData
+tidy_Data_Komponente.Rdata
+comp_df_list.Rdata
 
 # Example code in package build process
 *-Ex.R
 
 # Output files from R CMD build
 /*.tar.gz
+
+# Output files from knittr
+*.html
+*.tex
+*.pdf
+*.doc
+*.docx
 
 # Output files from R CMD check
 /*.Rcheck/
@@ -38,3 +50,12 @@ vignettes/*.pdf
 
 # Shiny token, see https://shiny.rstudio.com/articles/shinyapps.html
 rsconnect/
+
+# Temp & Testing Data
+comp_df_list.RData
+master_df.RData
+Testing_tidy_data_Fahrzeuge.R
+Testingscript.R
+# Ignore txt import related files
+backup_Komp.txt
+testing.txt
