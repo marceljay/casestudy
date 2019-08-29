@@ -124,7 +124,7 @@ server <- function(input, output) {
       
       # Creating a boxplot for single boxplot display of vehicle types 
       p <- ggplot(data, aes(vehicle_type, prod_time)) +
-        geom_boxplot(color = input$boxplot_color)
+        geom_boxplot(color = input$boxplot_color, width = 1)
       
       # Add labeling and color option to the plot
       p <- p + labs(title = "vehicle type & production time", x = "vehicle type", y = "production time [day]") +
@@ -134,7 +134,7 @@ server <- function(input, output) {
       if (input$separation == TRUE) {
         
         p <- ggplot(data, aes(y = prod_time)) +
-          geom_boxplot(color = input$boxplot_color)
+          geom_boxplot(color = input$boxplot_color, width = 1)
         
         # Add labeling and color option to the plot
         p <- p + labs(title = "vehicle type & production time", x = "vehicle type", y = "production time [day]") +
@@ -146,7 +146,7 @@ server <- function(input, output) {
       # if command to select between vehicle type and OEM factory view 
       if (input$select == "OEM factory" ) {
         p <- ggplot(data, aes(vehicle_prod_factory, prod_time)) +
-          geom_boxplot(color = input$boxplot_color) +
+          geom_boxplot(color = input$boxplot_color, width = 1) +
           theme(panel.background = element_rect(fill = input$background_color))
         
         # Add labeling and  to the plot
