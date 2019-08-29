@@ -22,6 +22,9 @@ library(tidyr)
 library(data.table)
 library(lubridate) 
 library(stringr)
+library(shiny)
+library(colorpicker)
+library(plotly)
 
 ```
 
@@ -342,6 +345,7 @@ tidyTXT_7 <- function(path){
 
 #### Components
 
+<<<<<<< HEAD
 Before attempting to import the files under the "Komponente" directory, every file needs to be checked for separators and patterns to work out the specifics of the import function and the required options. Some have working production date values, some contain an "origin" column and therefore include the date in POSIXct format. Distinctions must also be made for .txt files. Files with same patterns are put into the same list for future reference.
 
 ```{r component lists}
@@ -927,21 +931,519 @@ link_BE_list <- function() {
   print("BE_comp_df created successfully!")
 }
 ```
+=======
+The different components of vehicles were listed in four csv files. The files were seperated by OEM and vehicle type. All of the columns were seperated by semicolons, therefore we used read_csv2() function to import them. In the same step we assigned them to data frames.
+
+
+```{r}
+# Importing data and assigning to data frames
+df_B11 <- read_csv2("Data/Fahrzeug/Bestandteile_Fahrzeuge_OEM1_Typ11.csv")
+df_B12 <- read_csv2("Data/Fahrzeug/Bestandteile_Fahrzeuge_OEM1_Typ12.csv")
+df_B21 <- read_csv2("Data/Fahrzeug/Bestandteile_Fahrzeuge_OEM2_Typ21.csv")
+df_B22 <- read_csv2("Data/Fahrzeug/Bestandteile_Fahrzeuge_OEM2_Typ22.csv")
+
+```
+
+The files lacked a column for the OEM factory, where the components were produced.
+
+```{r}
+#Add column Produktionsstandort to Bestandteile_Fahrzeuge_OEM1_Typ11 
+df_B11$Produktionsstandort <- df_B11$ID_Fahrzeug
+
+df_B11$Produktionsstandort <- gsub(pattern = ".*-11-.*" , replacement = "Nuernberg" , df_B11$Produktionsstandort)
+df_B11$Produktionsstandort <- gsub(pattern = ".*-12-.*" , replacement = "Bonn" , df_B11$Produktionsstandort)
+
+#Add column Produktionsstandort to Bestandteile_Fahrzeuge_OEM1_Typ12 
+df_B12$Produktionsstandort <- df_B12$ID_Fahrzeug
+
+df_B12$Produktionsstandort <- gsub(pattern = ".*-12-.*" , replacement = "Bonn" , df_B12$Produktionsstandort)
+
+#Add column Produktionsstandort to Bestandteile_Fahrzeuge_OEM1_Typ21 
+df_B21$Produktionsstandort <- df_B21$ID_Fahrzeug
+
+df_B21$Produktionsstandort <- gsub(pattern = ".*-21-.*" , replacement = "Goettingen" , df_B21$Produktionsstandort)
+
+
+#Add column Produktionsstandort to Bestandteile_Fahrzeuge_OEM1_Typ22
+df_B22$Produktionsstandort <- df_B22$ID_Fahrzeug
+
+df_B22$Produktionsstandort <- gsub(pattern = ".*-21-.*" , replacement = "Goettingen" , df_B22$Produktionsstandort)
+
+```
+
+We merged all of the component data frames to minimize the amount of action, necessary to adjust the data. Furthermore we minimized the amount of data for further analysis by deleting the unnecessary column X1, which contained only index information.
+
+````{r}
+# Merge data frames Bestandteile_Fahrzeuge_OEM_Typxx
+BE_vehicle_df <- rbind(df_B11, df_B12, df_B21,df_B22)
+
+# Delete unnecessary column Bestandteile_Fahrzeuge_OEM_Typxx
+BE_vehicle_df$X1 <- NULL
+
+```
+
+We noticed, that values of rows were column header, so we gathered the data frame and deleted the unnecessary column Bestandteile. Afterwards we renamed the columns and reorderd them. We also removed the column vehicle_prod_factory for the later merging process, because it would be redundant.
+
+````{r}
+# Gather Bestandteile columns
+BE_vehicle_df <- gather(BE_vehicle_df, Bestandteile, ID_Bestandteile, -ID_Fahrzeug, -Produktionsstandort)
+
+# Delete unnecessary column Bestandteile from Bestandteile_Fahrzeuge_OEM_Typxx
+BE_vehicle_df$Bestandteile <- NULL
+
+# Rename columns of BE_vehicle_df
+names(BE_vehicle_df)[1] <- "vehicle_global_id"
+names(BE_vehicle_df)[2] <- "vehicle_prod_factory"
+names(BE_vehicle_df)[3] <- "comp_global_id"
+
+# reorder by column name
+BE_vehicle_df <- BE_vehicle_df[c("vehicle_global_id", "comp_global_id", "vehicle_prod_factory")]
+
+# Remove redundant column vehicle_prod_factory
+BE_vehicle_df$vehicle_prod_factory <- NULL
+
+```
+
+At last we checked the data frame for duplicates and NAs. 
+
+````{r}
+
+# Check for duplicates & NAs
+print(paste0("Number of duplicates in BE_vehicle_df: ", sum(duplicated(BE_vehicle_df$comp_global_id))))
+print(paste0("BE_vehicle_df has ", sum(is.na(BE_vehicle_df))," NAs"))
+
+# View tidy data frames
+View(BE_vehicle_df)
+
+```
+
+>>>>>>> Doku,Fahrzeuge_tidy_Bestandteile_tidy,shiny_app
 
 
 #### Vehicles
 
-add import scripts
+
+The different types of vehicles were listed in four csv files. Two of the files used semicolons to seperate the columns, while the other two had commas as separator. The two files containing semicolons were imported with the read_csv2() function, while the two containing commas were imported with the read_csv() function. All of the imported files were assigned to data frames.
+
+```{r}
+# Importing data
+df_F11 <- read_csv("Data/Fahrzeug/Fahrzeuge_OEM1_Typ11.csv")
+df_F12 <- read_csv2("Data/Fahrzeug/Fahrzeuge_OEM1_Typ12.csv")
+df_F21 <- read_csv("Data/Fahrzeug/Fahrzeuge_OEM2_Typ21.csv")
+df_F22 <- read_csv2("Data/Fahrzeug/Fahrzeuge_OEM2_Typ22.csv")
+
+```
+
+None of the data frames was tidy. The data frames df_F11 and df_F12 had two unnecessary columns namely X1_1, which contained the same index information as X1 and Fehlerhaft, which contained information available in the columns Fehlerhaft_Datum and Fehlerhaft_Fahrleistung.
+
+```{r}
+#Check if X1 == X1_1
+if (sum(!df_F11$X1 == df_F11$X1_1) == 0) {
+  # Delete X1_1
+  df_F11$X1_1 <- NULL
+}
+
+# Drop unnecessary column  "Fehlerhaft"
+df_F11$Fehlerhaft <- NULL
 
 
+#Check if X1 == X1_1
+if (sum(!df_F12$X1 == df_F12$X1_1) == 0) {
+  # Delete X1_1
+  df_F12$X1_1 <- NULL
+}
+
+# Drop unnecessary column  "Fehlerhaft"
+df_F12$Fehlerhaft <- NULL
+
+```
+
+The data frames df_F21 and df_F22 had the same unnecessary columns Fehlerhaft and X1_1 as df_F11 and df_F12. Furthermore they had a column called Produktionsdatum, which contained dates in an unsuitable format and a column named origin, which contained an useless date information. The unneeded columns had to be deleted and the dates had to be converted in a useful format.
+
+```{r}
+#Store all counted days in vector
+daycount_F21 <- df_F21$Produktionsdatum_Origin_01011970
+
+# Reformat date from data frame to fit as.Date
+betterDates <- as.Date(daycount_F21, origin = "1970-01-01")
+
+# Add date column with correctly formatted dates
+df_F21$Produktionsdatum <- betterDates
+
+# Delete Column Produktionsdatum_Origin_01011970 
+df_F21$Produktionsdatum_Origin_01011970 <- NULL
+
+# Delete unnecessary column eight "origin"
+df_F21$origin <- NULL
+
+#Check if X1 == X1_1
+if (sum(!df_F21$X1 == df_F21$X1_1) == 0) {
+  # Delete X1_1
+  df_F21$X1_1 <- NULL
+}
+
+# Drop unnecessary column  "Fehlerhaft"
+df_F21$Fehlerhaft <- NULL
+
+########
+
+#Store all counted days in vector
+daycount_F22 <- df_F22$Produktionsdatum_Origin_01011970
+
+# Reformat date from data frame to fit as.Date
+betterDates <- as.Date(daycount_F22, origin = "1970-01-01")
+
+# Add date column with correctly formatted dates
+df_F22$Produktionsdatum <- betterDates
+
+# Delete Column Produktionsdatum_Origin_01011970 
+df_F22$Produktionsdatum_Origin_01011970 <- NULL
+
+# Delete unnecessary column eight "origin"
+df_F22$origin <- NULL
+
+#Check if X1 == X1_1
+if (sum(!df_F22$X1 == df_F22$X1_1) == 0) {
+  # Delete X1_1
+  df_F22$X1_1 <- NULL
+}
+
+# Drop unnecessary column  "Fehlerhaft"
+df_F22$Fehlerhaft <- NULL
+
+```
+
+Because of our task, we were interested in the location of the OEM factory of each vehicle. We used the information available in the vehilce id. As described in the task, the third number of the vehicle id gave us the information in which OEM factory the vehicle was produced. We created a new column called Produktionsstandort, which assigned every vehicle id a factory location. 
+
+```{r}
+
+#Add column Produktionsstandort to Fahrzeuge_OEM1_Typ11
+df_F11$Produktionsstandort <- df_F11$ID_Fahrzeug
+
+df_F11$Produktionsstandort <- gsub(pattern = ".*-11-.*" , replacement = "Nuernberg" , df_F11$Produktionsstandort)
+df_F11$Produktionsstandort <- gsub(pattern = ".*-12-.*" , replacement = "Bonn" , df_F11$Produktionsstandort)
+
+#Add column Produktionsstandort to Fahrzeuge_OEM1_Typ12
+df_F12$Produktionsstandort <- df_F12$ID_Fahrzeug
+
+df_F12$Produktionsstandort <- gsub(pattern = ".*-12-.*" , replacement = "Bonn" , df_F12$Produktionsstandort)
+
+#Add column Produktionsstandort to Fahrzeuge_OEM1_Typ21
+df_F21$Produktionsstandort <- df_F21$ID_Fahrzeug
+
+df_F21$Produktionsstandort <- gsub(pattern = ".*-21-.*" , replacement = "Goettingen" , df_F21$Produktionsstandort)
+
+#Add column Produktionsstandort to Fahrzeuge_OEM1_Typ22
+df_F22$Produktionsstandort <- df_F22$ID_Fahrzeug
+
+df_F22$Produktionsstandort <- gsub(pattern = ".*-21-.*" , replacement = "Goettingen" , df_F22$Produktionsstandort)
+df_F22$Produktionsstandort <- gsub(pattern = ".*-22-.*" , replacement = "Regensburg" , df_F22$Produktionsstandort)
+
+```
+
+We merged all of the vehicle data frames to minimize the amount of action, necessary to adjust the data. Furthermore we minimized the amount of data for further analysis by deleting columns containing irrelevant information for solving our task. Afterwards we renamed the remaining columns and filtered the relevant dates. In the last step we checked the data for duplicates and NAs. 
+
+```{r}
+# Merge data frames Fahrzeuge_OEM1
+vehicle_df <- rbind(df_F11, df_F12, df_F21, df_F22)
+
+# Delete unnecessary columns Fahrzeuge_OEM2
+vehicle_df$Herstellernummer <- NULL
+vehicle_df$Werksnummer <- NULL
+vehicle_df$Fehlerhaft_Datum <- NULL
+vehicle_df$Fehlerhaft_Fahrleistung <- NULL
+vehicle_df$X1 <- NULL
+
+# Rename columns in Fahrzeuge_OEM2
+names(vehicle_df)[1] <- "vehicle_global_id"
+names(vehicle_df)[2] <- "vehicle_prod_date"
+names(vehicle_df)[3] <- "vehicle_prod_factory"
+
+# Filter for relevant dates
+vehicle_df <- subset(vehicle_df, !vehicle_prod_date < "2015-01-01")
+vehicle_df <- subset(vehicle_df, !vehicle_prod_date > "2016-12-31")
+
+# Check for duplicates & NAs
+print(paste0("Number of duplicates in vehicle_df: ", sum(duplicated(vehicle_df$vehicle_global_id))))
+print(paste0("vehicle_df has ", sum(is.na(vehicle_df))," NAs"))
+
+# View tidy data frames
+View(vehicle_df)
+
+```
 
 ### 3. Transform
+
+### 3.1 Transform for shiny app
+
+For our shiny app we needed a new column in our master data frame, which contained the maximum time between production of a part and production  of  the  entire  vehicle. Therefore we created a column which listed this time difference for every part. In the next step we created a list containg just the maximum time difference for every single vehicle. 
+
+```{r}
+# Create column for production time
+master_df$prod_time <- master_df$vehicle_prod_date - master_df$part_prod_date
+
+#Put max production time for each vehicle global id in a list
+master_list_shiny <- with(master_df, tapply(prod_time, vehicle_global_id, max))
+
+```
+
+Afterwards we converted the list to a dataframe and ajusted and renamed the columns
+
+```{r}
+#Convert list to a data frame
+master_df_shiny <- as.data.frame(master_list_shiny)
+
+# Change index rownames and use vehicle_global id as normal column
+master_df_shiny <- cbind(vehicle_global_id = rownames(master_df_shiny), master_df_shiny)
+rownames(master_df_shiny) <- 1:nrow(master_df_shiny)
+
+# Rename columns in master_df_shiny data
+names(master_df_shiny)[names(master_df_shiny) == "master_list_shiny"] <- "prod_time"
+
+```
+
+Eventually we added the column for OEM factory location, which was lost in the previous steps. After that we added a column containing just the vehicle type. To display our data correctly in a boxplot, it was necessary to convert the vehicle column to factors
+
+```{r}
+#Add column vehicle_prod_factory to master_df_shiny
+master_df_shiny$vehicle_prod_factory <- master_df_shiny$vehicle_global_id
+
+master_df_shiny$vehicle_prod_factory <- gsub(pattern = ".*-11-.*" , replacement = "Nuernberg" , master_df_shiny$vehicle_prod_factory)
+master_df_shiny$vehicle_prod_factory <- gsub(pattern = ".*-12-.*" , replacement = "Bonn" ,master_df_shiny$vehicle_prod_factory)
+master_df_shiny$vehicle_prod_factory <- gsub(pattern = ".*-21-.*" , replacement = "Goettingen" , master_df_shiny$vehicle_prod_factory)
+master_df_shiny$vehicle_prod_factory <- gsub(pattern = ".*-22-.*" , replacement = "Regensburg" , master_df_shiny$vehicle_prod_factory)
+
+# Add column vehicle type to master_df_shiny
+master_df_shiny$vehicle_type <- master_df_shiny$vehicle_global_id
+
+master_df_shiny$vehicle_type <- gsub(pattern = "^11-.*" , replacement = "11" , master_df_shiny$vehicle_type)
+master_df_shiny$vehicle_type <- gsub(pattern = "^12-.*" , replacement = "12" ,master_df_shiny$vehicle_type)
+master_df_shiny$vehicle_type <- gsub(pattern = "^21-.*" , replacement = "21" , master_df_shiny$vehicle_type)
+master_df_shiny$vehicle_type <- gsub(pattern = "^22-.*" , replacement = "22" , master_df_shiny$vehicle_type)
+
+
+# Convert column vehicle_type to factor
+master_df_shiny$vehicle_type <- as.factor(master_df_shiny$vehicle_type)
+
+```
+
+
 
 Add information for the merged data
 
 ### 4. Shiny App & Visualization
 
+At first we loaded the shiny package. We created a web page using the fluidpage() function. We created the user interface, which is responsible for the appearence of the app. We wrote a short heading at the top of our page.  
+
+```{r}
+# Create user interface
+ui <- fluidPage(
+  # Create a heading
+  h1(strong("Introduction to Engineering Data Analytics with R")),
+  h2("shiny app Group 7"),
+
+```
+
+Afterwards we used tabsetPanel() for our overall layout. This was necessary to give room to our different functionalities. In the first tab we placed our input options. We used a sidebar layout to differntiate basic inputs and additional ones. The basic inputs are essential for the use, while the additional ones offer further benefits.
+
+The basic inputs contain a group of checkboxes, which allows the user to select single vehicle types. We choose this input type, because it is easy to handle for the user and it allows every selection possible. Furthermore we added another checkbox, to give the user the opportunity to choose between a single and a separate boxplots display. In addition we created a radio button, which switches the boxplot display from separation by vehicle types to OEM factories. Thus production times of the vehicles at every single Oem factory can be shown. 
+
+```{r}
+  # Create tabs
+  tabsetPanel(
+    
+    # Create tab for input
+    tabPanel(
+      title = "input",
+      
+      # Create a sidebar layout
+      sidebarLayout(
+        
+         # Create a sidebar panel
+        sidebarPanel(
+          # Create a heading
+          h3("basic input options"),
+          
+          # Create a group of check boxes to select vehicle types
+          checkboxGroupInput(inputId = "vehicle_type", label = "vehicle type selection:",
+                             choiceNames = c("11","12","21","22"),
+                             choiceValues = levels(master_df_shiny$vehicle_type), selected = "11"),
+          
+          # Create a checkbox for switching between single and separate boxplot display
+          checkboxInput(inputId = "separation", label = "display selected vehicle types in a single boxplots", value = FALSE),
+          
+          # Create radio buttons for switching between vehicle type and OEM factory boxplot display
+          radioButtons(inputId = "select", label = "divide boxplot by:", choices = c("vehicle type", "OEM factory"), selected = "vehicle type")
+          
+          
+        ),
+        
+```         
+
+We created a main panel which offers distinct color selection and a slider input. The slider input gives the user the opportunity to select the production time range, which is used for the boxplots and the table. This gives the user many opportunities for further analysis. For example, it is possible to display a boxplot, which does not include the strongest outliers. Furthermore the slider input can be used to show just the strongest outliers in the reactive table. In this way they can be determined very easily.
+
+```{r}
+        # Create a main panel
+        mainPanel(
+          # Create a heading
+          h3("additional input options"),
+          
+           # Create a color input for the boxplot
+          colourInput( inputId = "boxplot_color", label = "boxplot color:", value  = "black"),
+            # Create a color input for the boxplot background
+          colourInput( inputId = "background_color", label = "boxplot background color:", value  = "#e5e5e5"),
+          
+          # Create a slider input for the production time range
+          sliderInput(inputId = "prod_time_range", label = "select production time range:", 
+                      min = 0, max = max(master_df_shiny$prod_time), value = c(0, max(master_df_shiny$prod_time)))
+        )
+      )
+    ),
+    
+    
+```    
+    
+The next two tabs were created to display the boxplot and the reactive table.     
+    
+```{r}    
+    # Create tab for boxplot
+    tabPanel(
+      title = "boxplot",
+      plotlyOutput("plot", width = "600px", height = "600px")
+    ),
+    
+    # Create tab for reactive tabel
+    tabPanel(
+      title = "table",
+      dataTableOutput("table")
+    )
+  )
+)
+
+```
+
+In the next step we defined the server logic. We used the reactive function, so our data gets reevaluated if any of its dependencies are modified. Hence the render functions of the boxplot and table will react to any change of our input controls. We called the reactive variable for our data filtered_data(). We used the subset() function twice to determine, which data is used depending on the input controls.
+
+```{r}
+# Define the server logic
+server <- function(input, output) {
+  
+  
+  # Create a reactive variable called filtered_data()
+  filtered_data <- reactive({
+    
+    data <- master_df_shiny
+    
+    # Determine subset of data which is selected by production time range slider
+    data <- subset(data, prod_time >= input$prod_time_range[1] 
+                   & prod_time <= input$prod_time_range[2]
+    )
+    
+     # Determine subset of vehicle type which is selected by check boxes
+    data <- subset(data, vehicle_type == input$vehicle_type)
+    
+    
+    data
+    
+  })
+  
+```
+  
+For creating our boxplot we used ggplot with geom_boxplot. We specified the inputs, designs and labeling. Furthermore we used if() functions to determine how the boxplot or boxplots should be displayed, when the checkboxes for separation or merge and OEM factory view or vehicle type view are selected.
+  
+  
+```{r} 
+  output$plot <- renderPlotly({
+    
+    data <- filtered_data()
+    
+    
+    ggplotly({
+      
+      # Creating a boxplot for single boxplot display of vehicle types 
+      p <- ggplot(data, aes(vehicle_type, prod_time)) +
+        geom_boxplot(color = input$boxplot_color)
+      
+      # Add labeling and color option to the plot
+      p <- p + labs(title = "vehicle type & production time", x = "vehicle type", y = "production time [day]") +
+        theme(panel.background = element_rect(fill = input$background_color))
+      
+      
+      
+      # if command to select between seperated boxplots and single boxplot view 
+      if (input$separation == TRUE) {
+        
+        p <- ggplot(data, aes(y = prod_time)) +
+          geom_boxplot(color = input$boxplot_color)
+        
+        # Add labeling and color option to the plot
+        p <- p + labs(title = "vehicle type & production time", x = "vehicle type", y = "production time [day]") +
+          theme( axis.text.x = element_blank(), panel.background = element_rect(fill = input$background_color))
+        
+        
+      }
+      
+      # if command to select between vehicle type and OEM factory view 
+      if (input$select == "OEM factory" ) {
+        p <- ggplot(data, aes(vehicle_prod_factory, prod_time)) +
+          geom_boxplot(color = input$boxplot_color) +
+          theme(panel.background = element_rect(fill = input$background_color))
+        
+         # Add labeling and  to the plot
+        p <- p + labs(title = "divided by OEM factory", x = "OEM factory", y = "production time [day]")
+      }
+      
+      
+      p 
+    })
+  })
+
+```
+
+In the last section we placed the table, which is displayed in the third tab of our shiny app. The data we created is a reactive variable and the render function is a reactive context, therefore the table will display the most up to date values, if the input changes. We renamed the columns of the table. The last line combines the user interface and the server into a shiny app and runs it.
+
+```{r}
+
+  output$table <- renderDataTable({
+    
+    data <- filtered_data()
+    
+    
+    # Rename column names
+    names(data)[1] <- "vehicle global id"
+    names(data)[2] <- "production time"
+    names(data)[3] <- "vehicle production factory"
+    names(data)[4] <- "vehicle type"
+    
+    data
+    
+    
+    
+  })
+  
+  
+  
+}
+
+# Combine ui and server into a shiny app and run it
+shinyApp(ui = ui, server = server)
+
+
+```
+
+
+
+
+
 Add Shiny, Boxplit info
+
+
+```{r}
+
+
+
+```
+
 
 ### 5. Analysis
 
