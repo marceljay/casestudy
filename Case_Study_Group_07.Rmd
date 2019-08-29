@@ -154,21 +154,417 @@ tidyCSV_b <- function(path, delim = ";") {
 }
 ```
 
-The .txt files in the Parts and Components files were more challenging, requiring a deeper pattern analysis, specially because of the lack of end of lines characters, that were added with the command gsub. The goal was to replace a pattern represented by a regular expression into a line breaker. 
+The .txt files in the Parts and Components files were more challenging, requiring a deeper pattern analysis, specially because of the lack of end of lines characters, that were added with the command gsub. The goal was to replace a pattern represented by a regular expression into a line breaker. By the fact that almost every .txt file had a different pattern a particular tidy function had to be created for every .txt file.
+The function `importTXT` is called when no .csv format is found and is responsible for calling each particular tidyTXT function for the respective Part number.
 
 ```{r}
-#gsub(pattern = '(?<=")\\s+"(?=[0-9][^-])', replace = '\n"', ., perl = TRUE)
+importTXT <- function(path) {
+  print(path)
+  
+  if (str_detect(path, "T01.txt")) {
+    print("tidyTXT_1 called")
+    return(tidyTXT_1(path))
+    
+  } else if(str_detect(path, "T02.txt")) {
+    print("tidyTXT_2 called")
+    return(tidyTXT_2(path))
+    
+  } else if(str_detect(path, "T03.txt")) {
+    print("tidyTXT_3 called")
+    return(tidyTXT_3(path))
+    
+  } else if(str_detect(path, "T07.txt")) {
+    print("tidyTXT_7 called")
+    return(tidyTXT_7(path))
+    
+  } else if(str_detect(path, "T09.txt")) {
+    print("tidyTXT_9 called")
+    return(tidyTXT_9(path))
+    
+  } else if(str_detect(path, "T11.txt")) {
+    print("tidyTXT_11 called")
+    return(tidyTXT_11(path))
+    
+  } else if(str_detect(path, "T16.txt")) {
+    print("tidyTXT_16 called")
+    return(tidyTXT_16(path))
+    
+  } else if(str_detect(path, "T20.txt")) {
+    print("tidyTXT_20 called")
+    return(tidyTXT_20(path))
+    
+  } else if(str_detect(path, "T22.txt")) {
+    print("tidyTXT_22 called")
+    return(tidyTXT_22(path))
+    
+  } else if(str_detect(path, "T24.txt")) {
+    print("tidyTXT_24 called")
+    return(tidyTXT_24(path))
+    
+  } else if(str_detect(path, "T27.txt")) {
+    print("tidyTXT_27 called")
+    return(tidyTXT_27(path))
+    
+  } else if(str_detect(path, "T31.txt")) {
+    print("tidyTXT_31 called")
+    return(tidyTXT_31(path))
+    
+  } else if(str_detect(path, "T34.txt")) {
+    print("tidyTXT_34 called")
+    return(tidyTXT_34(path))
+    
+  } else if(str_detect(path, "T35.txt")) {
+    print("tidyTXT_35 called")
+    return(tidyTXT_35(path))
+    
+  } else if(str_detect(path, "T36.txt")) {
+    print("tidyTXT_36 called")
+    return(tidyTXT_36(path))
+    
+  } else if(str_detect(path, "T39.txt")) {
+    print("tidyTXT_39 called")
+    return(tidyTXT_39(path))
+  }  
+  
+}
 ```
 
-After identifying all line breakers for particular .txt files, those files were imported using read_table. As an example is the code for the file of Parts_07
+Every TidyTXT function has to insert line breakers following a predetermined row pattern. After defining the line breakers the function imports each file using the read.table function. The resulting data frame is then transformed into a tidy data frame. Each function is shown below: 
 
 ```{r}
-#   x <- readLines(path) %>%
-#     gsub(pattern = '""', replace = '"\n"', .) 
-#   
-#   for (i in 2:length(x) ) {
-#     df <- read.table(textConnection(x[i]), header=TRUE)
-# }
+# Structure: wide (dirty)
+tidyTXT_1 <- function(path) {
+  x <- readLines(path) %>%
+    gsub(pattern = "\\| \\|", replace = "\\|",.) %>%
+    gsub(pattern = '(?<=[^\\|]) "', replace = '\n"',., perl = TRUE) %>%
+    gsub(pattern = " ", replace = "",.) # Corrects the Whitespace problem
+  
+  for (i in 2:length(x) ) {
+    df <- read.table(textConnection(x[i]), sep="|", header=TRUE)
+  }
+  
+  df  <- tidyLong(df)
+  
+  # Drop columns except the 2 necessary ones
+  df <- df[2:3]
+  
+  # Check for NA values
+  importAnalysis(df)
+  
+  return(df)
+}
+
+# Structure: wide (dirty)
+tidyTXT_2 <- function(path){
+  
+  x <- readLines(path) %>%
+    gsub(pattern = '(?<=")\\s+"(?=[0-9][^-])', replace = '\n"', ., perl = TRUE)  %>%
+    gsub(pattern = '(?<=A)\\s+"(?=[0-9][^-])', replace = '\n"', ., perl = TRUE)  %>%
+    gsub(pattern = '(?<=[^-]\\d0)\\s+"(?=[0-9][^-])', replace = '\n"', ., perl = TRUE)  %>%
+    gsub(pattern = '(?<=[^-][\\d|\\.][0-9])\\s+"(?=[0-9][^-])', replace = '\n"', ., perl = TRUE)
+  
+  for (i in 2:length(x) ) {
+    df <- read.table(textConnection(x[i]), header=TRUE)
+  }
+  
+  df  <- tidyLong(df)
+  
+  # Drop columns except the 2 necessary ones
+  df <- df[2:3]
+  
+  # Check for NA values
+  importAnalysis(df)
+  
+  return(df)
+}
+
+# Structure: slim
+tidyTXT_3 <- function(path){
+  x <- readLines(path) %>%
+    gsub(pattern = '', replace = '\n', .) %>%
+    gsub(pattern = '\\|', replace = ',', .)
+  
+  for (i in 2:length(x) ) {
+    df <- read.table(textConnection(x[i]), sep=",", header=TRUE)
+  }
+  
+  df <- tidyDate(df)
+  
+  # Drop columns and rename
+  df <- dropAndRename(df)
+  
+  return(df)
+}
+
+# Structure: slim
+tidyTXT_7 <- function(path){
+  x <- readLines(path) %>%
+    gsub(pattern = '""', replace = '"\n"', .) 
+  
+  for (i in 2:length(x) ) {
+    df <- read.table(textConnection(x[i]), header=TRUE)
+  }
+  
+  df <- tidyDate(df)
+  
+  # Drop columns and rename 
+  df <- dropAndRename(df)
+  
+  return(df)
+}
+
+# Structure: wide (dirty)
+tidyTXT_9 <- function(path) {
+  x <- readLines(path) %>%
+    gsub(pattern = '', replace = '\n', .) %>%
+    gsub(pattern = '\\\\', replace = ',', .)
+  
+  
+  for (i in 2:length(x) ) {
+    df <- read.table(textConnection(x[i]), sep=",", header=TRUE)
+  }
+  
+  df  <- tidyLong(df)
+  
+  # Drop columns except the 2 necessary ones
+  df <- df[2:3]
+  # 
+  # # Check for NA values
+  importAnalysis(df)
+  
+  return(df)
+}
+
+# Structure: slim
+tidyTXT_11 <- function(path){
+  x <- readLines(path) %>%
+    gsub(pattern = '', replace = '\n', .) 
+  
+  for (i in 2:length(x) ) {
+    df <- read.table(textConnection(x[i]),                      header=TRUE)
+  }
+  
+  df <- tidyDate(df)
+  
+  # Drop columns and rename 
+  df <- dropAndRename(df)  
+  
+  return(df)
+}
+
+# Structure: wide (dirty)
+tidyTXT_16 <- function(path){
+  x <- readLines(path) %>%
+    gsub(pattern = '(?<!\\|)\\s+"(?! \\|)', replace = '\n"', ., perl = TRUE) %>%
+    gsub(pattern = 'A[^|]"', replace = 'A\n"', .) %>%
+    gsub(pattern = '0[^|0-9]"', replace = '0\n"', .) %>%
+    gsub(pattern = '""', replace = '"\n"', .) %>%
+    gsub(pattern = "\\| \\|", replace = " ", .) 
+  
+  for (i in 2:length(x) ) {
+    df <- read.table(textConnection(x[i]), header=TRUE)
+  }
+  
+  df  <- tidyLong(df)
+  
+  # Drop columns except the 2 necessary ones
+  df <- df[2:3]
+  
+  # Check for NA values
+  importAnalysis(df)
+  
+  return(df)
+}
+
+# Structure: slim 
+tidyTXT_20 <- function(path){
+  x <- readLines(path) %>%
+    gsub(pattern = '" "', replace = '"\n"', .) %>%
+    gsub(pattern = '[^\\|] "', replace = '\n"', .) %>%
+    gsub(pattern = "\\| \\|", replace = "\\|", .)
+  
+  for (i in 2:length(x) ) {
+    df <- read.table(textConnection(x[i]), sep = "|", header=TRUE)
+  }
+  
+  df["origin"] <- "01-01-1970"
+  
+  df <- tidyDate(df)
+  
+  # # Drop columns and rename 
+  df <- dropAndRename(df)
+  
+  return(df)
+}
+
+# Structure: wide (dirty)
+tidyTXT_22 <- function(path){
+  x <- readLines(path) %>%
+    gsub(pattern = '(?<!\\s)"(?!\\s)', replace = '\n"', ., perl = TRUE) 
+  
+  for (i in 2:length(x) ) {
+    df <- read.table(textConnection(x[i]), header=TRUE)
+  }
+  
+  df <- tidyLong(df) 
+  
+  # Drop columns except the 2 necessary ones
+  df <- df[2:3]
+  
+  # Check for NA values
+  importAnalysis(df)
+  
+  return(df)
+}
+
+# Structure: wide (dirty)
+tidyTXT_24 <- function(path){
+  x <- readLines(path) %>%
+    gsub(pattern = '', replace = '\n', .)
+  
+  for (i in 2:length(x) ) {
+    df <- read.table(textConnection(x[i]), header=TRUE)
+  }
+  
+  df <- tidyLong(df) 
+  
+  # Drop columns except the 2 necessary ones
+  df <- df[2:3]
+  
+  # Check for NA values
+  importAnalysis(df)
+  
+  return(df)
+}
+
+# Structure: slim
+tidyTXT_27 <- function(path){
+  x <- readLines(path) %>%
+    gsub(pattern = '(?<=origin)\\W+(?=[0-9])', replace = '"\n"', ., perl = TRUE) %>%
+    gsub(pattern = '(?<=01-1970)\\W+(?=[0-9])', replace = '"\n"', ., perl = TRUE) %>%
+    gsub(pattern = "\\| \\|", replace = "\\|", .) 
+  
+  for (i in 2:length(x) ) {
+    df <- read.table(textConnection(x[i]), sep = "|", header=TRUE)
+  }
+  
+  df["origin"] <- "01-01-1970" #Change all Origin Values to 01-01-1970
+  
+  df <- tidyDate(df)
+  
+  # Drop columns and rename 
+  df <- dropAndRename(df)
+  
+  return(df)
+}
+
+# Structure: slim
+tidyTXT_31 <- function(path) {
+  x <- readLines(path) %>%
+    gsub(pattern = '(?<!\\s)"(?=[0-9])', replace = '"\n"', ., perl = TRUE) 
+  
+  for (i in 2:length(x) ) {
+    df <- read.table(textConnection(x[i]), header=TRUE)
+  }
+  
+  # Remove last errorous column
+  df <- df[-c(10)]
+  
+  df <- tidyDate(df)
+  
+  #  Drop columns and rename 
+  df <- dropAndRename(df)
+  
+  return(df)
+}
+
+# Structure: Slim
+tidyTXT_34 <- function(path) {
+  x <- readLines(path) %>%
+    gsub(pattern = '""', replace = '"\n"', .) %>%
+    gsub(pattern = "\\| \\|", replace = " ",.) 
+  
+  for (i in 2:length(x) ) {
+    df <- read.table(textConnection(x[i]), header=TRUE)
+  }
+  
+  df <- tidyDate(df)
+  
+  # Drop columns and rename 
+  df <- dropAndRename(df)
+  
+  return(df)
+}
+
+# Structure: wide (dirty)
+tidyTXT_35 <- function(path){
+  x <- readLines(path) %>%
+    gsub(pattern = '""', replace = '"\n"', .) %>%
+    gsub(pattern = '(?<!\\\\)"(?!\\\\|")', replace = '\n"', ., perl = TRUE) %>%
+    gsub(pattern = '\\\\', replace = ' ', .)
+  
+  for (i in 2:length(x) ) {
+    df <- read.table(textConnection(x[i]), header=TRUE)
+  }
+  
+  df <- tidyLong(df) 
+  
+  # Drop columns except the 2 necessary ones
+  df <- df[2:3]
+  
+  # Check for NA values
+  importAnalysis(df)
+  
+  return(df)
+}
+
+# Structure: slim
+tidyTXT_36 <- function(path){
+  x <- readLines(path) %>%
+    gsub(pattern = '" "', replace = '"\n"', .) 
+  
+  for (i in 2:length(x) ) {
+    df <- read.table(textConnection(x[i]), header=TRUE)
+  }
+  
+  df <- tidyDate(df)
+  
+  #  Drop columns and rename 
+  df <- dropAndRename(df)
+  
+  return(df)
+}
+
+# Structure: wide (totally messed up, SPECIAL CASE)
+tidyTXT_39 <- function(path){
+  x <- readLines(path)  %>%
+    gsub(pattern = '""', replace = '"\n"', .)  %>%
+    gsub(pattern = '(?<!\\\\)"(?!\\\\|")', replace = '\n"', ., perl = TRUE)  %>%
+    gsub(pattern = '\\\\', replace = ' ', .)
+  
+  for (i in 2:length(x) ) {
+    df <- read.table(textConnection(x[i]), header=TRUE)
+  }
+  
+  # combine .x .y cols into one 
+  df <- unite(df, "global_id", "Produktionsdatum.x", "Produktionsdatum.y", sep="_")
+  df <- unite(df, "prod_date", "Herstellernummer.x", "Herstellernummer.y",sep="_")
+  
+  # Clean newly united col names from NA
+  df$prod_date <- gsub(pattern="_NA|NA_",replace="",x=df$prod_date)
+  df$global_id <- gsub(pattern="_NA|NA_",replace="",x=df$global_id)
+  
+  
+  # Deleting rows that shall be disregarded because of date range
+  df <- subset(df, !prod_date<"2015-01-01")
+  df <- subset(df, !prod_date>"2016-12-31")
+  
+  # Drop columns except the 4 necessary ones
+  df <- df[3:4]
+  
+  
+  return(df)
+}
 ```
 
 
@@ -241,104 +637,6 @@ dropAndRename <- function(df) {
   return(df)
 }
 ```
-
-The following `importTXT` function assigns each plain text file based on their file name to a tidy function: 
-
-```{r}
-# Function to assign the correct import and tidy function to a .txt file
-importTXT <- function(path) {
-  print(path)
-  
-  if (str_detect(path, "T01.txt")) {
-    print("tidyTXT_1 called")
-    return(tidyTXT_1(path))
-    
-  } else if(str_detect(path, "T02.txt")) {
-    print("tidyTXT_2 called")
-    return(tidyTXT_2(path))
-    
-  } else if(str_detect(path, "T03.txt")) {
-    print("tidyTXT_3 called")
-    return(tidyTXT_3(path))
-    
-  } else if(str_detect(path, "T07.txt")) {
-    print("tidyTXT_7 called")
-    return(tidyTXT_7(path))
-    
-  } else if(str_detect(path, "T09.txt")) {
-    print("tidyTXT_9 called")
-    return(tidyTXT_9(path))
-    
-  } else if(str_detect(path, "T11.txt")) {
-    print("tidyTXT_11 called")
-    return(tidyTXT_11(path))
-    
-  } else if(str_detect(path, "T16.txt")) {
-    print("tidyTXT_16 called")
-    return(tidyTXT_16(path))
-    
-  } else if(str_detect(path, "T20.txt")) {
-    print("tidyTXT_20 called")
-    return(tidyTXT_20(path))
-    
-  } else if(str_detect(path, "T22.txt")) {
-    print("tidyTXT_22 called")
-    return(tidyTXT_22(path))
-    
-  } else if(str_detect(path, "T24.txt")) {
-    print("tidyTXT_24 called")
-    return(tidyTXT_24(path))
-    
-  } else if(str_detect(path, "T27.txt")) {
-    print("tidyTXT_27 called")
-    return(tidyTXT_27(path))
-    
-  } else if(str_detect(path, "T31.txt")) {
-    print("tidyTXT_31 called")
-    return(tidyTXT_31(path))
-    
-  } else if(str_detect(path, "T34.txt")) {
-    print("tidyTXT_34 called")
-    return(tidyTXT_34(path))
-    
-  } else if(str_detect(path, "T35.txt")) {
-    print("tidyTXT_35 called")
-    return(tidyTXT_35(path))
-    
-  } else if(str_detect(path, "T36.txt")) {
-    print("tidyTXT_36 called")
-    return(tidyTXT_36(path))
-    
-  } else if(str_detect(path, "T39.txt")) {
-    print("tidyTXT_39 called")
-    return(tidyTXT_39(path))
-  }  
-}
-```
-
-
-
-For the main analysis of the group only the ID columns and the Production Dates are necessary. In that way all the other columns were discharged. It is possible to verify how the functions were used for an example.
-
-```{r}
-tidyTXT_7 <- function(path){
-  x <- readLines(path) %>%
-    gsub(pattern = '""', replace = '"\n"', .) 
-  
-  for (i in 2:length(x) ) {
-    df <- read.table(textConnection(x[i]), header=TRUE)
-  }
-  
-  df <- tidyDate(df)
-  
-  # Drop columns and rename 
-  df <- dropAndRename(df)
-  
-  return(df)
-}
-
-```
-
 
 #### Components
 
