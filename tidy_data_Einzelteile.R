@@ -680,11 +680,6 @@ startImport <- function() {
   print("starting importing")
   for (i in seq_along(pathVector)) {
     df_list[[i]] <<- determineTidyFunction(pathVector[i])
-    
-    # # Renaming items in data frame list, implement when txt imports are done
-    # names(df_list) <- gsub("\\Einzelteil+", "", partFileNames)
-    # names(df_list) <- gsub("\\.csv$", "", partFileNames)
-    # names(df_list) <- gsub("\\.txt$", "", partFileNames)
   }
 }
 

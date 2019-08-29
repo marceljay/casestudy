@@ -48,9 +48,9 @@ Since there are 79 files to be considered for our analysis, many being untidy, w
 
 #### Parts
 
-The 38 part files in the `Einzelteile` directory had well over ten different patterns that needed to be identified for a correct import and tidying. Some files had more columns than others, some had differerent date formats, missing line breaks or varios delimiters. 
+The 38 part files in the `Einzelteile/` directory had well over ten different patterns that needed to be identified for a correct import and tidying. Some files had more columns than others, some had differerent date formats, missing line breaks or varios delimiters. 
   
-In this chunk, all the files from the specific `Einzelteile` directory are written into a vector:
+In this chunk, all the files from the specific `Einzelteile/` directory are written into a vector:
 ```{r}
 partFileNames <- list.files("Data/Einzelteil")
 pathVector <- paste("Data/Einzelteil/", partFileNames, sep="")
@@ -96,8 +96,8 @@ determineTidyFunction <- function(filePath) {
 }
 ```
 
-The function `tidyCSV_a` which gets called by`determineTidyFunction()` imports the .csv with format A and A2
-and returns a data frame. here varios helper functions are called, but are elaborated later one...
+The function `tidyCSV_a()` which gets called by`determineTidyFunction()` imports the .csv with format A and A2
+and returns a data frame. here varios helper functions are called, such as `tidyDate()`, which will be explained later on.
 
 ```{r}
 tidyCSV_a <- function(path, delim = ";") {
@@ -127,8 +127,8 @@ tidyCSV_a <- function(path, delim = ";") {
 }
 ```
 
-The function `tidyCSV_b` which gets called by`determineTidyFunction()` imports the .csv with format B and B2
-and returns a data frame. here varios helper functions are called too. It is different from the previous function in terms of not needing to reformat the date and different columns that can be dropped.
+The function `tidyCSV_b()` which gets called by`determineTidyFunction()` imports the .csv with format B and B2
+and returns a data frame. here helper functions such as `tidyLong()` are called too. It is different from the previous function in terms of not needing to reformat the date and different columns that can be dropped.
 
 ```{r}
 tidyCSV_b <- function(path, delim = ";") {
@@ -154,8 +154,8 @@ tidyCSV_b <- function(path, delim = ";") {
 }
 ```
 
-The .txt files in the Parts and Components files were more challenging, requiring a deeper pattern analysis, specially because of the lack of end of lines characters, that were added with the command gsub. The goal was to replace a pattern represented by a regular expression into a line breaker. By the fact that almost every .txt file had a different pattern a particular tidy function had to be created for every .txt file.
-The function `importTXT` is called when no .csv format is found and is responsible for calling each particular tidyTXT function for the respective Part number.
+The .txt files in the Parts and Components files were more challenging, requiring a deeper pattern analysis, specially because of the lack of end of lines characters. The goal was to replace a pattern represented by a regular expression into a line breaker. By the fact that almost every .txt file had a different pattern, a particular tidy function had to be created for every .txt file.
+The function `importTXT()` is called when no .csv format is found and is responsible for calling the specific `tidyTXT_*()` function for the respective part file.
 
 ```{r}
 importTXT <- function(path) {
@@ -229,7 +229,7 @@ importTXT <- function(path) {
 }
 ```
 
-Every TidyTXT function has to insert line breakers following a predetermined row pattern. After defining the line breakers the function imports each file using the read.table function. The resulting data frame is then transformed into a tidy data frame. Each function is shown below: 
+Every TidyTXT function has to insert line breakers following a predetermined row pattern. After defining the line breakers the function imports each file using the read.table function. The specifically written `gsub()` functions use regular expressions to substitute the various delimiting characters to make imports simple. After that we could see two main versions of the tables, a wide one and a slim one, which resemble the pattern in the .csv files. Here the same helper functions for tidying are called, yet columns are a bit different, which is why dropping columns was not implemented in the tidy functions. Also, some files such as T39, deviated strongly from the other .txt files. The resulting data frame is then transformed into a tidy data frame. Each function is shown below: 
 
 ```{r}
 # Structure: wide (dirty)
@@ -567,8 +567,9 @@ tidyTXT_39 <- function(path){
 }
 ```
 
+##### Helper functions 
 
-When all files were successfully imported, it was necessary to tidy the dataframes following the basic rules for Tidy Data. Some problems found were the different time formats, more than one column per information and other strange formats.
+When all files were first successfully imported, it was necessary to tidy the dataframes following the basic rules for tidy data. Some problems found were the different time formats, more than one column per information and other strange formats.
 
 The `tidydate`function is called for all the files storing the data in two separate files. After reappending the readable date to the data frame, any row outside the date specicified 2015-2016 is disregarded. The helper function is utilized by some of both .csv and .txt import functions.
 
@@ -636,6 +637,81 @@ dropAndRename <- function(df) {
   
   return(df)
 }
+```
+
+Another helper function, that was called from the tidy and import functions was `importAnalysis()`. The function searches for missing values (NA) for each column, which could cause errors later on. The potential NA values are then stored in a list of data frames.
+
+```{r}
+# Define empty list for data frames reporting
+# NA values found in imported data frames
+importStats <- list()
+
+importAnalysis <- function(df) {
+  
+  if(length(which(is.na(df)))>0) {
+    print("Found NA values")
+    i = length(importStats)
+    
+    # Analyze for NAs and append to list importStats
+    importStats[[i+1]] <<- sapply(df, function(x) sum(is.na(x))); 
+  } else {
+    print("Good, no NA values found")
+  }
+}
+
+```
+
+To make sure all dates are of the same format, the following helper function gets called after importing the data frames. 
+```{r}
+# Reformat date col from chr to date
+DateAsDate <- function() {
+  for (i in 1:length(df_list)) {
+    df_list[[i]]$prod_date <<- as.Date(df_list[[i]]$prod_date)
+  }
+}
+```
+
+Another helper function, `reformatPartCols()` serves to rename columns for differentiation in the global data frame.
+```{r}
+# Drop rownames, rename cols
+reformatPartCols <- function() {
+  
+  rownames(part_df) <<- c()
+  names(part_df) <<- c("part_global_id", "part_prod_date")
+}
+
+```
+
+
+All the imported data frames get called by `startImport()` and then stored in a list of data frame to keep the environment clean and well-aranged. 
+```{r}
+# Call this function to start importing all data from ./Einzelteile/
+df_list <<- list()
+
+startImport <- function() {
+  print("starting importing")
+  for (i in seq_along(pathVector)) {
+    df_list[[i]] <<- determineTidyFunction(pathVector[i])
+  }
+}
+```
+
+All the data frames from the list are then joined into one single data frame for all the parts. 
+```{r}
+
+# Link df_list into one df
+link_part_df_list <- function() {
+  print("Linking df_list dfs into one df")
+  part_df <<- df_list[[1]]
+  print(paste0("df added:","1/38"))
+  for (i in 2:length(df_list)) {
+    part_df <<- bind_rows(part_df, df_list[[i]])
+    print(paste0("df added:",i,"/38"))
+  }
+  
+  print("part_df created successfully!")
+}
+
 ```
 
 #### Components
