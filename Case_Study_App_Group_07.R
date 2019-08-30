@@ -184,4 +184,3 @@ server <- function(input, output) {
 # Combine ui and server into a shiny app and run it
 shinyApp(ui = ui, server = server)
 
-```
