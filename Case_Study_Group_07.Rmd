@@ -19,7 +19,7 @@ The objective is to identify vehicle types that take a lot of time between the S
 
 ```{r setup, include=FALSE}
 # Prevents code, but not the results from appearing in the finished file.
-knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(echo = TRUE)
 knitr::opts_chunk$set(warning = FALSE)
 
 # Dependencies
@@ -89,7 +89,7 @@ In order to create informative box plot diagrams visualizing this attribute, a t
 
 While skimming through the files in the directories `Einzelteil`, `Komponente` and `Fahrzeug` using external text editors, MS excel and in command line with head() and tail(), it became clear that the often sequentially named .csv and .txt files within contain columns such as `origin` with dates in POSIXct format, while files in the component and vehicle directories containing `Bestandteile` in their names serve as keys to match columns in parts, components and vehicles together.
 
-After the import, the resulting data frames are tidied according to the principles of tidy data depending on the given situation. Most often, the values are scanned for NA entries and duplicates, irrelevant columns are removed and a filter is set for the required time period. For the `Bestandteile` files, gather() needs to be applied to multiple column occurrences for parts or components. In select cases, further steps are involved to prepare data frames for transformation.
+After the import, the resulting data frames are tidied according to the principles of tidy data depending on the given situation. Most often, the values are scanned for NA entries and duplicates, irrelevant columns are removed and a filter is set for the required time period. For the `Bestandteile` files, `gather()` needs to be applied to multiple column occurrences for parts or components. In select cases, further steps are involved to prepare data frames for transformation.
 
 During transformation, all part, component and vehicle data frames are linked together to create one data frame for each segment via bind_rows(). With the `Bestandteile` data frames serving as keys, the columns of the three data frames containing the production dates of each segments are merged into one final data frame. While the production date of components are not essential for the objective, the component data frame still serves its purpose as it provides the only means to connect parts to vehicles.
 
@@ -1727,7 +1727,13 @@ vehicleCompPart_merger <- function() {
   print("Joining merged_vehicleToComp_df with part_df, this may take 1 min...")
   master_df <<- inner_join(merged_vehicleToComp_df, part_df, by = "part_global_id")
   
-  # remove redundant merged data frames to save memory
+  # remove redundant data frames to save memory
+  comp_df <<- NULL
+  BE_comp_df <<- NULL
+  vehicle_df <<- NULL
+  BE_vehicle_df <<- NULL
+  part_df <<- NULL
+  df <<- NULL
   merged_compBE_df <<- NULL
   merged_vehicleBE_df <<- NULL
   merged_vehicleToComp_df <<- NULL
@@ -1746,7 +1752,7 @@ print("master_df successfully created!")
 
 ## Transform for shiny app
 
-For our shiny app we needed a new column in our master data frame, which contains the maximum time between production of a part and production of the entire vehicle. Therefore we created a column which listed this time difference for every part. In the next step we created a list containg just the maximum time difference for every single vehicle. 
+For our shiny app we needed a new column in our master data frame, which contains the maximum time between production of a part and production of the entire vehicle. Therefore we created a column which listed this time difference for every part. In the next step we created a list containg just the maximum time difference for every single vehicle. Again, `master_df` is removed to save memory.
 
 ```{r prepare_masterdf_1}
 prepare_masterdf_1 <- function() {
@@ -1755,6 +1761,9 @@ prepare_masterdf_1 <- function() {
   
   #Put max production time for each vehicle global id in a list
   master_list_shiny <<- with(master_df, tapply(prod_time, vehicle_global_id, max))
+  
+  # Remove master_df to save memory
+  master_df <<- NULL
 }
 
 
