@@ -87,7 +87,7 @@ The mean of the logistics delay is 5,08 days.
 
 _d. Visualize the distribution in an appropriate way._
 ```{r}
-hist(Logistics_Delay$delay)
+hist(as.numeric(Logistics_Delay$delay), main = "Delay of Days", xlab = "Number of days")
 ```
 
 
