@@ -64,7 +64,7 @@ Distribution of Logistics Delay
 
 hist(as.numeric(Logistics_Delay$delay), main = "Delay of Days", xlab = "Number of days")
 ```
-The Distribution of the Logistics Delay is a normal distribution as shown in the histogram. 
+The Distribution of the Logistics Delay strongly resembles a normal distribution as shown in the histogram and is slightly skewed right. 
 
 _b. What is the minimum/maximum time between delivering and receiving goods?_
 
