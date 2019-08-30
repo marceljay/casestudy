@@ -59,6 +59,14 @@ if( !require(colourpicker)){
   install.packages("colourpicker")
 }
 
+if( !require(png)){
+  install.packages("png")
+}
+
+if( !require(knitr)){
+  install.packages("knitr")
+}
+
 library(readr)
 library(dplyr)
 library(tidyr)
@@ -68,7 +76,8 @@ library(stringr)
 library(shiny)
 library(colourpicker)
 library(plotly)
-
+library(png)
+library(knitr)
 ```
 
 # Approach
@@ -1967,11 +1976,67 @@ server <- function(input, output) {
 shinyApp(ui = ui, server = server)
   
 ```
-  
+
 
 
 
 
 # Analysis
 
-Insert analysis data and information
+Our main task as project manger is to select a vehicle type, which is the most critical in terms of the production time. The production time refers to the maximum time between the production of a part and the production  of  the  entire  vehicle. The visualization of our data shows big differences between the existing vehicle types. While the types 11 and 12 have a relativly low production time, the types 21 and 22 are far great with many extreme outliers. This fact ist best shown in the single vehicle type per boxplot view below.
+
+
+```{r, out.width = "400px"}
+
+knitr::include_graphics("Additional_Files_Group_07/shiny_app_pics/all_vehicle_types.jpg")
+
+```
+
+
+If you hover with the cursor over the boxplot, it displays the median, the upper and lower quartiles. Furthermore it shows both the upper and lower fence as well as the minimum and maximum production time. This is exemplary shown for vehicle type 11 in the image below.
+
+
+```{r, out.width = "500px"}
+
+knitr::include_graphics("Additional_Files_Group_07/shiny_app_pics/vehicle_type_11.jpg")
+
+```
+
+
+By looking at the visualized data it becomes clear, that vehicle type 11 has the lowest production time, even lower than vehicle type 12. The median of vehicle type 11 is 27 days, the upper quartile is 30 days, while the lower quartile is 26 days. The minimum production time is 11 days and the maximum production time is 48 days. In comparison to that, vehicle type 12 has a slightly higher median with 28 days, an equaly low upper quartile with 30 days and a lower quartile of 27 days. The minimum production time is also 11 days. while the maximum production time is a little higher with 49 days.
+
+The production times of vehicle type 11 and 12 outpeform the ones of 21 and 22 as depicted in the first graphic. It is our task as the project manger to focus on the critical ones, so we can initiate processes for improvements. The boxplots of vehicle type 21 and 22 look very similar in our shiny app. A closer look at the data is needed to decide, which of them is more critical. 
+
+
+```{r, out.width = "400px"}
+
+knitr::include_graphics("Additional_Files_Group_07/shiny_app_pics/vehicle_types_21_22.jpg")
+
+```
+
+Vehicle type 22 outperfoms vehicle type 21 in almost all of the visualized data. The only exception is the minimum production time, which is 10 days for both vehicle types. Suprisingly this is a lower minimum value than that of vehicle type 11 and 12, which is 11 days. However, the maximum production time for both vehicle type 21 and vehicle type 22 is significantly greater than the ones of vehicle type 11 and vehicle type 12. Vehicle type 21 has a slightly higher value with 671 days than vehicle type 22 with 666 days. The upper and lower fence of vehicle type 21 are both 2 days greater than the ones of vehicle type 21. They are 60 days and 44 days for vehicle type 21 and 58 days and 42 days for vehicle type 22. 
+
+In terms of outliers both vehicle types achieve comparable results. This can easily be shown in our shiny app by adjusting the slider input for the production time range. The table in the third tab updates and shows that both vehicle types have an almost equally high amount of extreme outliers. 
+
+The most important values displayed are the median and the upper and lower quartile, because they depict the vast majority of our data. In this regard vehicle type 22 has lower and thus less critical values for production time. The upper quartile of vehicle type 22 is 52 days and thus 2 days lower than vehicle type 21 upper quartile, which is 54 days. The median of vehicle type 22 is also smaller. It is 49 days compared to 53 days for vehicle type 21. Finally the lower quartile is 48 days for vehicle type 22 and 50 days for vehicle type 21. This is another difference of two days in favour of vehicle type 22.
+
+
+Thus from the analysis of the boxplots in our shiny app derives the clear conclusion, that vehicle type 21 is the most critical one. It is our job as project manager to take countermeasures by improving certain processes. If we would like to take action, it is necessary to to know in which factories vehicle type 21 is produced. This task can easily be done with our shiny app. By selecting the radio button divide boxplot by OEM factory the factory locations are displayed.
+
+At first we can have look where the most extreme outliers are produced in general by selecting a production time range between 100 days and 671 days. As depicted in the following image the problematic factories are Goettingen and Regensburg.
+
+
+```{r, out.width = "400px"}
+
+knitr::include_graphics("Additional_Files_Group_07/shiny_app_pics/vehicle_type_outlier_factory.jpg")
+
+```
+
+Our main focus lies on vehicle type 21, therefore we select the corresponding checkbox. As shown in the image below, all vehicles of type 21 are produced in Goettingen. This is the OEM factory, which needs to imrpove.
+
+
+```{r, out.width = "400px"}
+
+knitr::include_graphics("Additional_Files_Group_07/shiny_app_pics/vehicle_type_21_factory.jpg")
+
+```
